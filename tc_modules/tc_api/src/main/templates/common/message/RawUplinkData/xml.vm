@@ -1,0 +1,9 @@
+<RawUplinkDataMessage eventTime="$eventTime">
+	<ICmdRequestId>$iCmdRequestId</ICmdRequestId>
+	<ICmdRequestStatus>$iCmdRequestStatus</ICmdRequestStatus>
+#if($iCmdRequestFailureReason)
+	<ICmdRequestFailureReason>$iCmdRequestFailureReason</ICmdRequestFailureReason>
+#end
+	<DataFilename>$filename</DataFilename>
+	<ScmfFile>$scmfFile</ScmfFile>
+</RawUplinkDataMessage>

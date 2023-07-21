@@ -1,0 +1,1 @@
+"PRODUCT PART",#if($sessionId)"$sessionId.toString()"#else""#end,"$vcid","$apid","$sclk","$ert","$scet",#if($lst)"$lst"#else""#end,"$seq","$relay","$transId","$commandNumber","$dvtCoarse","$dvtFine","$partLength","$partOffset","$seqId","$seqVersion","$totalParts"

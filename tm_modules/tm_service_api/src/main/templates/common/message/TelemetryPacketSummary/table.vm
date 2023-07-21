@@ -1,0 +1,20 @@
+#macro (justify $width $str)
+#set ($length = $str.length())
+#if ($width == $length || $width < $length)$str#else
+#set ($counter = $width - $length)
+#set ($space = " ")
+#set ($outstr = $str)
+#foreach ($foo in [1..$counter])#set($outstr = "${space}${outstr}")#end$outstr#end
+#end
+#if ($header)
++------+------+---------------------+-------+------------------------+------------------------+------------------------+-------------------------+---------------------+
+| VCID | APID |      APID Name      | Count |     Last Scet Time     |     Last Lst Time      |     Last Sclk Time     |      Last Ert Time      |    Last Seq Time    |
++------+------+---------------------+-------+------------------------+------------------------+------------------------+-------------------------+---------------------+
+#elseif ($body)
+#if ($summaryList)
+#foreach($sum in $summaryList)  
+|#justify(6 $sum.getVcidAsString())|#justify(6 $sum.getApidAsString())|#justify(21 $sum.getApidName())|#justify(7 $sum.getCountAsString())|#justify(24 $sum.getLastScetStr())|#if($sum.getLastLstStr())#justify(23 $sum.getLastLstStr())#else#justify(23 "Unknown")#end |#justify(24 $sum.getLastSclkStr())|#justify(25 $sum.getLastErtStr())|#justify(21 $sum.getSeqCountAsString())|
+#end
+#end
++------+------+---------------------+-------+------------------------+------------------------+------------------------+-------------------------+---------------------+
+#end

@@ -1,0 +1,8 @@
+## MPCS-7941 changed replaceAll for " to prevent VM from randomly interpret the escape incorrectly
+#if ($header)
+ERT,SCET,SCLK,SOURCE,TYPE,ID,DATA,SEQUENCE_ID,CATEGORY_SEQUENCE_ID,TASK_NAME,REALTIME,SESSION
+#elseif ($trailer)
+#else
+#if($ert)$ert#end,#if($scet)$scet#end,#if($sclk)$sclk#end,#if($fromSse)SSE#{elseif}($realTime)FSW RT#{else}FSW REC#{end},EVR#if($nullTool.isNotNull($level)) $level.toUpperCase()#end,#if($name)$name#end,"#if($message)#set($mc=$message.replaceAll("[\r\n]+", " ").replaceAll('"', ""))$mc#end",#{set}($index=0)#{set}($catSeqId=false)#{set}($SeqId=false)#{set}($TaskName=false)#{foreach}($key in $metadataKeys)#{if}($key.convert()=="CategorySequenceId")#{set}($catSeqId=$metadataVals.get($index))#{end}#{if}($key.convert()=="SequenceId")#{set}($SeqId=$metadataVals.get($index))#{end}#{if}($key.convert()=="TaskName")#{set}($taskName=$metadataVals.get($index))#{end}#{set}($index=$index+1)
+#{end}#if($SeqId)$SeqId#{else}NOT_FOUND#end,#if($catSeqId)$catSeqId#{else}NOT_FOUND#end,#if($taskName)$taskName#{else}NOT_FOUND#end,$realTime,$sessionId
+#end

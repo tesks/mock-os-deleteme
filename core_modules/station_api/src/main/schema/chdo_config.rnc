@@ -1,0 +1,359 @@
+#
+# Compressed Header Data Object (CHDO) configuration schema.
+#     
+# Defines the fields in DSN binary SFDU and CHDO structures 
+# (multi-mission and mission-specific), and also
+# specifies SFDU filters and handling specific to a mission.
+# The first allows decommutation of fields from CHDO SFDUs. The second
+# defines which SFDUs and CHDOs are valid and should or should not
+# be processed for a specific mission.
+#
+# DSN CHDO structures are defined by 0172-Telecomm-CHDO. XML definitions
+# in the CHDO configuration must align with the DSN definitions.
+#
+# Copyright (c) 2013-2017 California Institute of Technology, All Rights Reserved
+# JPL Proprietary Information
+#
+# Change Log:
+#   V1.0  Date Unknown   Original version
+#   V1.1  05/28/13       Imported common schema. Major commenting and re-organization
+#   V2.0  08/26/17       No longer imports common dictionary schema.
+#
+namespace rng = "http://relaxng.org/ns/structure/1.0"
+datatypes xsd = "http://www.w3.org/2001/XMLSchema-datatypes"
+
+
+# Start XML document here
+start = chdo-dictionary-def
+
+# The CHDO dictionary element
+chdo-dictionary-def = 
+    element ChdoDictionary
+    {
+        # Standard dictionary version header and general change log 
+        header-def, 
+        
+        # Must have one SFDU information element
+        sfdu-info-def,
+        
+        # Must have a list of CHDO definitions
+        chdo-list-def,
+        
+        # Defines properties of SFDU and CHDOs to be 
+        # processed for a specific mission. This is used to
+        # define which SFDUs and CHDOs represent valid
+        # telemetry packets, idle data, anomalous data, etc.
+        chdo-properties-def
+    }
+    
+# Defines the SFDU information element  
+sfdu-info-def =
+    element SfduInformation
+    {
+        # Currently, SFDU information includes only the list of valis
+        # control authority IDs
+        ca-list-def
+    }
+
+# Defines the list of accepted SFDU control authority identifiers.
+# The CA ID is the first 4 bytes of a 20 byte SFDU label.
+ca-list-def =
+    element ControlAuthorityList
+    {
+        # Consists of one or more ControlAuthorityId elements.
+        cai-def+
+    }
+
+# Defines a single SFDU control authority ID. The ground system will
+# only process SFDUs with a defined control authority ID. Examples:
+# "CCSD", "NJPL". 
+cai-def =
+    element ControlAuthorityId
+    {
+        # CA ID is a 4 character string containing only upper case alphabetic
+        # characters and digits.
+        ca-pattern-def
+    }
+
+# Defines a list of CHDO definitions.
+chdo-list-def =
+    element ChdoList 
+    {
+        # Consists of one or more Chdo elements.
+        chdo-def+
+    }
+    
+# Defines the structure of a specific CHDO.    
+chdo-def =
+    element Chdo
+    {
+        # CHDO type. This is a DSN-assigned integer from the
+        # 0172-Telecomm-CHDO.
+        attribute type {  chdo-type-format },
+            
+        # CHDO classification.  Also assigned by the 0172-Telecomm-CHDO.
+        attribute classification { classification-def },
+            
+        # Name of the CHDO. Used for management purposes only.
+        # It is convention to use the DSN-assigned name for the
+        # CHDO.
+        attribute name { non-empty-token-def }?,
+            
+        # Optional size in bytes of the CHDO, from the 0172-Telecomm-CHDO.
+        # Using "undefined" is the same as leaving the element out. Value
+        # is not used by the GDS.
+        attribute byteSize { byte-size-def }?,
+        
+        # Textual description of the CHDO. Generally copied from the
+        # 0172-Telecomm-CHDO.
+        description-def,
+        
+        # List of data fields in the CHDO.
+        field-list-def
+    }
+    
+# Defines a list of data fields for a CHDO. It is advized, but not necessary,
+# to define all the CHDO fields described n the 0172-Telecomm CHDO. However, if
+# the field is never used by the GDS, it can be omitted.
+field-list-def = 
+    element FieldList
+    {
+        # Consists of one or more Field elements
+        field-def+
+    }
+
+# Defines a single data field in a CHDO.
+field-def =
+    element Field
+    {
+            # Name of the field.  Note that generally this is the same as the field
+            # name in the 0172-Telecomm-CHDO, BUT in some cases these have been modified
+            # because DSN naming is not consistent or unique.  Even if the DSN 0172-Telecomm-CHDO 
+            # calls the field spacecraft_id in one CHDO and scft_id in another, AMPCS
+            # must have a consistent name for accessing the spacecraft ID field in all
+            # CHDOs.
+            attribute fieldId { non-empty-token-def },
+            
+            # Byte offset of the field from the start of THIS CHDO.
+            attribute byteOffset { xsd:unsignedShort },
+            
+            # Bit offset of the field from the start of THIS FIELD (i.e, from
+            # byteOffset.
+            attribute bitOffset { bit-offset-range-def },
+            
+            # Length of the CHDO field in bits. The "udnefined" value can ONLY be used
+            # for variable length data fields in DATA CHDOs. 
+            attribute bitLength { bit-length-def },
+            
+            # Defines the data type of the field.
+            attribute format { format-def }?,
+            
+            # Optional specification for the field units.
+            attribute units { xsd:token }?,
+        
+        
+           # Textual description for the field. Should be copied from the 
+           # 0172-Telecomm-CHDO.
+           description-def,
+           
+           # Defines how to validate the field.
+           validation-def?
+        
+    }
+    
+# Specifies validation parameters for a CHDO field.    
+validation-def = 
+    element Validation
+    {
+        # Validation is by range, or for a specific list of valid values.
+        (range-def | value-def)+
+    }
+ 
+#  Specifies a valid range for CHDO field values.
+range-def = 
+    element Range
+    {
+        # Minimum value for the field.
+        attribute min { non-empty-token-def },
+        # Maximum valud for the field.
+        attribute max { non-empty-token-def },
+        # Default value for the field.
+        attribute default { non-empty-token-def }?
+    }
+    
+# Specifies a valid value for a CHDO Field
+value-def =
+    element Value
+    {
+        # A valid value for the CHDO field
+        attribute value { non-empty-token-def }
+    }
+    
+# A general description element. May be empty.    
+description-def =
+    element Description
+    { 
+        xsd:token
+    }
+
+# Defines the CHDO properties for a specific mission. A property is 
+# essentially a true/false variable, which is created by a series of 
+# conditions on SFDU and CHDO fields. There is a finite number of
+# properties that can be defined and which are supported by the
+# GDS.
+chdo-properties-def =
+    element ChdoProperties
+    {
+        # Consists of a list of 0 or more Property elements.
+        chdo-property-def*
+    }
+ 
+# Defines a single CHDO property as a list of conditions that
+# must be met for the Property to be considered true.
+chdo-property-def = 
+    element Property
+    {
+        # The name of the property. Must be one of the GDS-supported
+        # property names.
+        attribute name { property-name-def },
+        
+        # Field conditions that must be met to set the property to true.
+        conditions-def
+    }
+
+# Defines a list of field conditions.
+conditions-def = 
+    element Conditions
+    {
+        # Consists of one or more Condition elements. All
+        # Conditions within a given Property definition will
+        # be OR's together.
+        condition-def+
+    }
+   
+# Defines a single field condition   
+condition-def = 
+    element Condition
+    {
+        # The CHDO type of the CHDO containing the
+        # field to be examined.
+        attribute chdo_type { chdo-type-format },
+        
+        # List of 0 or more equality statements. All will
+        # be ANDed together to compute this condition.
+        equals-def*,
+        
+        # List of 0 or more inequality statements. All will
+        # ANDed together to compute this condition.
+        not-equals-def*
+    }
+
+# Defines a CHDO field equality statement. 
+equals-def = 
+    element Equals
+    {
+        # Name of the CHDO property to check.
+        attribute name { non-empty-token-def },
+        
+        # Equality value to look for.
+        attribute value { non-empty-token-def }
+    }
+
+# Defines a CHDO field inequality statement.
+not-equals-def  = 
+    element NotEquals
+    {
+        # Name of the CHDO property to check.
+        attribute name { non-empty-token-def },
+        
+        # Inequality value to look for.
+        attribute value { non-empty-token-def }
+    }
+
+# Valid data types for CHDO fields. A TIME may be a SCLK or a wall-clock time.
+format-def = ( "UNSIGNED_INTEGER" | "SIGNED_INTEGER" | "TIME" | "FLOATING_POINT" | "STRING" | "BINARY" )
+
+# Valid CHDO classifications. These are imposed by the 0172-Telecomm-CHDO.
+classification-def = ( "aggregation" | "primary" | "secondary" | "tertiary" | "quaternary" | "data" )
+
+# Valid CHDO type value.
+chdo-type-format = xsd:unsignedShort
+
+# Valid property names. These are the CHDO properties known to the GDS. Others will be ignored.
+#
+# isTimeCorrelation - Property consists of conditions that identify time correlation packet SFDUs
+# isPacket - Property consists of conditions that identify valid telemetry packet SFDUs from TIS
+# isFrame - Property consists of conditions that identify valid telemetry frame SFDUs from TIS
+# isGifFrame - Property consists of conditions that identify valid telemetry frame SFDUs from GIF
+# isPacketFull - Property consists of conditions that identify full, as opposed to partial, telemetry packets
+# isDataPadded - Property consists of conditions that identify telemetry frame or packet SFDUs that have
+#                been padded in the data area
+# isQqcData - Property consists of conditions that identify QQC SFDUs
+# isAnomaly - Property consists of conditions that identify Anomaly SFDUs
+# isWeather - Property consists of conditions that identify Weather SFDUs
+# isCdr - Property consists of conditions that identify SFDUs that contain Channelized Data Records
+# isEcdr - Property consists of conditions that identify SFDUs that contain Expanded Channelized Data Records
+# isIdle - Property consists of conditions that identify SFDUs that idle telemetry packets or frames
+# isTurbo - Property consists of conditions that identify SFDUs that contain Turbo-encoded telemetry frames
+# isOutofSync - Property consists of conditions that identify SFDUs that contain out-of-sync frame data
+property-name-def = ("isTimeCorrelation" | "isPacket" | "isFrame" | "isGifFrame" | "isMonitorData" | "isPacketFull" |
+     "isDataPadded" | "isQqcData" | "isAnomaly" | "isWeather" | "isCdr" | "isEcdr" | "isIdle" | "isInvalid" | "isTurbo" |
+     "isOutOfSync")
+ 
+# Valid pattern for control authority
+ca-pattern-def = xsd:token { pattern="[A-Z0-9]{4}" }  
+
+# Valid range for bit offset
+bit-offset-range-def = xsd:unsignedByte { minInclusive="0" maxInclusive="7" } 
+
+# Valid specification for CHDO byte size
+byte-size-def = xsd:unsignedInt | "undefined"
+
+# Valid specification for CHDO field bit length
+bit-length-def = xsd:unsignedShort | xsd:token "undefined"
+
+# Common header
+header-def = element header {
+
+    # Name of the project/mission generating or using the file
+    attribute mission_name { xsd:token },
+    
+    # Numeric ID of the spacecraft the file applies to.
+    
+    # Made this element optional.
+    # SCID is not always known at time of XML generation, and
+    # the same XML May be used for multiple spacecraft. A value
+    # of 0 can also be used to indicate that SCID is unknown
+    # or unused.
+    attribute spacecraft_id { xsd:nonNegativeInteger }?,
+    
+    # Version of the dictionary
+    attribute version { xsd:token },
+    
+    # version of the schema upon which the dictionary is based
+    attribute schema_version { xsd:token },
+    
+    # Change log
+    change-log-def? 
+}
+
+# General change log element. 
+change-log-def = element change_log {
+    element log {
+    
+        # Author of the change
+        attribute author { xsd:token },
+        
+        # Date of the change
+        attribute date { xsd:date },
+        
+        # Text description of the change. Multi-line text allowed. White space 
+        # preserved.
+        xsd:string
+    }*
+}
+
+
+# General definition for a non-empty token field
+non-empty-token-def = xsd:token { minLength="1" }
+

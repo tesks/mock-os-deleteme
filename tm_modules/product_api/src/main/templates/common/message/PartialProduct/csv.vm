@@ -1,0 +1,1 @@
+"PARTIAL PRODUCT",#if($sessionId)"$sessionId.toString()",#else"",#end"$reason","$apid","$vcid","$creationTime","$scet",#if($lst)"$lst"#else""#end,"$ert","$sclk","$fullPath","$commandNumber","$dvtCoarse","$dvtFine","$seqId","$seqVersion","$totalParts","$transactionId","$fileSize","$checksum","$groundStatus"

@@ -1,0 +1,165 @@
+/**
+ * Copyright 2006-2018. California Institute of Technology.
+ * ALL RIGHTS RESERVED.
+ * U.S. Government sponsorship acknowledged.
+ *
+ * This software is subject to U. S. export control laws and
+ * regulations (22 C.F.R. 120-130 and 15 C.F.R. 730-774). To the
+ * extent that the software is subject to U.S. export control laws
+ * and regulations, the recipient has the responsibility to obtain
+ * export licenses or other export authority as may be required
+ * before exporting such information to foreign countries or
+ * providing access to foreign nationals.
+ */
+/**
+ * AMPCS common protobuf schema for CFDP PDUs
+ *
+ * Version 1.0
+ * ChangeLog:
+ * V1.0 - New for R8
+ */
+syntax = "proto3";
+
+package cfdp_message_impl;
+
+import "abstract_message.proto";
+
+option optimize_for = SPEED;
+option java_multiple_files = true;
+option java_package = "jpl.gds.serialization.cfdp_message_impl";
+option java_outer_classname = "ProtoBufCfdpMessageSerialization";
+
+message Proto3CfdpIndicationMessage{
+    messages.Proto3AbstractMessage super = 1;
+    Proto3CfdpMessageHeader header = 2;
+    enum Proto3CfdpIndicationTypeEnum {
+      TRANSACTION = 0;
+      REPORT = 1;
+      SUSPENDED = 2;
+      RESUMED = 3;
+      FAULT = 4;
+      TRANSACTION_FINISHED = 5;
+      ABANDONED = 6;
+      NEW_TRANSACTION_DETECTED = 7;
+      EOF_SENT = 8;
+      METADATA_RECV = 9;
+      FILE_SEGMENT_RECV = 10;
+      EOF_RECV = 11;
+    }
+    Proto3CfdpIndicationTypeEnum type = 3;
+    enum Proto3CfdpFaultConditionEnum {
+      NO_ERROR = 0;
+      POSITIVE_ACK_LIMIT_REACHED = 1;
+      KEEP_ALIVE_LIMIT_REACHED = 2;
+      INVALID_TRANSMISSION_MODE = 3;
+      FILESTORE_REJECTION = 4;
+      FILE_CHECKSUM_FAILURE = 5;
+      FILE_SIZE_ERROR = 6;
+      NAK_LIMIT_REACHED = 7;
+      INACTIVITY_DETECTED = 8;
+      INVALID_FILE_STRUCTURE = 9;
+      RESERVED_BY_CCSDS_10 = 10;
+      RESERVED_BY_CCSDS_11 = 11;
+      RESERVED_BY_CCSDS_12 = 12;
+      RESERVED_BY_CCSDS_13 = 13;
+      SUSPEND_REQUEST_RECEIVED = 14;
+      CANCEL_REQUEST_RECEIVED = 15;
+    }
+    Proto3CfdpFaultConditionEnum condition = 4;
+    enum Proto3CfdpTransactionDirectionEnum {
+      IN = 0;
+      OUT = 1;
+    }
+    Proto3CfdpTransactionDirectionEnum transactionDirection = 5;
+    uint64 sourceEntityId = 6;
+    uint64 transactionSequenceNumber = 7;
+    string serviceClass = 8;
+    uint64 destinationEntityId = 9;
+    bool involvesFileTransfer = 10;
+    uint64 totalBytesSentOrReceived = 11;
+    enum Proto3CfdpTriggeredByTypeEnum {
+      PDU = 0;
+      REQUEST = 1;
+    }
+    Proto3CfdpTriggeredByTypeEnum triggeringType = 12;
+    string pduId = 13;
+    Proto3FixedPduHeader triggeringPduFixedHeader = 14;
+}
+
+message Proto3FixedPduHeader{
+  string version = 1;
+  enum Proto3CfdpPduTypeEnum {
+    DIRECTIVE = 0;
+    DATA = 1;
+  }
+  Proto3CfdpPduTypeEnum type = 2;
+  enum Proto3CfdpPduDirectionEnum {
+    TO_RECEIVER = 0;
+    TO_SENDER = 1;
+  }
+  Proto3CfdpPduDirectionEnum direction = 3;
+  enum Proto3CfdpTransmissionModeEnum {
+    ACKNOWLEDGED = 0;
+    UNACKNOWLEDGED = 1;
+  }
+  Proto3CfdpTransmissionModeEnum transmissionMode = 4;
+  bool crcFlagPresent = 5;
+  uint32 dataFieldLength = 6;
+  uint32 entityIdLength = 7;
+  uint32 transactionSequenceNumberLength = 8;
+  uint64 sourceEntityId = 9;
+  uint64 transactionSequenceNumber = 10;
+  uint64 destinationEntityId = 11;
+}
+
+message Proto3CfdpFileGenerationMessage{
+  messages.Proto3AbstractMessage super = 1;
+  Proto3CfdpMessageHeader header = 2;
+  map<string, string> downlinkFileMetadata = 3;
+  string downlinkFileMetadataFileLocation = 4;
+  string downlinkFileLocation = 5;
+}
+
+message Proto3CfdpFileUplinkFinishedMessage{
+  messages.Proto3AbstractMessage super = 1;
+  Proto3CfdpMessageHeader header = 2;
+  map<string, string> uplinkFileMetadata = 3;
+  string uplinkFileMetadataFileLocation = 4;
+  string uplinkFileLocation = 5;
+}
+
+message Proto3CfdpRequestReceivedMessage{
+  messages.Proto3AbstractMessage super = 1;
+  Proto3CfdpMessageHeader header = 2;
+  string requestId = 3;
+  string requesterId = 4;
+  string httpUser = 5;
+  string httpHost = 6;
+  string requestContent = 7;
+}
+
+message Proto3CfdpRequestResultMessage{
+  messages.Proto3AbstractMessage super = 1;
+  Proto3CfdpMessageHeader header = 2;
+  string requestId = 3;
+  bool rejected = 4;
+  string resultContent = 5;
+}
+
+message Proto3CfdpPduReceivedMessage{
+  messages.Proto3AbstractMessage super = 1;
+  Proto3CfdpMessageHeader header = 2;
+  string pduId = 3;
+  repeated string metadata = 4;
+}
+
+message Proto3CfdpPduSentMessage{
+  messages.Proto3AbstractMessage super = 1;
+  Proto3CfdpMessageHeader header = 2;
+  string pduId = 3;
+  repeated string metadata = 4;
+}
+
+message Proto3CfdpMessageHeader{
+  string cfdpProcessorInstanceId = 1;
+}

@@ -1,0 +1,77 @@
+# AMPCS EVR Data Generator Mission Configuration Schema
+#
+# This schema defines the XML used to configure a mission for the
+# AMPCS EVR generator.
+#
+# Version 1.0 - M. DeMore
+# Version 1.1 - M. DeMore add optional FillPacketApid element
+# Version 1.2 - M. DeMore added some comments regarding --sourceSchema,
+#                  imported the common schema, and also
+#                  made SCLK settings optional (MPCS-6698)
+# Version 1.3 - M. DeMore change name of imported common schema,
+#               use common APID def (MPCS-6854 - 11/21/14)
+# Version 1.4 - M. DeMore change comments about defaults for SCLK
+#               elements. Add packet header class element. 
+#               (MPCS-7663 - 9/10/15)
+#
+# Root element. Start XML document here.
+
+include "CommonConfig.rnc"
+
+start =
+  element EvrGeneratorMissionConfig {
+  
+    # AMPCS Java class name for the EVR dictionary parser. This is the
+    # AMPCS class used to parse the dictionary. If omitted, this defaults
+    # based upon the --schemaSource command line option to the generator.
+    element EvrDictionaryClass { text }?,
+    
+    # AMPCS Java class name for the EVR definition. This is the
+    # AMPCS class used to store EVR definitions parsed from the dictionary.
+    # If omitted, this defaults based upon the --schemaSource command line 
+    # option to the generator.
+    #
+    # DEPRECATED FOR R8
+    element EvrDefinitionClass { text }?,
+    
+    # MPCS-7663 - 9/10/15. Added packet header class element.
+    
+    # See the common schema for definition.
+    packet-header-class-def?,
+    
+    # See the common schema for definition
+    max-packet-len-def?,
+    
+    # MPCS-7663 - 9/10/15. Removed statement about defaults for SCLK elements
+    # below. 
+    
+    # See the common schema for definitions of these.
+    sclk-coarse-len-def?,
+    sclk-fine-len-def?,
+    use-fraction-sclk-def?,
+    sclk-sep-char-def?,
+    
+    # See the common schema for definition
+    fill-apid-def?,
+    
+    # Defines the EVR Levels that apply to this mission. There must be at
+    # least one. If undefined EVR levels are encountered in the dictionary, 
+    # the generator will skip those EVRS.
+    element EvrLevels {
+    
+      # Defines one EVR level. Must be repeated for every level the mission supports.
+      element Level {
+      
+        # The level name, e.g. COMMAND or ACTIVITY
+        attribute name { xsd:NCName },
+        
+        # The packet APID for EVRs of this level. May overlap between levels.
+        # See the common schema for definition
+        attribute apid { apid-def },
+        
+        # True if this EVR level is considered FATAL in the flight software.
+        # Defaults to false.
+        attribute fatal { xsd:boolean }?
+      }+
+    }
+  }

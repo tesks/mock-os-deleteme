@@ -1,0 +1,30 @@
+# AMPCS LogMessage RelaxNG Compact format XML specification.
+#
+# This message is published to communicate log events out of
+# a variety of AMPCS applications. Note that there may be more
+# than one log message/record per JMS message.
+#
+# ChangeLog: Updated to import new common session schema.
+#
+namespace rng = "http://relaxng.org/ns/structure/1.0"
+datatypes xsd = "http://www.w3.org/2001/XMLSchema-datatypes"
+default namespace = "http://dsms.jpl.nasa.gov/mpcs"
+
+include "ContextCommon.rnc"
+include "Times.rnc"
+
+start = MPCSLogMessage-def
+
+MPCSLogMessage-def = element MPCSLogMessage {
+    context-def?,
+    LogMessage-def+
+}
+
+LogMessage-def = element LogMessage {
+    attribute eventTime { time-def },
+    context-def?,
+    element severity { "Info" | "Warning" | "Error" | "Debug" | "Trace" },
+    element type {xsd:string },
+    element message { xsd:string }
+}
+ 

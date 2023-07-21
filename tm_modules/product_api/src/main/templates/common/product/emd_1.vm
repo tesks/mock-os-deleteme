@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mm-emd:EarthProductMetadata xmlns:mpcs="http://dsms.jpl.nasa.gov/mpcs"
+    xmlns:mm-emd="http://dsms.jpl.nasa.gov/mpcs_mm-core_emd"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://dsms.jpl.nasa.gov/mpcs_mm-core_emd http://dsms.jpl.nasa.gov/mpcs/MM_Core_Session.xsd"
+    EmdSchemaVersion="1">
+    
+    <mm-emd:SessionInformation>
+        <mpcs:SessionId>
+            <mpcs:Number>$sessionId</mpcs:Number>
+            <mpcs:Name>$sessionName</mpcs:Name>
+            <mpcs:FswDictionaryDir>$fswDictionaryDir</mpcs:FswDictionaryDir>
+            <mpcs:FswDictionaryVersion>$fswVersion</mpcs:FswDictionaryVersion>
+        </mpcs:SessionId>
+        <mpcs:Venue>
+            <mpcs:VenueType>$venueType</mpcs:VenueType>
+#if ($testbedName)
+            <mpcs:TestbedName>$testbedName</mpcs:TestbedName>
+#end
+            <mpcs:User>$user</mpcs:User>
+            <mpcs:Host>$host</mpcs:Host>
+        </mpcs:Venue>
+        <mpcs:OutputDirectory>$outputDir</mpcs:OutputDirectory>
+    </mm-emd:SessionInformation>
+    
+    <mm-emd:ProductMetadata>
+        <mm-emd:GroundCreationTime>$productMetadata.getProductCreationTimeStr()</mm-emd:GroundCreationTime>
+        <mm-emd:Scid>$productMetadata.getScid()</mm-emd:Scid>
+        <mm-emd:Apid>$productMetadata.getApid()</mm-emd:Apid>
+        <mm-emd:ProductType>$productMetadata.getProductType()</mm-emd:ProductType>
+        <mm-emd:Vcid>$productMetadata.getVcid()</mm-emd:Vcid>
+        <mm-emd:GroundStatus>$productMetadata.getGroundStatus()</mm-emd:GroundStatus>
+        <mm-emd:DataFilePath>$productMetadata.getFullPath()</mm-emd:DataFilePath>
+        <mm-emd:SequenceId>$productMetadata.getSequenceId()</mm-emd:SequenceId>
+        <mm-emd:SequenceVersion>$productMetadata.getSequenceVersion()</mm-emd:SequenceVersion>
+        <mm-emd:CommandNumber>$productMetadata.getCommandNumber()</mm-emd:CommandNumber>
+        <mm-emd:DvtCoarse>$productMetadata.getDvtCoarse()</mm-emd:DvtCoarse>
+        <mm-emd:DvtFine>$productMetadata.getDvtFine()</mm-emd:DvtFine>
+        <mm-emd:FirstPartSclk>$productMetadata.getSclkStr()</mm-emd:FirstPartSclk>
+        <mm-emd:FirstPartScet>$productMetadata.getScetStr()</mm-emd:FirstPartScet>
+#if($productMetadata.getSol())
+        <mm-emd:FirstPartLst>$productMetadata.getSolStr()</mm-emd:FirstPartLst>
+#end       
+        <mm-emd:FirstPartErt>$productMetadata.getErtStr()</mm-emd:FirstPartErt>
+        <mm-emd:TotalDataParts>$productMetadata.getTotalParts()</mm-emd:TotalDataParts>
+        <mm-emd:ExpectedProductChecksum>$productMetadata.getChecksum()</mm-emd:ExpectedProductChecksum>
+        <mm-emd:ActualProductChecksum>$productMetadata.getActualChecksum()</mm-emd:ActualProductChecksum>
+        <mm-emd:ExpectedProductFileSize>$productMetadata.getFileSize()</mm-emd:ExpectedProductFileSize>
+        <mm-emd:ActualProductFileSize>$productMetadata.getActualFileSize()</mm-emd:ActualProductFileSize>
+        <mm-emd:CfdpTransactionSequenceNumber>$productMetadata.getCfdpTransactionId()</mm-emd:CfdpTransactionSequenceNumber>
+        <mm-emd:PartList TotalExpected="$productMetadata.getTotalParts()" TotalReceived="$numReceivedParts">
+#foreach($missing in $missingPartList)
+            <mm-emd:MissingPart>$missing</mm-emd:MissingPart>
+#end
+
+#foreach($part in $partList)
+            <mm-emd:Part Number="$part.getNumber()" Offset="$part.getOffset()" Length="$part.getLength()">
+                <mm-emd:Sclk>$part.getSclk()</mm-emd:Sclk>
+                <mm-emd:Scet>$part.getScetStr()</mm-emd:Scet>
+#if($part.getSolStr())
+                <mm-emd:Lst>$part.getSolStr()</mm-emd:Lst>
+#end
+                <mm-emd:Ert>$part.getErtString()</mm-emd:Ert>
+                <mm-emd:SourcePacketSeqCount>$part.getPktSequence()</mm-emd:SourcePacketSeqCount>
+            </mm-emd:Part>
+#end
+        </mm-emd:PartList>
+           
+    </mm-emd:ProductMetadata>
+
+</mm-emd:EarthProductMetadata>

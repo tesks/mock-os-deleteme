@@ -1,0 +1,27 @@
+<CpdUplinkStatusMessage eventTime="$eventTime">
+  <RequestID>$requestId</RequestID>
+  <StatusUpdateTime>$statusUpdateTime</StatusUpdateTime>
+  <RequestStatus>$requestStatus</RequestStatus>
+#if($filename)
+  <Filename>$filename</Filename>
+#end
+#if($bitrateRange)
+  <BitrateRange>
+#foreach($rate in $bitrateRange)
+    <Bitrate>$rate</Bitrate>
+#end
+  </BitrateRange>
+#end
+#if($userId)
+  <UserID>$userId</UserID>
+#end
+#if($roleId)
+  <RoleID>$roleId</RoleID>
+#end
+#if($submitTime)
+  <SubmitTime>$submitTime</SubmitTime>
+#end
+#if($nullTool.isNotNull($includedInExeList))
+  <IncludedInExeList>$includedInExeList</IncludedInExeList>
+#end
+</CpdUplinkStatusMessage>

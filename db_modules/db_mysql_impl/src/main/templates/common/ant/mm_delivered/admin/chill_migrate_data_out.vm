@@ -1,0 +1,15 @@
+#set ( $shellName = "sh" )
+#shell( $shellName )
+
+#init()
+
+#Python()
+
+#set( $tpsLibraries = ["pydes"] )
+#constructPythonpath ( $tpsLibraries )
+       
+#set ( $scriptName = "lib/python/mpcsutil/chill_db_migrate_out.py" )
+#set ( $excludeSite = "false" )
+#execPython ( $scriptName $excludeSite )
+
+ 

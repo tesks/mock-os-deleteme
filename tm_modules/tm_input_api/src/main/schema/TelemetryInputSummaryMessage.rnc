@@ -1,0 +1,37 @@
+# 
+# AMPCS TelemetryInputSummaryMessage RelaxNG Compact format XML specification.
+#
+# This message is published periodically by the downlink processor to
+# provide status of the telemetry connection and input stream. Note that
+# these numbers may suffer rollover if a session runs long enough.
+#
+# Version: 3.0
+#
+# ChangeLog: V2.0 3/14/2013 Updated to import new common session schema.
+# ChangeLog: V3.0 5/18/17 Major updates for AMPCS R8
+#
+namespace rng = "http://relaxng.org/ns/structure/1.0"
+datatypes xsd = "http://www.w3.org/2001/XMLSchema-datatypes"
+default namespace = "http://dsms.jpl.nasa.gov/mpcs"
+
+include "ContextCommon.rnc"
+include "Times.rnc"
+
+start = MPCSTelemetryInputSummaryMessage-def
+
+MPCSTelemetryInputSummaryMessage-def = element MPCSTelemetryInputSummaryMessage
+ {
+     context-def?,
+     summaryMessage-def+
+}
+
+summaryMessage-def = element TelemetryInputSummaryMessage
+ {
+    attribute eventTime { time-def },
+    context-def?,
+    element fromSSE { xsd:boolean },
+    element isConnected { xsd:boolean },
+    element isFlowing { xsd:boolean },
+    element lastReadTime { time-def }?,
+    element readCount { xsd:long }
+}

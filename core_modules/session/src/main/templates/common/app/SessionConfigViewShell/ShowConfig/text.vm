@@ -1,0 +1,142 @@
+#if ($body)
+---------------------------------------------------------------
+Session Information
+---------------------------------------------------------------
+#if($sessionId)
+Number                  = $sessionId
+#else
+Number                  = <UNASSIGNED>
+#end
+SpacecraftId            = $spacecraftId
+#if ($sessionName)
+Name                    = $sessionName
+#end
+#if ($sessionType)
+Type                    = $sessionType
+#end
+#if ($sessionDescription)
+Description             = $sessionDescription
+#end
+#if($outputDir)
+OutputDirectory         = $outputDir
+#end
+OutputDirOverridden     = $outputDirOverride
+---------------------------------------------------------------
+Venue Information
+---------------------------------------------------------------
+User                    = $user
+Host                    = $host
+StartTime               = $startTime
+#if ($endTime)
+EndTime                 = $endTime
+#end
+#if ($venueType)
+VenueType               = $venueType
+#end
+#if ($inputFormat)
+InputFormat             = $inputFormat
+#else 
+InputFormat             = UNKNOWN
+#end
+#if ($downlinkConnectionType)
+DownlinkConnectionType  = $downlinkConnectionType
+#end
+#if ($uplinkConnectionType)
+UplinkConnectionType    = $uplinkConnectionType
+#end
+#if($testbedName && ($venueType == "TESTBED" || $venueType == "ATLO"))
+TestbedName             = $testbedName
+#end
+#if($downlinkStreamId && ($venueType == "TESTBED" || $venueType == "ATLO"))
+DownlinkStreamId        = $downlinkStreamId
+#end
+#if ($downlinkConnectionType && ($downlinkConnectionType == "TDS" || $downlinkConnectionType == "FILE"))
+#if ($inputFile)
+InputFile               = $inputFile
+#end
+#end
+#if ($downlinkConnectionType && $downlinkConnectionType == "DATABASE")
+#if ($databaseSessionKey)
+DatabaseSessionKey      = $databaseSessionKey
+#end
+#if ($databaseSessionHost)
+DatabaseSessionHost     = $databaseSessionHost
+#end
+#end
+#if ($sessionDssId)
+SessionDssId            = $sessionDssId
+#end
+---------------------------------------------------------------
+FSW Information
+---------------------------------------------------------------
+#if ($fswDictionaryDir)
+FswDictionaryDirectory  = $fswDictionaryDir $dictOverrideText
+#end
+#if ($fswVersion)
+FswVersion              = $fswVersion $dictOverrideText
+#end
+RunFswDownlink          = $fswDownlinkFlag
+#if ($fswDownlinkHost && $downlinkConnectionType != "UNKNOWN")
+FswDownlinkHost         = $fswDownlinkHost
+#end
+#if ($fswDownlinkPort && $fswDownlinkPort != -1 && $downlinkConnectionType != "UNKNOWN")
+FswDownlinkPort         = $fswDownlinkPort
+#end
+#if ($fswUplinkHost && $uplinkConnectionType != "UNKNOWN")
+FswUplinkHost           = $fswUplinkHost
+#end
+#if ($fswUplinkPort && $fswUplinkPort != -1 && $uplinkConnectionType != "UNKNOWN")
+FswUplinkPort           = $fswUplinkPort
+#end
+#if ($sessionVcid)
+SessionVcid             = $sessionVcid
+#end
+#if ($hasSse)
+---------------------------------------------------------------
+SSE Information
+---------------------------------------------------------------
+#if ($sseDictionaryDir)
+SseDictionaryDirectory  = $sseDictionaryDir $dictOverrideText
+#end
+#if ($sseVersion)
+SseVersion              = $sseVersion $dictOverrideText
+#end
+RunSseDownlink          = $sseDownlinkFlag
+#if ($sseHost && $sseHost != "")
+SseHost                 = $sseHost
+#end
+#if ($sseUplinkPort && $sseUplinkPort != -1 && $uplinkConnectionType != "UNKNOWN")
+SseUplinkPort           = $sseUplinkPort
+#end
+#if ($sseDownlinkPort && $sseDownlinkPort != -1 && $downlinkConnectionType != "UNKNOWN")
+SseDownlinkPort         = $sseDownlinkPort
+#end
+#end
+---------------------------------------------------------------
+JMS/Database Information
+---------------------------------------------------------------
+#if ($jmsHost)
+JmsHost                 = $jmsHost
+#end
+#if ($jmsPort)
+JmsPort                 = $jmsPort
+#end
+#if ($jmsSubtopic)
+JmsSubtopic             = $jmsSubtopic
+#end
+#if ($topic)
+Topic                   = $topic
+#end
+#if ($databaseName)
+DbName                  = $databaseName
+#end
+#if ($databaseHost)
+DbHost                  = $databaseHost
+#end
+#if ($databasePort)
+DbPort                  = $databasePort
+#end
+#if ($databaseUser)
+DbUser                  = $databaseUser
+#end
+#end

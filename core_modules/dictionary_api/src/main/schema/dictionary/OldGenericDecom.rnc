@@ -1,0 +1,314 @@
+# 
+# Multimission Generic Channel Decom Map Schema
+# 
+# This schema defines a generic map format for decommutating packets.
+# It is closely based on 0186-Telecomm "Decommutation Maps"
+# specification. It assumes that all extracted fields are channels.
+# 
+# It is possible to change the allocation of the channels based on a
+# value in the packet. It is also possible that the length of the data
+# in the extracted field does not exactly match the length specified in 
+# the channel dictionary (e.g. one may wish to extract 2 bits and 
+# put it into a 4-byte integer channel). The channel dictionary sets the 
+# type and length of the result. The decom map sets the length of the 
+# field to extract. The length of the field extracted by the decom must be 
+# less than or equal to the length of the destination channel.
+# 
+# Byte 0, bit 0 is the start of the packet header.  This differs from the 
+# DSN decom specification in 0186-Telecomm. Here, the packet is defined 
+# to be the DATA area. All data is assumed to be in GDR format. 
+#
+# Numeric data to be extracted must be placed into packets in big-endian order, 
+# i.e., the most significant byte has the smallest offset.  For 4 byte 
+# floating-point values, the bits must represent of a floating-point value 
+# according to the IEEE 754 floating-point "single format" bit layout. For 
+# 8 byte floating-point values, the bits must represent of a floating-point 
+# value according to the IEEE 754 floating-point "double format" bit layout. 
+#
+# String data must be placed into packets such that the first character 
+# in the string has the smallest offset in the packet. All characters should 
+# be in the ASCII printable range (hexadecimal values 0x20 through 0x7E). 
+# The GDS will replace carriage returns (0x0D), line feeds (0x0A), and all 
+# other characters outside of the printable range by space characters (0x20).  
+# The bit length (width) of string fields must correspond to the length of 
+# the string in the packet. The C NULL (0x00) character has no meaning to the 
+# GDS and will not be recognized as a string terminator.
+#
+# Note: 0186-Telecomm makes available "block call" statements, which are
+#       not supported by this schema.
+#
+# Copyright (c) 2013 California Institute of Technology, All Rights Reserved
+# JPL Proprietary Information
+# 
+# Change Log:
+#   V1.0  03/11/10   Original Version by Choi/Wright
+#   V1.1  05/20/12   Imported common dictionary schema, some
+#                    comments
+#   V1.2  05/20/13   Moved into AMPCS, normalized header 
+#                    format, minor reorganization, a lot of comments.
+#   V1.3  05/24/13   More re-org. A lot of comments.
+#   V2.0  07/08/13   Removed element choices in favor of element
+#                    sequences.
+#   V2.1  09/18/13   Minor updates in response to DMS SIS Review
+#   V2.2  11/19/13   Made APID attribute optional in the map
+#                    definition. 
+#   V3.0  08/05/15   Removed redundant missionName attribute
+#                    on the decom map element. Added attributes and
+#                    categories on the decom map element. 
+#   V3.1 01/12/16    Removed default namespace and fixed typos 
+#                    This is the final change for AMPCS 7.3 (MGSS ECR-117883)
+#
+namespace rng = "http://relaxng.org/ns/structure/1.0"
+
+# Include common dictionary XML definitions
+include "CommonDictionary.rnc"
+
+#  Start XML document here
+start = decom-map-root
+
+# Root element, which contains the file header and a DecomMap
+# element.
+decom-map-root = element DecomMapRoot { 
+
+      # Standard dictionary version header and general change log 
+      header-def, 
+
+      # The content is a single decom map
+      decom-map-def 
+   }
+
+# The DecomMap element defines a single decom map.         
+decom-map-def =
+    element DecomMap {   
+        
+        # Name to identify this decom map. (Just for management
+        # purposes.)
+        attribute name { name-def },
+          
+            
+        # Packet APID this decom map is for. In case this is a
+        # general map to handle packets of any APID, omit this
+        # attribute. IMPORTANT: ATTRIBUTE MUST NOT BE PRESENT
+        # FOR THE GENERAL MAP.
+        attribute apid { xsd:nonNegativeInteger }?,
+        
+        # Descriptive comment for this decom map.
+        description-def?,
+        
+        # Decom statements to process for each packet.
+        statements-def,
+        
+        #
+        # This is used to categorize Maps into groups. Possible category names 
+        # are "module", "operational category", "subsystem", ...
+        # It is possible that there are multiple ways of organizing groups of elements, so
+        # that there may be more than one category entry for a given item. 
+        categories-def?,
+         
+        #
+        # Additional dictionary attributes, defined using key-value XML container. Use
+        # this to attach additional project-specific information to this EVR. 
+        attributes-def?
+    }
+#
+# Specifies the Statements in a DecomMap.
+statements-def =
+    element Statements { (define-def | skip-def | channel-def | variable-def 
+    | switch-def)+ }
+
+# Define statements have two versions: Define Width and Define Offset.
+# The first is used to define the width (in bits)  for upcoming channel 
+# extractions. The second is used to move the data offset pointer 
+# forward or backward. 
+define-def =
+    element Define {
+    
+        # Descriptive comment on this define statement.
+        description-def? &
+        (
+           # Width in bits to be applied to all future channel extractions, unless
+           # a specific Channel element overrides the value. This Width remains in
+           # effect until a different Width is specified by another Define element
+           element Width { xsd:positiveInteger } 
+           
+           # or (use Width or Offset, but not both)
+           | 
+           
+           # Offset to move forward or backward in the data stream
+           element Offset {
+           
+                 # Indicates the relative direction of the offset, from 
+                 # current position. If relativeDirection attribute is missing, 
+                 # the offset is absolute from the start of the DATA area.
+                 attribute relativeDirection { relative-direction-def }?,
+                 
+                 # Offset value in bits. Specifying DATA will set the offset 
+                 # to beginning of the data area (packet header bit 0)
+                 ( xsd:nonNegativeInteger | "DATA" )
+            }
+        )
+    }
+
+# Defines content to skip during decom
+skip-def =
+    element Skip {
+    
+        # Number of bits to skip.
+        attribute numBits { xsd:nonNegativeInteger },
+    
+       # Descriptive comment for this skip statement.
+        description-def?
+    }
+    
+#
+# Defines a telemetry channel to extract during decom. 
+channel-def =
+    element Channel {
+       
+        # Channel ID: Must match with entry in channel dictionary.
+        attribute id { channel-id-def },
+            
+        # Length of channel data in bits. This overrides any
+        # Define.Width value currently in effect
+        attribute width { xsd:positiveInteger }?,
+            
+        # Absolute offset, in bits, from the start of the
+        # DATA area
+        attribute offset { xsd:nonNegativeInteger }?,
+            
+        # Descriptive comment on this channel statement.
+        description-def?
+    }
+
+#
+# Defines a variable to be extracted from the decom stream, so that
+# the value can be stored and later used in a Switch statement.
+# Also be used to copy the value of one variable to another. The value
+# of a variable, though it can vary in width, is always unsigned
+# integer.
+variable-def =
+    element Variable {
+        
+            # Variable name.
+            attribute name { variable-name },
+            (
+                # If variable's value is extracted from packet data...
+                (
+                   # Length of variable data in bits. (Mandatory.)
+                   attribute width { xsd:positiveInteger },
+                   
+                   # Absolute offset, in bits, from the start of the
+                   # DATA area. If not specified, the variable will
+                   # extracted from the current position in the data
+                   # stream.
+                   attribute offset { xsd:nonNegativeInteger }?
+                )
+                
+                # or (specify width and offset or assignValueFrom, but
+                # not both)
+                | 
+                
+                # Variable to variable assignment: specify the name of
+                # the variable to get this variable's value from
+                attribute assignValueFrom { xsd:IDREF }
+            ),
+         
+            # Descriptive comment on this variable statement.
+            description-def?
+    }
+
+# Defines a switch point in the decom stream, such that differing cases
+# can be executed during decom.
+switch-def =
+    element Switch {
+    
+        # Name of the control variable for this Switch  
+        attribute variable { xsd:IDREF },
+        
+        # Modulus value.
+        # If specified, the modulo of the variable value 
+        # will be calculated before the case(s)
+        # in the switch are executed.
+        attribute modulus { xsd:positiveInteger }?,
+        
+        # Descriptive comment on this switch statement.
+        description-def?,
+        
+        # Cases associated with this Switch
+        ((case-set-def | case-def)+ & default-case-def?)
+    }
+
+# A CaseSet represents a group in Switch where multiple cases are
+# aggregated to result in same block of statements being executed.
+case-set-def =
+    element CaseSet {
+    
+        # Descriptive comment on this CaseSet.
+        description-def?,
+        
+        # Cases in this CaseSet
+        cases-def,
+        
+        # Statements in this CaseSet
+        statements-def
+    }
+
+# Defines multiple Cases for inclusion in a CaseSet.
+cases-def =
+
+    element Cases {
+    
+        # A single Case. Note that this type of Case has
+        # no associated statements because it belongs to 
+        # a CaseSet which specifies the statements.
+        
+        element Case {
+        
+            # The value of the Switch variable for this case.
+            attribute value { xsd:nonNegativeInteger },
+            
+            # Descriptive comment on this case.
+            description-def?
+        }+
+    }
+
+# Represents a single Case within a Switch, NOT in a CaseSet.
+# The decom statements defined here are executed based upon a single 
+# variable value.
+case-def =
+    element Case {
+    
+        # Value of the Switch variable for this case. May be hex or decimal
+        attribute value { hex-int },
+        
+        # Descriptive comment on this case.
+        description-def?,
+        
+        # Statements in this case.
+        statements-def
+    }
+
+# Defines a set of Default statements to execute if the
+# Switch variable value does not satisfy another defined 
+# Case.
+default-case-def =
+    element Default {
+    
+        # Descriptive comment on this Default Case.
+        description-def?,
+        
+        # The Statements in the default Case
+        statements-def
+    }
+
+# Acceptable pattern for a variable name
+variable-name = xsd:ID { pattern = "[A-Za-z][A-Za-z_0-9]*" }
+
+# Element for descriptive text
+description-def = element Description { xsd:string }
+
+# Acceptable values for a relative direction.
+# Indicates whether the direction of an offset is backward (-)
+# or forward (+) relative to current position in the data
+# stream.
+relative-direction-def = "-" | "+"

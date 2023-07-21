@@ -1,0 +1,3 @@
+#foreach($correlation in $correlations)  
+SSE TIME CORRELATION SSE SCLK=$packetSclk SSE ERT=$packetErt Correlated SCLK=$correlation.getOne().toString() Correlated ERT=$correlation.getTwo().getFormattedErt(true)
+#end

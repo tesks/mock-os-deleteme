@@ -1,0 +1,1124 @@
+#*
+	Macro for generating the #! line at the
+	top of a Unix script.
+*#
+#macro( shell $name )
+#!/bin/$name
+#end
+
+#*
+	General script initialize that empties out existing paths,
+	sets the umask and checks that CHILL_GDS exists.
+*#
+#macro( init )
+#Initialize all the important environment variables
+umask 0000
+
+# If ActiveMQ is already set to valid directory, save it
+if [ -n "$ACTIVEMQ_HOME" ] && [ -d "$ACTIVEMQ_HOME" ] ;
+then
+    AMQ_TEMP="$ACTIVEMQ_HOME"
+fi
+
+# Make mission name configurable
+if [ ! -z "$CHILL_MISSION" ] ;
+then
+    CHILL_MISSION_TEMP="$CHILL_MISSION"
+fi
+
+# Add user override of system defaults.
+# CHILL_ENV_OVERRIDE can be set to "true" to use only what is in the user's environment,
+# or be set to a valid file path to source.
+# If CHILL_ENV_OVERRIDE is set to "false" or is not set, the system environment default
+# is used.
+if [ "X$CHILL_ENV_OVERRIDE" = "X" ] || [ "X$CHILL_ENV_OVERRIDE" = "Xfalse" ]
+then
+    source "${CHILL_GDS}/config/ampcs_env.sh"
+elif [ "X$CHILL_ENV_OVERRIDE" != "Xtrue" ]
+then
+    if [ -f "$CHILL_ENV_OVERRIDE" ]
+    then
+        source "$CHILL_ENV_OVERRIDE"
+
+    else
+        echo "CHILL_ENV_OVERRIDE not set to a valid file path; please fix it or unset it."
+    fi
+fi
+
+# Override default ActiveMQ path with user defined path
+if [ -n "$AMQ_TEMP" ] ;
+then
+    export ACTIVEMQ_HOME="$AMQ_TEMP"
+fi
+
+#  Set CHILL_MISSION adaptation name if not set in ampcs_env.sh
+if [ -z "${CHILL_MISSION}" ] || [ "$CHILL_MISSION" = "" ];
+then
+export CHILL_MISSION=$(cat $CHILL_GDS/dist.properties | cut -d '=' -f2)
+fi
+
+# Set to user defined mission name if it was set previously
+if [ -n "$CHILL_MISSION_TEMP" ] ;
+then
+    export CHILL_MISSION="$CHILL_MISSION_TEMP"
+fi
+
+
+CLASSPATH=${CHILL_GDS}
+
+OS_UNAME=`uname`
+
+# Look for 64-bit, but ONLY for Linux at this time, not Apple.
+
+if test "X$OS_UNAME" = "XLinux"
+then
+    if test `uname -m` = "x86_64"
+    then
+        SWT_UNAME=Linux64
+    else
+        echo "32-bit Linux is not supported by AMPCS.  Please use a 64-bit machine."
+        exit 1
+    fi
+elif test "X$OS_UNAME" = "XDarwin"
+then
+    SWT_UNAME=$OS_UNAME
+else
+    echo "You are using an unsupported operating system. AMPCS supports 64-bit Linux and 64-bit Darwin (OS X)."
+    exit 1
+fi
+
+if [ "$CHILL_GDS" = "" ] ; then
+	echo "Your CHILL_GDS environment variable is not set."
+    exit 1
+fi
+
+if [ "$CHILL_TMP_DIR" == "" ] ; then
+    export CHILL_TMP_DIR=$HOME/CHILL/tmp
+fi
+
+
+if [ ! -d $CHILL_TMP_DIR ]; then
+   mkdir -p $CHILL_TMP_DIR >/dev/null 2>&1
+   chmod a+rw $CHILL_TMP_DIR >/dev/null 2>&1
+
+   if [ $? != 0 ]; then
+       export CHILL_TMP_DIR=$TMPDIR
+   fi
+fi
+export TMPDIR=$CHILL_TMP_DIR
+
+#end
+
+#*
+	Set up the Java environment.  This includes setting
+	JAVA_HOME in the environment and finding the path to
+	the Java executable.
+*#
+#macro( Java )
+#Setup the version of Java to use
+if [ "X$JRE_DIR" != "X" ] && [ -e $JRE_DIR ]
+then
+    export JAVA_HOME=$JRE_DIR
+elif [ "X$JDK_DIR" != "X" ] && [ -e $JDK_DIR ]
+then
+    export JAVA_HOME=$JDK_DIR
+elif [ "X$JAVA_HOME" = "X" ] || [ ! -e $JAVA_HOME ]
+then
+    echo "Either JAVA_HOME, JRE_DIR, or JDK_DIR needs to be set to a valid Java installation."
+    exit 1
+fi
+
+export GDS_JAVA_OPTS="$GDS_JAVA_OPTS -Djava.io.tmpdir=$CHILL_TMP_DIR"
+
+JAVA_CMD="$JAVA_HOME/bin/java"
+export JAVA_CMD
+#end
+
+#*
+	Set up the Python environment.
+*#
+#macro( Python )
+#* Remove Python 2.6 references. Use Python 2.7 *#
+
+#* point to 64 bit Python 2.7 if it
+exists in kickstart location, otherwise use python on PATH *#
+
+if [ ! -f ${PYTHON_CMD} ]
+then
+    PYTHON_CMD=python3
+fi
+#end
+
+
+#*
+Set up the Perl environment.
+*#
+#macro( Perl )
+#*
+This now doesn't do anything, since
+PERL_CMD is set in separate script
+*#
+#end
+
+#*
+	Set up SWT for Java GUI apps.  Including setting up the SWT_LIB
+	environment and the CLASSPATH.
+
+	@param headless Set "true" if AWT headless should be set to
+	true or false otherwise.
+*#
+#macro( SWT $headless)
+#Setup any SWT-related parameters
+if [ "$OS_UNAME" = "Darwin" ] ; then
+    DARWIN_SWT_OPTS="-Djava.awt.headless=$headless -XstartOnFirstThread"
+fi
+
+SWT_LIB=$CHILL_GDS/tps/lib/swt/$SWT_UNAME
+CLASSPATH=${CLASSPATH}:$SWT_LIB/swt.jar
+#* removed LD_LIBRARY_PATH, which was specified
+set a specific location for old gtk version. Expecting environment to have linker
+search paths configured to find shared libraries needed by SWT. *#
+#end
+
+#*
+	Construct the base Java CLASSPATH by adding the normal MPCS
+	jars to the CLASSPATH plus add all the necessary TPS.
+
+ @param tpsLibraries An array of strings containing the names of all
+ the TPS libraries to include.
+*#
+#macro( constructClasspath $tpsLibraries )
+
+#Construct the Java classpath
+for i in $CHILL_GDS/lib/*.jar \
+$CHILL_GDS/tps/lib/commons_codec/*.jar \
+$CHILL_GDS/tps/config/*.properties \
+$CHILL_GDS/tps/lib/aspectjrt/aspectjrt.jar \
+$CHILL_GDS/tps/lib/guava/guava.jar \
+$CHILL_GDS/lib/${CHILL_MISSION}/*.jar #foreach( $lib in $tpsLibraries ) \
+$CHILL_GDS/tps/lib/$lib/*.jar#end
+
+do
+    CLASSPATH=${CLASSPATH}:${i}
+done
+export CLASSPATH
+#end
+
+
+#*
+    Macro to parse config file hierarchy
+*#
+#macro( parseLog4jConfigFile $CONFIG_FILE )
+# User override configuration dir through GDS_JAVA_OPTS
+## User override for logging component file not enabled
+LOG_DIRECTORIES=""
+echo $GDS_JAVA_OPTS | grep -q -e "-DGdsUserConfigDir="
+if [ $? = 0 ] ; then
+    GDS_USER_CONFIG_DIR=`echo $GDS_JAVA_OPTS | sed 's/.*-DGdsUserConfigDir=//' | sed 's/ *.-D.*//'`
+    if [ -f ${GDS_USER_CONFIG_DIR}/$CONFIG_FILE ] ; then
+        if [ "X$LOG4J_CONFIG_PROPERTY" = "X" ]
+        then
+            LOG4J_CONFIG_PROPERTY=$GDS_USER_CONFIG_DIR/$CONFIG_FILE
+        else
+            LOG4J_CONFIG_PROPERTY=$LOG4J_CONFIG_PROPERTY,$GDS_USER_CONFIG_DIR/$CONFIG_FILE
+        fi
+    fi
+else
+    # Check User home directory, no value found for GdsUserConfigDir
+    if [ "X$HOME/CHILL/$CONFIG_FILE" != "X" ] && [ -f "$HOME/CHILL/$CONFIG_FILE" ]
+    then
+        if [ "X$LOG4J_CONFIG_PROPERTY" = "X" ]
+        then
+            LOG4J_CONFIG_PROPERTY=$HOME/CHILL/$CONFIG_FILE
+        else
+            LOG4J_CONFIG_PROPERTY=$HOME/CHILL/$CONFIG_FILE,$LOG4J_CONFIG_PROPERTY
+        fi
+    fi
+fi
+
+# Check mission directory for Log4J config
+if [ "X$CHILL_GDS/config/${CHILL_MISSION}/$CONFIG_FILE" != "X" ] && [ -f "$CHILL_GDS/config/${CHILL_MISSION}/$CONFIG_FILE" ]
+then
+    if [ "X$LOG4J_CONFIG_PROPERTY" = "X" ]
+    then
+        LOG4J_CONFIG_PROPERTY=$CHILL_GDS/config/${CHILL_MISSION}/$CONFIG_FILE
+        LOG_DIRECTORIES=$CHILL_GDS/config/${CHILL_MISSION}/
+    else
+        LOG4J_CONFIG_PROPERTY=$CHILL_GDS/config/${CHILL_MISSION}/$CONFIG_FILE,$LOG4J_CONFIG_PROPERTY
+        LOG_DIRECTORIES=$CHILL_GDS/config/${CHILL_MISSION}/:$LOG_DIRECTORIES
+    fi
+fi
+
+# Check system directory for Log4J config
+if [ "X$CHILL_GDS/config/$CONFIG_FILE" != "X" ] && [ -f "$CHILL_GDS/config/$CONFIG_FILE" ]
+then
+    if [ "X$LOG4J_CONFIG_PROPERTY" = "X" ]
+    then
+        LOG4J_CONFIG_PROPERTY=$CHILL_GDS/config/$CONFIG_FILE
+        LOG_DIRECTORIES=$CHILL_GDS/config/
+    else
+        LOG4J_CONFIG_PROPERTY=$CHILL_GDS/config/$CONFIG_FILE,$LOG4J_CONFIG_PROPERTY
+        LOG_DIRECTORIES=$CHILL_GDS/config/:$LOG_DIRECTORIES
+    fi
+fi
+#end
+
+#*
+    For apps that use logging, add the necessary CLASSPATH entries
+    and set the necessary environment settings
+*#
+#macro( constructLog4j2Classpath $OPTIONAL_CONFIG_FILE )
+
+LOG4J_CONFIG_FILE="log4j2.xml"
+LOG4J_MYSQL_FILE="log4j2-mysql.xml"
+LOG4J_COMPONENT_FILE="log4j2.component.properties"
+LOG4J_CONFIG_PROPERTY=""
+LOG4J_COMPONENT_PATH=""
+
+## Use macro to parse path for logging component file that is added on the classpath.
+## Users can set logging performance properties in the component file
+#parseLog4jConfigFile($LOG4J_COMPONENT_FILE)
+LOG4J_COMPONENT_PATH=$LOG_DIRECTORIES
+LOG4J_CONFIG_PROPERTY=""  ## Reset LOG4J_CONFIG_PROPERTY property after.
+
+## Now use macro to hierarchically load log4j2 config files
+if [ "$OPTIONAL_CONFIG_FILE" != "" ]
+then
+    #parseLog4jConfigFile($OPTIONAL_CONFIG_FILE)
+fi
+#parseLog4jConfigFile($LOG4J_MYSQL_FILE)
+#parseLog4jConfigFile($LOG4J_CONFIG_FILE)
+
+# Exit if there was no Log4J config file
+if [ "X$LOG4J_CONFIG_PROPERTY" = "X" ]
+then
+    exit "Unable to load Log4j2 configuration file at $CHILL_GDS/config/${CHILL_MISSION}, $CHILL_GDS/config or $HOME/CHILL" 1
+else
+    #set ($log4jLibraries= ["slf4j_api", "jcl_over_slf4j", "jul_to_slf4j", "log4j_slf4j_impl", "log4j_core", "log4j_api", "log4j_1.2_api", "disruptor", "spring_context", "spring_beans", "spring_core"])
+
+    for i in #foreach( $lib in $log4jLibraries ) $CHILL_GDS/tps/lib/$lib/*.jar$#end
+
+    do
+        CLASSPATH=${CLASSPATH}:${i}
+    done
+
+    if [ "X$LOG4J_COMPONENT_PATH" != "X" ]
+    then
+        CLASSPATH=$CLASSPATH:$LOG4J_COMPONENT_PATH
+    fi
+
+    export CLASSPATH
+
+    ## A csv list of log4j2 configuration files are added to the log4j2.configurationFile property
+    ## -Dlog4j.configurationFile									| Setup log4j2 configuration files (csv list)
+    ## -Dorg.jboss.logging.provider=slf4j							| Setup the jboss logging to use slf4j
+    ## -Dcom.mchange.v2.log.MLog=com.mchange.v2.log.slf4j.Slf4jMLog | Setup hibernate logging to use slf4j
+    ## -Dlog4j.shutdownHookEnabled									| Disables the log4j2 shutdown hook in favor of ours
+
+	## Override ActiveMQ log4j with empty file
+	## -Dlog4j.configuration=file:$CHILL_GDS/tps/config/log4j.properties | Setup ActiveMQ log4j (1.2) log with empty file
+    LOG4J_JAVA_OPTS="-Dlog4j.configurationFile=$LOG4J_CONFIG_PROPERTY -Dorg.jboss.logging.provider=slf4j -Dcom.mchange.v2.log.MLog=com.mchange.v2.log.slf4j.Slf4jMLog -Dlog4j.shutdownHookEnabled=false"
+	export LOG4J_JAVA_OPTS="$LOG4J_JAVA_OPTS -Dlog4j.configuration=file:$CHILL_GDS/tps/config/log4j.properties"
+fi
+
+#end
+
+#*
+	Construct the base Python PYTHONPATH by adding the normal MPCS
+	Python libraries to the PYTHONPATH plus all the necessary TPS.
+
+	@param tpsLibraries An array of strings containing the names of
+	all the TPS libraries to include.
+    @param includeInternal "true" if mpcsutil.internal package should
+    be included, "false" otherwise.
+*#
+#macro( constructPythonpath $tpsLibraries $includeInternal)
+
+#Construct the PYTHONPATH
+
+#*  Removing use of eggs.  For
+   R7.0, the decision has been made to rely on the site-packages
+   on the kickstart environment.  OS X will also have to rely on
+   global installs, which are not set explicitly in either case.
+*#
+#the order matters, we don't want the PYTHONPATH from the user's environment to overwrite what we need to include in the PYTHONPATH
+#* Moved PYTHONPATH site-package additions to external ampcs_env.sh script*#
+
+#if ($includeInternal == 'true')
+PYTHONPATH=$CHILL_GDS/lib/python:$CHILL_GDS/lib/python/mpcsutil/internal:${PYTHONPATH}
+#else
+PYTHONPATH=$CHILL_GDS/lib/python:${PYTHONPATH}
+#end
+
+export PYTHONPATH
+#end
+
+#*
+Construct the base Perl PERL5LIB path by adding the normal MPCS
+	Perl libraries to the PERL5LIB plus all the necessary TPS.
+
+	@param tpsLibraries An array of strings containing the names of
+	all the TPS libraries to include.
+*#
+#macro( constructPerlPath $tpsLibraries )
+#Construct the PERL path
+for i in $CHILL_GDS/lib/*.pm \
+$CHILL_GDS/lib/${CHILL_MISSION}/*.pm #foreach( $lib in $tpsLibraries ) \
+$CHILL_GDS/tps/lib/$lib \
+$CHILL_GDS/tps/lib/$lib/*$OS_UNAME.pm#end
+
+do
+    PERL5LIB=${i}:${PERL5LIB}
+done
+PERL5LIB=$CHILL_GDS/lib/perl:${PERL5LIB}
+export PERL5LIB
+#*  removed LD_LIBRARY_PATH,
+no longer supporting Perl scripts with NCF package which needed it *#
+
+#end
+
+
+#macro(addTctClasspath)
+#* TCT (time correlation tool) is
+    provided by a CNES subcontractor, only needed for SEIS and APSS
+    APIDs on the NSYT project.
+   NB: For TCT, the paths go in FRONT (don't know why)
+*#
+if test "X${TCT_HOME}" != "X"
+then
+    for i in "${TCT_HOME}"/lib/time-correlation*.jar "${TCT_HOME}"/lib/commons-math*.jar "${TCT_HOME}/conf"
+    do
+        CLASSPATH=${i}:${CLASSPATH}
+    done
+fi
+#end
+
+
+#*
+	For apps that use JMS, add the necessary Java CLASSPATH
+	entries and set the necessary environment settings.
+*#
+#macro(addJmsClasspath)
+# Add the appropriate JMS libraries to classpath
+
+if test "X$CHILL_JMS" = "X"
+then
+    CHILL_JMS=ACTIVEMQ
+else
+    CHILL_JMS=`echo $CHILL_JMS | tr a-z A-Z`
+fi
+
+
+if test "X$CHILL_JMS" != "XFIORANOMQ"
+then
+    # Use ActiveMQ libraries
+    JMS=fuse
+else
+    # Use FioranoMQ libraries
+    JMS=fiorano
+fi
+
+for i in $CHILL_GDS/tps/lib/$JMS/*.jar
+do
+    CLASSPATH=${CLASSPATH}:${i}
+done
+
+
+for i in $CHILL_GDS/tps/lib/javax.jms_api/*.jar \
+$CHILL_GDS/tps/lib/hawtbuf/*.jar \
+$CHILL_GDS/tps/lib/geronimo_j2ee_management_1.1_spec/*.jar
+do
+    CLASSPATH=${CLASSPATH}:${i}
+done
+
+#end
+
+#*
+ Added method to allow the user to supply their own copies of the DSN emulator libraries
+*#
+#macro(addDsneClasspath)
+if [ "X${DSNE_LIB}" != "X" -a -d "${DSNE_LIB}" ];
+
+then
+    for i in $DSNE_LIB/*.jar
+    do
+        CLASSPATH=${CLASSPATH}:${i}
+    done
+fi
+#end
+
+#*
+  Added macro to put icmd xml binding on classpath
+*#
+#macro(addICMDClasspath)
+if [ "X${CHILL_GDS}/lib/icmd-xml-binding-1.0.jar" != "X" ];
+then
+	export CLASSPATH=$CLASSPATH:$CHILL_GDS/lib/icmd-xml-binding-1.0.jar
+fi
+#end
+
+#*
+ Add a test (jira 4669) for an active messaging service as a pre condition to run
+*#
+#macro( verifyMessagingService )
+## $CHILL_GDS/bin/internal/chill_ping_jms "$CHILL_JMS" "$@"
+## currently, only supporting ActiveMQ; later-refactor setting $chill-jms
+
+$CHILL_GDS/bin/internal/chill_ping_jms "$@" --quiet --validatePort
+if [ $? != 0 ];
+then
+	echo "Cannot start this process: $CHILL_JMS is not active on local or remote (--jmsHost) host."
+	exit 1
+fi
+#end
+
+
+#*
+ For apps that are part of the MPCS integrated GUI.
+*#
+#macro ( integrated )
+#Establish flags for the integrated GUI
+GDS_JAVA_OPTS="-DGdsIntegrated=true $GDS_JAVA_OPTS"
+export GDS_JAVA_OPTS
+#end
+
+#*
+	For apps that make use of the Save Perspective and
+	Save Perspective As options in Java.
+*#
+#macro ( perspective )
+#Figure out the integrated GUI perspective to use
+perspective=
+jmsHost=
+jmsPort=
+databaseHost=
+databasePort=
+## autoStart option parsing for chill_web
+autoStart=
+userRole=
+loginMethod=
+## keytab/username
+keytabFile=
+username=
+## bufferedInput, support to pass it through SessionConfigurationApp to PerspectiveApp
+bufferedInput=
+## GLAD location options
+gladServerHost=
+gladSocketPort=
+gladRestPort=
+## bootstrap channel lad option
+bootstrapLad=
+bootstrapIds=
+## noGUI option parsing for chill_down_web
+noGUI=
+
+while [ $# -gt 0 ]; do
+        if [ "$1" = "--perspective" -o "$1" = "-p" ]; then
+        shift
+        perspective="--perspective $1"
+
+    	elif [ "$1" = "--jmsHost" ]; then
+    	shift
+    	jmsHost="--jmsHost $1"
+
+    	elif [ "$1" = "--jmsPort" ]; then
+    	shift
+    	jmsPort="--jmsPort $1"
+
+    	elif [ "$1" = "--autoStart" ]; then
+    	autoStart="--autoStart"
+
+    	elif [ "$1" = "--databaseHost" -o "$1" = "-j" ]; then
+    	shift
+    	databaseHost="--databaseHost $1"
+
+    	elif [ "$1" = "--databasePort" -o "$1" = "-n" ]; then
+    	shift
+    	databasePort="--databasePort $1"
+
+        elif [ "$1" = "--role" ]; then
+        shift
+        userRole="--role $1"
+
+        elif [ "$1" = "--keytabFile" ]; then
+        shift
+        keytabFile="--keytabFile $1"
+
+        elif [ "$1" = "--loginMethod" ]; then
+        shift
+        loginMethod="--loginMethod $1"
+
+        elif [ "$1" = "--username" ]; then
+        shift
+        username="--username $1"
+
+        ## set the bufferedInput variable when it's being passed through to PerspectiveApp
+        elif [ "$1" = "--bufferedInput" ]; then
+    	shift
+    	bufferedInput="--bufferedInput $1"
+
+        elif [ "$1" = "--gladServerHost" ]; then
+    	shift
+    	gladServerHost="--gladServerHost $1"
+
+        elif [ "$1" = "--gladSocketPort" ]; then
+    	shift
+    	gladSocketPort="--gladSocketPort $1"
+
+    	elif [ "$1" = "--gladRestPort" ]; then
+    	shift
+    	gladRestPort="--gladRestPort $1"
+
+    	##  bootstrap channel lad option
+	    elif [ "$1" = "--bootstrapLad" ]; then
+	    bootstrapLad="--bootstrapLad"
+
+	    elif [ "$1" = "--bootstrapIds" ]; then
+	    shift
+	    bootstrapIds="--bootstrapIds $1"
+
+        ##  noGUI option parsing for chill_down_web
+        elif [ "$1" = "--noGUI" -o "$1" = "-H" ]; then
+        noGUI="--noGUI"
+
+        fi
+        shift
+done
+
+#end
+
+#*
+    Basic help option argument parsing.
+*#
+#macro ( checkForHelpOption )
+showHelp="false"
+for var in "$@"
+do
+    if [ "$var" = "--help" -o "$var" = "-h" ]; then
+        showHelp="true"
+    fi
+done
+
+#end
+
+#macro( checkChillMission )
+
+# Set CHILL_MISSION adaptation name if not set.
+if [ "$CHILL_GDS" = "" ] ; then
+echo "Your CHILL_GDS environment variable is not set."
+exit 1
+fi
+if [ -z "${CHILL_MISSION}" ] || [ "$CHILL_MISSION" = "" ];
+then
+export CHILL_MISSION=$(cat $CHILL_GDS/dist.properties | cut -d '=' -f2)
+fi
+
+if [ -n "$CHILL_MISSION_TEMP" ] ;
+then
+export CHILL_MISSION="$CHILL_MISSION_TEMP"
+fi
+#end
+
+#*
+	Basic MySQL database script argument parsing.
+*#
+#macro ( databaseArgs )
+#Figure out the database options to use for mysql
+dbHost=
+dbPort=
+dbUser="--user mpcs"
+dbPwd=
+while [ $# -gt 0 ]; do
+    if [ $1 = --databaseHost -o $1 = -j ]; then
+        shift
+        dbHost="--host=$1"
+    fi
+    if [ $1 = --databasePort -o $1 = -n ]; then
+        shift
+        dbPort="--port=$1"
+    fi
+    if [ $1 = --dbUser ]; then
+        shift
+        dbUser="--user=$1"
+    fi
+    if [ $1 = --dbPwd ]; then
+        shift
+        dbPwd="--password=$1"
+    fi
+    shift
+done
+
+#end
+
+#*
+	The skeleton for all of our SQL-related scripts for create, destroy, etc.
+
+	@param operation The string name of the operaton for the database action that will
+	be performed (e.g. "create").
+*#
+#macro( SQLOperation $operation )
+echo "This script will $operation the MySQL ${NAME} database for the $mission MPCS installation."
+printf "Are you sure this is what you want to do? (y/n) "
+read ANSWER
+
+if [ "$ANSWER" != "y" -a "$ANSWER" != "Y" ]; then
+        echo "Terminating without performing the $operation on the MySQL ${NAME} database..."
+        exit 1
+fi
+
+echo "Performing the $operation on the ${NAME} database for $mission..."
+#end
+
+#*
+	The command for executing a Java application with a "master" app name. Used directly by chill, indirectly by others,
+    who will pass an empty name. See execJava below.
+
+	@param appName The string name of the Java app (usually matches shell script name)
+	@param appClass The actual Java (fully-qualified) class name of the app to execute
+	@param appArgs Any command line args that should always be passed to the app
+	@param headless "true" if AWT headless should be set, "false" otherwise
+	@param doExec "true" if "exec" should be used to launch the process, "false" otherwise
+	@param doLog "true" if logging should be done to a file for the app, "false" otherwise
+	@param minMem number for the min memory. (Specified in the same format as Java's -Xms and -Xmx options).
+	@param maxMem number for the max memory. (Specified in the same format as Java's -Xms and -Xmx options).
+	@param responderHelper The actual Java (fully-qualified) class name of the responder helper app
+	@param sysPropeties A list of properly formatted Java System Properties to include
+	@param includePassThruArgs "true" if all command line args should be passed through to the app, "false" otherwise
+	@param masterAppName The string name of the Java app that encapsulates this app
+*#
+#macro ( execJavaWithMaster $appName $appClass $appArgs $headless $doExec $doLog $minMem $maxMem $responderHelper $sysProperties $includePassThruArgs $masterAppName)
+
+if [ "X$CHILL_CODE_COVERAGE" = "Xtrue" ]
+then
+    COVERAGE_FILE="pid$$_${appName}.exec"
+    #echo "coverage file $COVERAGE_FILE"
+    #echo "lib: $COVERAGE_LIB"
+    GDS_JAVA_OPTS="$GDS_JAVA_OPTS -javaagent:${COVERAGE_LIB}=destfile=${COVERAGE_FILE}"
+fi
+
+#setJvmHeapVariables ( $minMem $maxMem )
+
+#Execute the Java app
+#if($doExec == "true")exec#end "$JAVA_CMD" \
+     $GDS_JAVA_OPTS \
+     $sysProperties \
+     $LOG4J_JAVA_OPTS \
+     -Djava.awt.headless=$headless \
+     -DGdsAppName=$appName \
+     -DGdsMasterAppName=$masterAppName \
+     -DGdsHelperApp=$responderHelper \
+     -Djava.library.path=$SWT_LIB:$LD_LIBRARY_PATH \
+     $DARWIN_SWT_OPTS \
+     -Dhost.name=`hostname -s` \
+     -DGdsMission=${CHILL_MISSION} \
+     -DGdsDirectory=$CHILL_GDS \
+     -DGdsPid=$$ \
+     -Dcom.sun.management.jmxremote \
+     -Djavax.xml.stream.XMLOutputFactory=com.ctc.wstx.stax.WstxOutputFactory \
+     -Djavax.xml.parsers.SAXParserFactory=com.bluecast.xml.JAXPSAXParserFactory \
+     -Xms${CHILL_MIN_HEAP_VAL} -Xmx${CHILL_MAX_HEAP_VAL} \
+     $appClass $appArgs #if($includePassThruArgs == "true") "$@" #end
+
+#end
+
+#*
+	The command for executing a Java application. Calls execJavaWithMaster with empty master.
+    Used so that the complicated macro need not be duplicated.
+
+	@param appName The string name of the Java app (usually matches shell script name)
+	@param appClass The actual Java (fully-qualified) class name of the app to execute
+	@param appArgs Any command line args that should always be passed to the app
+	@param headless "true" if AWT headless should be set, "false" otherwise
+	@param doExec "true" if "exec" should be used to launch the process, "false" otherwise
+	@param doLog "true" if logging should be done to a file for the app, "false" otherwise
+	@param minMem number for the min memory. (Specified in the same format as Java's -Xms and -Xmx options).
+	@param maxMem number for the max memory. (Specified in the same format as Java's -Xms and -Xmx options).
+	@param responderHelper The actual Java (fully-qualified) class name of the responder helper app
+	@param sysProperties A list of properly formatted Java System Properties to include
+	@param includePassThruArgs "true" if all command line args should be passed through to the app, "false" otherwise
+*#
+#macro ( execJava $appName $appClass $appArgs $headless $doExec $doLog $minMem $maxMem $responderHelper $sysProperties $includePassThruArgs)
+
+#set ( $masterAppName = "" )
+
+#execJavaWithMaster ( $appName $appClass $appArgs $headless $doExec $doLog $minMem $maxMem $responderHelper $sysProperties $includePassThruArgs $masterAppName )
+
+#end
+
+#*
+	The command for executing a Python application
+
+	@param scriptName The name of the Python script to execute (relative to the PYTHONPATH)
+	@param excludeSite "true" if Python should ignore site-installed libraries, "false" otherwise
+*#
+#macro ( execPython $scriptName $excludeSite)
+exec $PYTHON_CMD #if($excludeSite == "true")-S#end $CHILL_GDS/$scriptName "$@"
+#end
+
+#*
+		The command for executing a Perl application.
+
+		@param scriptName The name of the Perl script to execute (relative to the PERL5LIB)
+*#
+#macro ( execPerl $scriptName)
+exec $PERL_CMD $CHILL_GDS/$scriptName "$@"
+#end
+
+
+#*
+    For apps that use CSS, add the necessary Java CLASSPATH
+    entries. Note that we specify the log4j from our own directory,
+    but ONLY if CSS is present.
+*#
+#macro(addCssClasspath)
+
+# Add the appropriate CSS libraries and log4j to classpath
+
+CSS_DIR=/ammos/css/lib
+CLASSPATH=${CLASSPATH}:$CSS_DIR
+for i in $CSS_DIR/*.jar
+do
+    CLASSPATH=${CLASSPATH}:${i}
+done
+
+#end
+
+#*
+	The command for executing a Java application as a single process.
+
+	@param appName The string name of the Java app (usually matches shell script name)
+	@param appClass The actual Java (fully-qualified) class name of the app to execute
+	@param appArgs Any command line args that should always be passed to the app
+	@param headless "true" if AWT headless should be set, "false" otherwise
+	@param doExec "true" if "exec" should be used to launch the process, "false" otherwise
+	@param doLog "true" if logging should be done to a file for the app, "false" otherwise
+	@param minMem number for the min memory. (Specified in the same format as Java's -Xms and -Xmx options).
+	@param maxMem number for the max memory. (Specified in the same format as Java's -Xms and -Xmx options).
+	@param responderHelper The actual Java (fully-qualified) class name of the responder helper app
+	@param sysProperties A list of properly formatted Java System Properties to include
+	@param includePassThruArgs "true" if all command line args should be passed through to the app, "false" otherwise
+*#
+#macro ( execJavaSimple $appName $appClass $appArgs $headless $doExec $doLog $minMem $maxMem $responderHelper $sysProperties $includePassThruArgs )
+
+if [ "X$CHILL_CODE_COVERAGE" = "Xtrue" ]
+then
+    COVERAGE_FILE="pid$$_${appName}.exec"
+    #echo "coverage file $COVERAGE_FILE"
+    #echo "lib: $COVERAGE_LIB"
+    GDS_JAVA_OPTS="$GDS_JAVA_OPTS -javaagent:${COVERAGE_LIB}=destfile=${COVERAGE_FILE}"
+fi
+
+#setJvmHeapVariables ( $minMem $maxMem )
+
+#Execute the Java app
+#if($doExec == "true")exec #{end}"$JAVA_CMD" \
+     $GDS_JAVA_OPTS \
+     $sysProperties \
+     $LOG4J_JAVA_OPTS \
+     -Djava.awt.headless=$headless \
+     -DGdsAppName=$appName \
+     -DGdsMasterAppName= \
+     -DGdsHelperApp=$responderHelper \
+     -Djava.library.path=$SWT_LIB:$LD_LIBRARY_PATH \
+     $DARWIN_SWT_OPTS \
+     -Dhost.name=`hostname -s` \
+     -DGdsMission=${CHILL_MISSION} \
+     -DGdsDirectory=$CHILL_GDS \
+     -DGdsPid=$$ \
+     -Dcom.sun.management.jmxremote \
+     -Djavax.xml.stream.XMLOutputFactory=com.ctc.wstx.stax.WstxOutputFactory \
+     -Djavax.xml.parsers.SAXParserFactory=com.bluecast.xml.JAXPSAXParserFactory \
+     -Xms${CHILL_MIN_HEAP_VAL} -Xmx${CHILL_MAX_HEAP_VAL} \
+     $appClass $appArgs #if($includePassThruArgs == "true")"$@"#end
+
+#end
+
+#*
+    The command for executing a Java application as a single process. uplink edition
+
+    @param appName The string name of the Java app (usually matches shell script name)
+    @param appClass The actual Java (fully-qualified) class name of the app to execute
+    @param appArgs Any command line args that should always be passed to the app
+    @param headless "true" if AWT headless should be set, "false" otherwise
+    @param doExec "true" if "exec" should be used to launch the process, "false" otherwise
+    @param doLog "true" if logging should be done to a file for the app, "false" otherwise
+    @param minMem number for the min memory. (Specified in the same format as Java's -Xms and -Xmx options).
+    @param maxMem number for the max memory. (Specified in the same format as Java's -Xms and -Xmx options).
+    @param responderHelper The actual Java (fully-qualified) class name of the responder helper app
+    @param sysProperties A list of properly formatted Java System Properties to include
+    @param includePassThruArgs "true" if all command line args should be passed through to the app, "false" otherwise
+*#
+
+
+#*
+	The command for executing a Java application as a single process and setting the
+	GC as well as the defining the exact min and max memory.
+
+	@param appName The string name of the Java app (usually matches shell script name)
+	@param appClass The actual Java (fully-qualified) class name of the app to execute
+	@param appArgs Any command line args that should always be passed to the app
+	@param headless "true" if AWT headless should be set, "false" otherwise
+	@param doExec "true" if "exec" should be used to launch the process, "false" otherwise
+	@param doLog "true" if logging should be done to a file for the app, "false" otherwise
+	@param useG1GC "true" if the GC1 garbage collector should be used.
+	@param minMem number for the min memory. (Specified in the same format as Java's -Xms and -Xmx options).
+	@param maxMem number for the max memory. (Specified in the same format as Java's -Xms and -Xmx options).
+	@param responderHelper The actual Java (fully-qualified) class name of the responder helper app
+	@param sysProperties A list of properly formatted Java System Properties to include
+	@param includePassThruArgs "true" if all command line args should be passed through to the app, "false" otherwise
+*#
+#macro ( execJavaSimpleMemory $appName $appClass $appArgs $headless $doExec $doLog $useG1GC $minMem $maxMem $responderHelper $sysProperties $includePassThruArgs )
+
+if [ "X$CHILL_CODE_COVERAGE" = "Xtrue" ]
+then
+    COVERAGE_FILE="pid$$_${appName}.exec"
+    #echo "coverage file $COVERAGE_FILE"
+    #echo "lib: $COVERAGE_LIB"
+    GDS_JAVA_OPTS="$GDS_JAVA_OPTS -javaagent:${COVERAGE_LIB}=destfile=${COVERAGE_FILE}"
+fi
+
+#setJvmHeapVariables ( $minMem $maxMem )
+
+#Execute the Java app
+#if($doExec == "true")exec #{end}"$JAVA_CMD" \
+     $GDS_JAVA_OPTS \
+     $LOG4J_JAVA_OPTS \
+     $sysProperties \
+     #if($useG1GC == "true")-XX:+UseG1GC#end \
+     -Djava.awt.headless=$headless \
+     -DGdsAppName=$appName \
+     -DGdsMasterAppName= \
+     -DGdsHelperApp=$responderHelper \
+     -Djava.library.path=$SWT_LIB:$LD_LIBRARY_PATH \
+     $DARWIN_SWT_OPTS \
+     -Dhost.name=`hostname -s` \
+     -DGdsMission=${CHILL_MISSION} \
+     -DGdsDirectory=$CHILL_GDS \
+     -DGdsPid=$$ \
+     -Dcom.sun.management.jmxremote \
+     -Djavax.xml.stream.XMLOutputFactory=com.ctc.wstx.stax.WstxOutputFactory \
+     -Djavax.xml.parsers.SAXParserFactory=com.bluecast.xml.JAXPSAXParserFactory \
+     -Xms${CHILL_MIN_HEAP_VAL} -Xmx${CHILL_MAX_HEAP_VAL} \
+     $appClass $appArgs #if($includePassThruArgs == "true")"$@"#end
+
+#end
+
+
+#*
+	The command for executing a java -jar and setting the
+	GC as well as the defining the exact min and max memory.
+
+	@param appName The string name of the Java app (usually matches shell script name)
+	@param jarName The actual Java (fully-qualified) jar name.  Should have CHILL_GDS in it.
+	@param appArgs Any command line args that should always be passed to the app
+	@param headless "true" if AWT headless should be set, "false" otherwise
+	@param doExec "true" if "exec" should be used to launch the process, "false" otherwise
+	@param doLog "true" if logging should be done to a file for the app, "false" otherwise
+	@param useG1GC "true" if the GC1 garbage collector should be used.
+	@param minMem number for the min memory. (Specified in the same format as Java's -Xms and -Xmx options).
+	@param maxMem number for the max memory. (Specified in the same format as Java's -Xms and -Xmx options).
+	@param responderHelper The actual Java (fully-qualified) class name of the responder helper app
+	@param sysProperties A list of properly formatted Java System Properties to include
+	@param includePassThruArgs "true" if all command line args should be passed through to the app, "false" otherwise
+*#
+#macro ( execJavaJar $appName $jarName $appArgs $headless $doExec $doLog $useG1GC $minMem $maxMem $responderHelper $sysProperties $includePassThruArgs )
+
+#setJvmHeapVariables ( $minMem $maxMem )
+
+#Execute the Java app
+#if($doExec == "true")exec #{end}"$JAVA_CMD" \
+     $GDS_JAVA_OPTS \
+     $sysProperties \
+     $LOG4J_JAVA_OPTS \
+     #if($useG1GC == "true")-XX:+UseG1GC#end \
+     -Djava.awt.headless=$headless \
+     -DGdsAppName=$appName \
+     -DGdsMasterAppName= \
+     -DGdsHelperApp=$responderHelper \
+     -Djava.library.path=$SWT_LIB:$LD_LIBRARY_PATH \
+     $DARWIN_SWT_OPTS \
+     -Dhost.name=`hostname -s` \
+     -DGdsMission=${CHILL_MISSION} \
+     -DGdsDirectory=$CHILL_GDS \
+     -DGdsPid=$$ \
+     -Dcom.sun.management.jmxremote \
+     -Djavax.xml.parsers.SAXParserFactory=com.bluecast.xml.JAXPSAXParserFactory \
+     -Xms${CHILL_MIN_HEAP_VAL} -Xmx${CHILL_MAX_HEAP_VAL} \
+     -jar $jarName $appArgs #if($includePassThruArgs == "true")"$@"#end
+
+#end
+
+
+#*
+	Sets up the JAVA_OPTS with all the required values.  This is used to deploy
+	and start up a service with Tomcat. Sets GC as well as the defining the exact min and max memory.
+	Added new macro set up the JAVA_OPTS variable.  This is
+	needed when deploying to an instance of Tomcat."
+
+	@param appName The string name of the Java app (usually matches shell script name)
+	@param headless "true" if AWT headless should be set, "false" otherwise
+	@param useG1GC "true" if the GC1 garbage collector should be used.
+	@param minMem number for the min memory. (Specified in the same format as Java's -Xms and -Xmx options).
+	@param maxMem number for the max memory. (Specified in the same format as Java's -Xms and -Xmx options).
+	@param responderHelper The actual Java (fully-qualified) class name of the responder helper app
+	@param sysProperties A list of properly formatted Java System Properties to include
+*#
+#macro ( setJavaOptsTomcat $appName $headless $useG1GC $minMem $maxMem $responderHelper $sysProperties )
+
+#setJvmHeapVariables ( $minMem $maxMem )
+
+#Execute the Java app
+export JAVA_OPTS=" \
+     $GDS_JAVA_OPTS \
+     $sysProperties \
+     $LOG4J_JAVA_OPTS \
+     #if($useG1GC == "true")-XX:+UseG1GC#end \
+     -Djava.awt.headless=$headless \
+     -DGdsAppName=$appName \
+     -DGdsMasterAppName= \
+     -DGdsHelperApp=$responderHelper \
+     -Djava.library.path=$SWT_LIB:$LD_LIBRARY_PATH \
+     $DARWIN_SWT_OPTS \
+     -Dhost.name=`hostname -s` \
+     -DGdsMission=${CHILL_MISSION} \
+     -DGdsDirectory=$CHILL_GDS \
+     -DGdsPid=$$ \
+     -Dcom.sun.management.jmxremote \
+     -Xms${CHILL_MIN_HEAP_VAL} -Xmx${CHILL_MAX_HEAP_VAL}"
+
+#end
+
+
+#*
+	For apps that use Spring context, add the necessary Java CLASSPATH
+	entries and set the necessary environment settings.
+*#
+#macro(addSpringClasspath)
+
+# Add the appropriate Spring boot libraries to classpath
+#set ($springLibraries= ["disruptor","spring_aop","spring_beans","spring_boot","spring_boot_autoconfigure","spring_boot_starter","spring_boot_starter_validation","spring_boot_starter_web","spring_bridge","spring_context","spring_core","spring_expression","spring_web","spring_websocket","spring_webmvc"])
+
+
+for i in #foreach( $lib in $springLibraries ) $CHILL_GDS/tps/lib/$lib/*.jar$#end
+
+do
+    CLASSPATH=${CLASSPATH}:${i}
+done
+export CLASSPATH
+
+#end
+
+#*
+	For apps that use Spring Boot, add the necessary Java CLASSPATH
+	entries and set the necessary environment settings.
+*#
+#macro(addSpringBootClasspath)
+
+# Add the appropriate Spring boot libraries to classpath
+
+#set ($springLibraries= ["spring_webmvc","spring_boot_actuator","spring_boot_actuator_autoconfigure"])
+
+for i in #foreach( $lib in $springLibraries ) $CHILL_GDS/tps/lib/$lib/*.jar$#end
+
+do
+    CLASSPATH=${CLASSPATH}:${i}
+done
+export CLASSPATH
+
+#end
+
+#*
+	For apps that use Spring Boot, and need Actuator, add the necessary Java CLASSPATH
+	entries and set the necessary environment settings.
+	This separate entry is only used for the GLAD as of 2021-03-16.
+*#
+#macro(addSpringBootActuatorClasspath)
+
+# Add the appropriate Spring boot libraries to classpath
+
+    #set ($springActuatorLibraries= ["micrometer_core","spring_boot_starter_actuator","LatencyUtils","HdrHistogram"])
+
+for i in #foreach( $lib in $springActuatorLibraries ) $CHILL_GDS/tps/lib/$lib/*.jar$#end
+
+do
+CLASSPATH=${CLASSPATH}:${i}
+done
+export CLASSPATH
+
+#end
+
+#*
+	For apps that use Swagger2, add the necessary Java CLASSPATH
+	entries and set the necessary environment settings.
+*#
+#macro(addSwagger2Classpath)
+
+# Add the appropriate SpringFox / Swagger2 libraries to classpath
+
+#set ($swagger2Libraries= ["springfox_core","springfox_schema","springfox_spi","springfox_spring_web","springfox_swagger2","springfox_swagger_common","springfox_swagger_ui","spring_plugin_core","spring_plugin_metadata","swagger_annotations","swagger_models","swagger_jaxrs", "guava"])
+
+for i in #foreach( $lib in $swagger2Libraries ) $CHILL_GDS/tps/lib/$lib/*.jar$#end
+
+do
+    CLASSPATH=${CLASSPATH}:${i}
+done
+export CLASSPATH
+
+#end
+
+#*
+	For RESTful client apps that use Swagger2, add the necessary Java CLASSPATH
+	entries and set the necessary environment settings.
+*#
+#macro(addSwagger2ClientClasspath)
+
+# Add the appropriate libraries to classpath
+
+#set ($swagger2ClientLibraries= ["okhttp", "okio", "joda_time"])
+
+for i in #foreach( $lib in $swagger2ClientLibraries ) $CHILL_GDS/tps/lib/$lib/*.jar$#end
+
+do
+    CLASSPATH=${CLASSPATH}:${i}
+done
+export CLASSPATH
+
+#end
+
+#*
+    For apps that need a secure classloader (only chill_down, for now),
+    add the security manager invocation to the command line.
+*#
+#macro(addSecurityManager)
+
+export GDS_JAVA_OPTS="-Djava.security.manager=jpl.gds.security.security_manager.AMPCSSecurityManager $GDS_JAVA_OPTS"
+
+#end
+
+
+#*
+    The command for determining what values to use for Java heap settings. Examines override environment variables.
+    @param defaultMinMem the default for the min memory. (Specified in the same format as Java's -Xms and -Xmx options).
+    @param defaultMaxMem string for the max memory
+*#
+#macro( setJvmHeapVariables $defaultMinMem $defaultMaxMem )
+
+
+CHILL_MIN_HEAP_VAL=$defaultMinMem
+
+if [ "X$CHILL_MIN_HEAP_$appName" != "X" ]
+then
+CHILL_MIN_HEAP_VAL="$CHILL_MIN_HEAP_$appName"
+fi
+
+CHILL_MAX_HEAP_VAL=$defaultMaxMem
+
+if [ "X$CHILL_MAX_HEAP_$appName" != "X" ]
+then
+CHILL_MAX_HEAP_VAL="$CHILL_MAX_HEAP_$appName"
+fi
+#end
+
+#macro(addCtsClasspath)
+export CLASSPATH=$CLASSPATH:/ammos/cts/lib/java/UplinkUtils.jar
+#end

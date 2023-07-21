@@ -1,0 +1,67 @@
+------------------------------
+Channel Definition: $channelDef.getId()
+------------------------------
+#if($channelDef.getTitle())
+Title = $channelDef.getTitle()
+#end
+#if($channelDef.getFswName())
+FSW Name = $channelDef.getFswName()
+#end
+#if($channelDef.getOpsCategory())
+Operational Category = $channelDef.getOpsCategory()
+#end
+#if($channelDef.getFswModule())
+FSW Module = $channelDef.getFswModule()
+#end
+#if($channelDef.getSubsystem())
+Subsystem = $channelDef.getSubsystem()
+#end
+#if($channelDef.getDescription())
+Description = $channelDef.getDescription()
+#end
+#if($channelDef.getMaturity())
+Maturity = $channelDef.getMaturity()
+#end
+Data Type = $channelDef.getChannelType()
+Length in Bits = $channelDef.getSize()
+#if ($channelDef.getDNFormat())
+Default DN/Raw Formatter = $channelDef.getDNFormat()
+#end
+#if ($channelDef.getDNUnits())
+DN Units = $channelDef.getDNUnits()
+#end
+#if($channelDef.hasEu())
+#if ($channelDef.getEUFormat())
+Default EU/Value Formatter = $channelDef.getEUFormat()
+#end
+#if($channelDef.getEUUnits())
+EU Units = $channelDef.getEUUnits()
+#end
+EU Calculator: $channelDef.getDnToEu()
+#end
+#if ($channelDef.getStateTable())
+
+Enumeration:
+------------------------------------------------
+$channelDef.getStateTable()
+#end
+#if($channelDef.isDerived())
+
+Derivation:
+------------------------------------------------
+Type = $channelDef.getDerivationType()
+#if($bitUnpack)
+$bitUnpack
+#end
+#if($algoDerivation)
+$algoDerivation
+#end
+#end
+#if($alarms)
+
+Alarms 
+------------------------------------------------
+#foreach($alarm in $alarms)
+    $alarm
+#end
+#end    

@@ -1,0 +1,1 @@
+LOG #if($eventTime)$eventTime#else No Time#end #if($severity)$severity:#else Unknown:#end #if($type) ($type) #end#if($message)$message #else No message#end

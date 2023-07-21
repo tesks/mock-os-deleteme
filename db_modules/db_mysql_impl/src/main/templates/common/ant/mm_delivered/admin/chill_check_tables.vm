@@ -1,0 +1,202 @@
+#set ( $shellName = "sh" )
+#shell( $shellName )
+
+# MPCS-11809 - Set CHILL_MISSION
+#checkChillMission()
+
+PID="$$"
+LOGFILE="/tmp/chill_check_tables_${PID}.log"
+
+echo >$LOGFILE
+
+trap "rm -f $LOGFILE" 0 1 2 3 15
+
+# DBNAMES is quoted with blanks separating items
+# DBTABLES is quoted with blanks or commas separating items
+
+# Default is the default database for this mission
+DBNAMES=${CHILL_MISSION}$dbName
+
+# Default is all tables for each database
+DBTABLES=
+
+# Default is a quick check, but not the quickest
+MODE=FAST
+
+# Passed to mysql
+OTHERPARAMS=
+
+HELP=no
+
+while test $# -gt 0
+do
+    if test $1 = "--table" -o $1 = "--tables"
+    then
+        shift
+        DBTABLES="$1"
+        shift
+    elif test $1 = "--mode"
+    then
+        shift
+        MODE="$1"
+        shift
+    elif test $1 = "--db"
+    then
+        shift
+        DBNAMES="$1"
+        shift
+    elif test $1 = "--help" -o $1 = "-h"
+    then
+        HELP=yes
+        shift
+    else
+        OTHERPARAMS="${OTHERPARAMS} $1"
+        shift
+    fi
+done
+
+DQ='"'
+
+if test "X$HELP" = "Xyes"
+then
+    echo
+    echo "$0"
+    echo "[--db <Quoted blank-separated list of databases or ${DQ}all${DQ}>]"
+    echo "[--table <Quoted blank-separated list of tables>]"
+    echo "[--mode <One of QUICK, FAST, MEDIUM, EXTENDED, CHANGED, ${DQ}FOR UPGRADE${DQ}>]"
+    echo "[--help or -h for help]"
+    echo
+    echo "Database defaults to default database for mission."
+    echo "Table defaults to all tables for each database."
+    echo "Mode defaults to FAST."
+    echo
+    echo "Other options are passed to MySQL."
+    echo
+    exit 2
+fi
+
+MODE=`echo $MODE | tr [:lower:] [:upper:]`
+
+case $MODE in
+    "FOR UPGRADE" | QUICK | FAST | MEDIUM | EXTENDED | CHANGED )
+        : ;;
+    *)
+        echo "Illegal mode: $MODE" 1>&2
+        exit 1 ;;
+esac
+
+CORRUPT=no # start by assuming no corruption
+
+echo "chill_check_tables: $DBTABLES $MODE"
+date
+echo "---------------------------------------------------------"
+echo
+echo
+
+# Get our list of databases to check...
+
+if test "X$DBNAMES" = "Xall"
+then
+    DBNAMES="`mysql $CHILL_MYSQL_OPTIONS $OTHERPARAMS --batch --skip-column-names --execute="show databases"`"
+fi
+
+if test "X$DBNAMES" = "X"
+then
+    echo "No database specified" 1>&2
+
+    exit 1
+fi
+
+
+# Run through each database and execute our CHECK TABLE command for all tables
+# in a single pass.
+
+STATUS=0
+
+for i in $DBNAMES
+do
+    if test "X$i" = "Xinformation_schema" \
+         -o "X$i" = "Xmysql" \
+         -o "X$i" = "Xperformance_schema"
+    then
+        continue
+    fi
+
+    # echo the database we are working on
+
+    echo "Database being checked:"
+
+    mysql $CHILL_MYSQL_OPTIONS $OTHERPARAMS --batch --table --skip-column-names --execute="SHOW DATABASES LIKE '$i'"
+
+    echo
+
+    # Check all tables in one pass, instead of a loop
+    # Use GAWK to put in comma separators, use SED to remove trailing comma
+    # Modified to only check MyISAM or InnoDB tables - eyechart
+
+    TABLES="$DBTABLES"
+
+    if test "X$TABLES" = "X"
+    then
+        TABLES="`mysql $CHILL_MYSQL_OPTIONS $OTHERPARAMS --batch --skip-column-names --execute="show table status" $i | awk 'BEGIN {ORS="," } $2 == "MyISAM" || $2 == "InnoDB"{print "\`" $1 "\`"}' | sed 's/,$//'`"
+    else
+        # Make sure supplied list of tables is comma-separated
+        TABLES=`echo $TABLES | sed "s/[ ,][ ,]*/,/g"`
+    fi
+
+    # Output in table form using --table option
+
+    if test "X$TABLES" = "X"
+    then
+        echo "NOTE: There are no tables to check in the $i database - skipping..." 1>&2
+    else
+        echo "Checking tables ${i}: $TABLES"
+        echo
+
+        mysql $CHILL_MYSQL_OPTIONS $OTHERPARAMS --batch --table --execute="CHECK TABLE $TABLES $MODE" $i >>$LOGFILE 2>&1
+
+        LSTATUS=$?
+
+        if test $LSTATUS -ne 0
+        then
+            STATUS=$LSTATUS
+            break
+        fi
+    fi
+done
+
+if test $STATUS = 0
+then
+    # Test our logfile for corruption in the database...
+
+    grep -i "warning" $LOGFILE >/dev/null 2>&1
+
+    if test $? -eq 0
+    then
+        CORRUPT=yes
+    fi
+
+    grep -i "error" $LOGFILE >/dev/null 2>&1
+
+    if test $? -eq 0
+    then
+        CORRUPT=yes
+    fi
+
+    # Send off our results...
+
+    cat $LOGFILE
+
+    if test $CORRUPT = "yes"
+    then
+        echo "chill_check_tables [ERROR FOUND] for $DBHOST-`date`"
+    else
+        echo "chill_check_tables [PASSED OK] for $DBHOST-`date`"
+    fi
+else
+    echo chill_check_tables [ERROR] problem issuing SQL CHECK TABLE command
+
+    exit 1
+fi
+
+exit 0

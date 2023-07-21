@@ -1,0 +1,37 @@
+# Defines a decom map for application to telemetry.
+# Represents an entry point for generic decommutation of some
+# telemetry object such as a packet or data product.
+# Only one decom map can be defined for such a file. See
+# GenericDecomMapCollection.rnc for defining multiple, reusable
+# decom maps in a single file.
+#
+# Copyright (c) 2016 California Institute of Technology, 
+# All Rights Reserved
+# JPL Proprietary Information
+#
+# Change Log:
+#   V4.0  07/29/16       R. Puncel - Created with version matching
+#                                    generic decom map schema.
+
+datatypes xsd = "http://www.w3.org/2001/XMLSchema-datatypes"
+
+include "GenericDecom.rnc"
+
+start = decom-telemetry-def
+
+start-attrs-def = header-def,
+    # Type of map for descriptive purposes. E.g., packet or product.
+    attribute type { "packet" | "product" },
+    attributes-def?,
+    attribute apid { xsd:nonNegativeInteger }?,
+    # Text description of the telemetry.
+    element description { xsd:string }?,
+    product-viewer-def?
+
+# Define the start of the telemetry to be decommutated.
+decom-telemetry-def = element decom_telemetry_definition {
+    start-attrs-def,
+    decom-map-tables-def?,
+    decom-map-def
+}
+

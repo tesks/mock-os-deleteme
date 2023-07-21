@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mm-emd:EarthProductMetadata xmlns:mpcs="http://dsms.jpl.nasa.gov/mpcs"
+    xmlns:mm-emd="http://dsms.jpl.nasa.gov/mpcs_mm-core_emd"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://dsms.jpl.nasa.gov/mpcs_mm-core_emd http://dsms.jpl.nasa.gov/mpcs/MM_Core_Session.xsd"
+    EmdSchemaVersion="CFDP-1">
+    
+    <mm-emd:SessionInformation>
+        <mpcs:SessionId>
+            <mpcs:Number>$sessionId</mpcs:Number>
+            <mpcs:Name>$sessionName</mpcs:Name>
+            <mpcs:FswDictionaryDir>$fswDictionaryDir</mpcs:FswDictionaryDir>
+            <mpcs:FswDictionaryVersion>$fswVersion</mpcs:FswDictionaryVersion>
+        </mpcs:SessionId>
+        <mpcs:Venue>
+            <mpcs:VenueType>$venueType</mpcs:VenueType>
+#if ($testbedName)
+            <mpcs:TestbedName>$testbedName</mpcs:TestbedName>
+#end
+            <mpcs:User>$user</mpcs:User>
+            <mpcs:Host>$host</mpcs:Host>
+        </mpcs:Venue>
+        <mpcs:OutputDirectory>$outputDir</mpcs:OutputDirectory>
+    </mm-emd:SessionInformation>
+    
+    <mm-emd:ProductMetadata>
+        <mm-emd:GroundCreationTime>$productCreationTimeStr</mm-emd:GroundCreationTime>
+        <mm-emd:Scid>$scid</mm-emd:Scid>
+        <mm-emd:Apid>$apid</mm-emd:Apid>
+        <mm-emd:ProductType>$productType</mm-emd:ProductType>
+        <mm-emd:Vcid>$vcid</mm-emd:Vcid>
+        <mm-emd:GroundStatus>$groundStatus</mm-emd:GroundStatus>
+        <mm-emd:DataFilePath>$fullPath</mm-emd:DataFilePath>
+        <mm-emd:SequenceId>$sequenceId</mm-emd:SequenceId>
+        <mm-emd:SequenceVersion>$sequenceVersion</mm-emd:SequenceVersion>
+        <mm-emd:CommandNumber>$commandNumber</mm-emd:CommandNumber>
+        <mm-emd:DvtCoarse>$dvtCoarse</mm-emd:DvtCoarse>
+        <mm-emd:DvtFine>$dvtFine</mm-emd:DvtFine>
+        <mm-emd:FirstPartSclk>$firstPartSclk</mm-emd:FirstPartSclk>
+        <mm-emd:FirstPartScet>$firstPartScet</mm-emd:FirstPartScet>
+#if($firstPartSol)
+        <mm-emd:FirstPartLst>$firstPartSol</mm-emd:FirstPartLst>
+#end       
+        <mm-emd:FirstPartErt>$firstPartErt</mm-emd:FirstPartErt>
+## Removed TotalDataParts because CFDP doesn't specify them.**
+        <mm-emd:ExpectedProductChecksum>$expectedChecksum</mm-emd:ExpectedProductChecksum>
+        <mm-emd:ActualProductChecksum>$actualChecksum</mm-emd:ActualProductChecksum>
+        <mm-emd:ExpectedProductFileSize>$expectedFileSize</mm-emd:ExpectedProductFileSize>
+        <mm-emd:ActualProductFileSize>$actualFileSize</mm-emd:ActualProductFileSize>
+        <mm-emd:CfdpTransactionSequenceNumber>$cfdpTransactionId</mm-emd:CfdpTransactionSequenceNumber>
+        ##  Removed TotalExpected attribute below because CFDP doesn't specify total number of parts.**
+        <mm-emd:PartList TotalReceived="$numReceivedParts">
+## Changed missing part list, which requires part sequence numbers, to gap offset ranges.**
+#foreach($missingRange in $missingRangeList)
+            <mm-emd:MissingRange>$missingRange</mm-emd:MissingRange>
+#end
+
+#foreach($part in $partList)
+            ##  Removed Number because CFDP doesn't specify them.**
+            <mm-emd:Part Offset="$part.getOffset()" Length="$part.getLength()">
+                <mm-emd:Sclk>$part.getSclkStr()</mm-emd:Sclk>
+                <mm-emd:Scet>$part.getScetStr()</mm-emd:Scet>
+#if($part.getSolStr())
+                <mm-emd:Lst>$part.getSolStr()</mm-emd:Lst>
+#end
+                <mm-emd:Ert>$part.getErtStr()</mm-emd:Ert>
+                <mm-emd:SourcePacketSeqCount>$part.getPktSequence()</mm-emd:SourcePacketSeqCount>
+            </mm-emd:Part>
+#end
+        </mm-emd:PartList>
+           
+    </mm-emd:ProductMetadata>
+
+</mm-emd:EarthProductMetadata>

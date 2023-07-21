@@ -1,0 +1,53 @@
+# 
+# AMPCS FswTimeCorrelationMessage RelaxNG Compact format XML specification.
+#
+# This message is published by the AMPCS downlink processor when it
+# encounters a flight time correlation packet in the telemetry stream
+# AND also is processing from a frame source as opposed to a packet source.
+# Note that more than one time correlation record/message may be published
+# in the same JMS message.
+#
+# Version: 4.0
+#
+# ChangeLog: V3.0 3/14/2013 Updated to import the new common session schema.
+# ChangeLog: V3.1 7/16/2013 Added frame encoding type and bit rate index
+# ChangeLog: V3.2 4/04/2016 corrected spelling of REED_SOLOMON per
+#            MGSS ECR-117883
+# ChangeLog: V4.0 11/28/2-17 Major updates for R8
+#
+#
+default namespace = "http://dsms.jpl.nasa.gov/mpcs"
+namespace rng = "http://relaxng.org/ns/structure/1.0"
+
+include "ContextCommon.rnc"
+include "Times.rnc"
+
+start = MPCSFswTimeCorrelationMessage-def
+
+MPCSFswTimeCorrelationMessage-def =
+    element MPCSFswTimeCorrelationMessage
+     {
+        context-def?, 
+        Message-def+ 
+    }
+    
+Message-def =
+    element FswTimeCorrelationMessage
+    {
+        attribute eventTime { time-def },
+        context-def?,
+        element packetSclk { sclk-time-def },
+        element packetErt { ert-time-def },
+        element referenceFrameFound { xsd:boolean },
+        element bitRate { xsd:double },
+        element frameVcid {xsd:nonNegativeInteger },
+        element frameVcfc { xsd:nonNegativeInteger },
+        element frameLength { xsd:double },
+        # This is the SCLK time for the LAST bit of the frame
+        element frameSclk { sclk-time-def },
+        # Frame ERT may not be present if the reference frame could not be found
+        element frameErt { ert-time-def }?,
+        element frameEncodingType { "CHECKSUM" | "BYPASS" | "ANY_TURBO" | "REED_SOLOMON" | "UNENCODED" }?,
+        element bitRateIndex {xsd:nonNegativeInteger }
+    }
+

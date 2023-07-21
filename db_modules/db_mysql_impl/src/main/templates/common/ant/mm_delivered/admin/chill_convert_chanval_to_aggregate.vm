@@ -1,0 +1,15 @@
+#set ( $shellName = "sh" )
+#shell( $shellName )
+
+#init()
+
+#Python()
+
+#set( $tpsLibraries = ["pydes"] )
+#constructPythonpath ( $tpsLibraries true )
+       
+#set ( $scriptName = "lib/python/mpcsutil/chill_chan_to_agg.py" )
+#set ( $excludeSite = "false" )
+#execPython ( $scriptName $excludeSite )
+
+ 

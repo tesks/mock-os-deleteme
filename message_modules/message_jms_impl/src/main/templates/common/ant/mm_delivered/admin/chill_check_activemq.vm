@@ -1,0 +1,46 @@
+#set ( $shellName = "sh" )
+#shell( $shellName )
+
+if [ -z "$ACTIVEMQ_HOME" ] ; then
+   ACTIVEMQ_HOME=/msop/mpcs/activemq-5.16.1
+fi
+
+jmshostname="localhost"
+
+if [ $# -gt 0 ] ; then
+   if [ $1 = '-h' -o $1 = "--help" ]; then
+      echo check_activemq [hostname]
+      exit 1
+   fi
+fi
+if [ $# -gt 0 ] ; then
+   jmshostname="$1"
+fi
+
+# This is what we want to find
+WANT=MPCS_Message_Broker
+
+tempfoo=`basename $0.XXXXXXXXXX`
+TEMP=`mktemp -t ${tempfoo}` || exit 1
+
+chmod 777 $TEMP
+
+$ACTIVEMQ_HOME/bin/activemq-admin list \
+    --jmxurl service:jmx:rmi:///jndi/rmi://$jmshostname:1098/jmxrmi \
+    >$TEMP 2>&1
+
+grep --silent $WANT $TEMP
+
+STATUS=$?
+
+if test $STATUS -eq 0
+then
+    cat $TEMP
+    echo "ActiveMQ is up"
+else
+    echo "ActiveMQ is not up. See $TEMP for details."
+fi
+
+
+
+exit $STATUS

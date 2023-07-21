@@ -1,0 +1,8 @@
+<SavePerspectiveMessage eventTime="$eventTime">
+#if ($location) 
+  <location>$location</location>
+#end 
+#if ($applicationId) 
+  <guiApplicationId>$applicationId</guiApplicationId>
+#end     
+</SavePerspectiveMessage>

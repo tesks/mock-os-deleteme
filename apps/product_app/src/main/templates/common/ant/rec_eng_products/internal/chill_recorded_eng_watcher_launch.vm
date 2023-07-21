@@ -1,0 +1,5 @@
+#set ( $shellName = "sh" )
+#shell( $shellName )
+trap "" SIGINT
+$CHILL_GDS/bin/internal/chill_recorded_eng_watcher $@
+exit

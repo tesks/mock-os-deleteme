@@ -1,0 +1,167 @@
+# AMPCS Multi-mission Application Packet Identifier (APID) dictionary schema. 
+#      
+# This schema defines a common, multi-mission format for description of 
+# telemetry Application Packet Identifiers (APIDs). The APID dictionary 
+# essentially  defines the types of application packets exchanged between 
+# flight and ground software. The APID of a packet is used for routing 
+# packets through the proper processing sequence on the ground.
+#
+# Copyright (c) 2013-2015 California Institute of Technology, All Rights Reserved
+# JPL Proprietary Information
+#
+# Change Log:
+#   V1.0   05/20/12  Original version
+#   V1.1   05/20/13  Moved into the AMPCS repository and 
+#                    standardized header format
+#   V1.2   09/18/13  Minor updates in response to DMS SIS Review
+#   V1.3  05/14/14   Added optional elements for product viewer
+#                    definition and identification of commanded product
+#                    APIDs. Made title optional. (ECR-116107)
+#   V2.0  08/05/15   Clarified comments on recorded attribute.
+#                    Marked commanded product element as deprecated. 
+#                    Added category support. Removed change log support
+#                    on the apid-definition element. Fix typo.
+#                    This is the final change for AMPCS 7.3 (MGSS ECR-117883)
+#   V2.1  05/03/16   Added secondary header element.
+#   V2.2  09/18/18   B. Borelly - Added CFDP APID format.
+#   V2.2  01/09/19   B. Borelly - Made title element required for
+#                    consistency with implementation.
+#   V2.3  07/18/19   B. Borelly - Change allowed CFDP formats to
+#                    distinquish between protocol and data.
+#
+namespace rng = "http://relaxng.org/ns/structure/1.0"
+datatypes xsd = "http://www.w3.org/2001/XMLSchema-datatypes"
+
+# Include common dictionary XML definitions
+include "CommonDictionary.rnc"
+
+# Start XML document here
+start = apid-dictionary-def
+
+# Top-level element for the APID dictionary 
+apid-dictionary-def = element apid_dictionary {
+
+    # Standard dictionary version header and general change log 
+    header-def,
+    
+    # Define 0 or more packet APIDs
+    element apids {
+        apid-def*
+    }
+}
+
+# XML element that defines a single Application Packet Identifier expected 
+# from the flight software
+apid-def = element apid_definition {
+
+    # The APID number. This is the primary identifier and must match the 
+    # APID value in packet headers. All apid numbers must be unique. 
+    # Apid 2047 is reserved for fill packets.
+    attribute apid { apid-range-def },
+    
+    # The basic format/type of data contained in packets with this APID
+    attribute format { apid-format-def },
+    
+    #
+    # Indicates whether packets with this APID contain recorded flight data.
+    # If true, data will be marked as recorded by AMPCS if (and only if) 
+    # the recorded marking strategy is BY_APID.  If attribute is false,
+    # the data will not be marked as recorded. For most flight-generated data, 
+    # this implies the data is probably real-time, but all this flag really 
+    # indicates is whether the project wants the ground system to mark data 
+    # extracted from this packet type as recorded. This attribute should be 
+    # omitted when the AMPCS recorded marking strategy is not BY_APID.
+    attribute recorded { xsd:boolean }?, 
+    
+    # The dictionary name for this apid.  Allowed characters are limited to 
+    # letters, numbers, -, or _ for ease of processing. All apid names must 
+    # be unique.
+    element name { name-def },
+    
+    # A descriptive title for this APID, used for display purposes. May be 
+    # any length, but projects are strongly advised to set a reasonable limit 
+    # for displays and maintain that limit, or at least maintain uniqueness 
+    # in the first N characters that will appear on displays.
+    #
+    # This element was listed as optional, but was
+	# not effectively in the parser. Making this agree with implementation
+    element title { xsd:token },
+    
+    # A free-form description of this APID. May be multi-line. White space 
+    # will be preserved.
+    element description { xsd:string }?,
+    
+    # Added product viewer definition.
+    #
+    # Data product viewer information, used only for DATA_PRODUCT APIDs. 
+    # If the viewer is the default AMPCS DP viewer then the viewer element 
+    # can be omitted entirely. Use of this element is confined to missions 
+    # that use their own product adaptation in AMPCS. Missions that use the 
+    # multimission product adaptation should place this element into the 
+    # data product dictionary file associated with the product APID. 
+    product-viewer-def?,
+    
+    # Added command product element.
+    # Marked as DEPRECATED.
+    #
+    # This element is DEPRECATED - Do not use in new dictionaries.
+    #
+    # Commanded product flag, used only for DATA_PRODUCT APIDs. Indicates
+    # whether a multimission data product is generated on board the spacecraft
+    # by command (true) or automatically (false). The latter have sometimes
+    # been termed "streaming" products. The default is true for data product 
+    # APIDs and false for all others. 
+    # The reason this flag is required is because commanded products packets 
+    # are created with a different secondary header than non-commanded products 
+    # by the MSAP product flight module.
+    element isCommandedProduct { xsd:boolean }?,
+    
+     # Added categories support.
+     #
+     # category names are "module", "ops category", "subsystem", ...
+     # It is possible that there are multiple ways of organizing groups of 
+     # measurements, so that there may be more than one category entry for a 
+     # measurement.
+    categories-def?,
+    
+    # Additional dictionary attributes, defined using key-value XML container. 
+    # Use this to attach additional project-specific information to this 
+    # APID definition. 
+    attributes-def?,
+    
+
+    # Add secondary header adapation point. If not
+    # specified, the default secondary header handler for the mission will be
+    # used. The content of the secondary_header element identifies the id
+    # of either a time tag or a secondary header extractor, which will then
+    # be used by AMPCS for determining secondary header contents and length.
+    # The "type" attribute tells AMPCS how to distinguish whether the ID
+    # is referencing a time tag or a custom secondary header extractor.
+    # If a packet has a secondary header flag set to 0, this element is ignored.
+    element secondary_header { 
+        attribute type { "TIME" | "CUSTOM" }?,
+        xsd:token
+    }?
+}
+
+# Allowed values for APID format:
+#
+# FILL is reserved for packets that contain data that should not be processed
+# TIME CORRELATION packets contain flight software time correlation
+# information.
+# EVR packets contain individual event records to be processed 
+# into EVR messages by the ground system.
+# PRE_CHANNELIZED indicates packets that contain telemetry channels
+# packed into a standard pre-channelized format.
+# DATA_PRODUCT packets contain science or engineering data file content,
+# spanning multiple packets.
+# DECOM_FROM_MAP packets contain telemetry channels or other engineering
+# data that must be decommutated on the ground using a specific decommutation
+# map.
+# Both CFDP_DATA and CFDP_PROTOCOL indicate packets that contain standard CFDP PDUs as the content.
+# Functionally, ground CFDP processing will not treat the two differently.
+# A dictionary owner may choose to use these to indicate when a data product dictionary should accompany the APID
+# OTHER packets contain custom data that is possibly not recognized or processable by the ground system.
+apid-format-def = "FILL" | "TIME_CORRELATION" | "EVR" | "PRE_CHANNELIZED" | 
+   "DATA_PRODUCT" | "DECOM_FROM_MAP" | "CFDP_DATA" | "CFDP_PROTOCOL" | "OTHER"
+

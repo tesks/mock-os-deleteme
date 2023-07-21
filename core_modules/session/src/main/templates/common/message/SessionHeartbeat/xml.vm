@@ -1,0 +1,5 @@
+<SessionHeartbeatMessage eventTime="$eventTime">
+  <startTime>$startTime</startTime>
+  $sessionConfiguration
+  $serviceConfiguration
+</SessionHeartbeatMessage>

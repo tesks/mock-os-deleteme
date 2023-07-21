@@ -1,0 +1,72 @@
+/**
+ * Copyright 2006-2018. California Institute of Technology.
+ * ALL RIGHTS RESERVED.
+ * U.S. Government sponsorship acknowledged.
+ *
+ * This software is subject to U. S. export control laws and
+ * regulations (22 C.F.R. 120-130 and 15 C.F.R. 730-774). To the
+ * extent that the software is subject to U.S. export control laws
+ * and regulations, the recipient has the responsibility to obtain
+ * export licenses or other export authority as may be required
+ * before exporting such information to foreign countries or
+ * providing access to foreign nationals.
+ */
+/**
+ * AMPCS common protobuf schema for context metadata primitives.
+ *
+ * Version: 1.0
+ * ChangeLog:
+ * V1.0 - New for R8
+ */
+syntax = "proto3";
+
+package metadata;
+
+option optimize_for = SPEED;
+option java_multiple_files = true;
+option java_package = "jpl.gds.serialization.primitives.metadata";
+option java_outer_classname = "ProtoMetadataMapElementSerialization";
+
+enum Proto3MetadataKey{
+    CONTEXT_ID = 0;
+    CONTEXT_FRAGMENT = 1;
+    CONTEXT_HOST = 2;
+    CONTEXT_HOST_ID = 3;
+    CONTEXT_NUMBER = 4;
+    CONTEXT_USER = 5;
+    APPLICATION_OUTPUT_DIRECTORY = 6;
+    APPLICATION_ROOT_TOPIC = 7;
+    CONFIGURED_DSSID = 8;
+    CONFIGURED_VCID = 9;
+    CREATE_TIME = 10;
+    FSW_DICTIONARY_DIR = 11;
+    FSW_DICTIONARY_VERSION = 12;
+    MESSAGE_COUNTER = 13;
+    MESSAGE_TYPE = 14;
+    MISSION_ID = 15;
+    MISSION_NAME = 16;
+    PERSPECTIVE_ID = 17;
+    SOURCE_PID = 18;
+    SPACECRAFT_ID = 19;
+    SPACECRAFT_NAME = 20;
+    SSE_DICTIONARY_DIR = 21;
+    SSE_DICTIONARY_VERSION = 22;
+    TELEMETRY_STREAM_TYPE = 23;
+    TESTBED_NAME = 24;
+    VENUE_TYPE = 25;
+    AMPCS_VERSION = 26;
+}
+
+message Proto3MetadataMapElement {
+    Proto3MetadataKey key = 1;
+    oneof value{
+        bool boolValue = 2;
+        int32 numberValue = 3;
+        int64 longValue = 4;
+        double doubleValue = 5;
+        float floatValue = 6;
+        string stringValue = 7;
+        uint32 unsignedNumberValue = 8;
+        uint64 unsignedLongValue = 9;
+    }
+}

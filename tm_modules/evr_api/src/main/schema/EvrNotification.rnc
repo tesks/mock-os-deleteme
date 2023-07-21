@@ -1,0 +1,142 @@
+namespace rng = "http://relaxng.org/ns/structure/1.0"
+datatypes xsd = "http://www.w3.org/2001/XMLSchema-datatypes"
+
+
+start = evr-notification-def
+
+evr-notification-def = 
+	element EvrNotification
+	{
+		notification-list-def
+	}
+	
+notification-list-def =
+	element NotificationList
+	{
+		notification-def*
+	}
+
+notification-def = 
+	element Notification
+	{
+		attribute name { xsd:normalizedString },
+		attribute mode { mode-def }?,
+		(
+		  (specific-evr-list-def | evr-criteria-def) &
+		  email-list-def &
+		  text-message-list-def
+		)
+	}
+
+mode-def = ( "realtime" | 
+             "recorded" | 
+             "none"     | 
+             "all" )
+
+specific-evr-list-def =
+	element SpecificEvrList
+	{
+		(id-def | id-range-def | name-regex-def)+
+	}
+
+id-def =
+    element Id
+    {
+        attribute id {xsd:nonNegativeInteger}
+    }
+
+id-range-def =
+    element IdRange
+    {
+        attribute begin {xsd:nonNegativeInteger},
+        attribute end {xsd:nonNegativeInteger}
+    }
+
+name-regex-def =
+    element NameRegex
+    {
+        xsd:normalizedString
+    }
+
+evr-criteria-def =
+    element EvrCriteria
+    {
+        (level-list-def & module-list-def & ops-category-list-def )
+    }
+
+level-list-def =
+    element LevelList
+    {
+        level-def*
+    }
+    
+level-def =
+    element Level
+    {
+        attribute level {xsd:normalizedString}
+    }
+
+module-list-def =
+    element ModuleList
+    {
+        module-def*
+    }
+    
+module-def =
+    element Module
+    {
+        attribute module {xsd:normalizedString}
+    }
+
+ops-category-list-def =
+    element OperationalCategoryList
+    {
+        ops-category-def*
+    }
+    
+ops-category-def =
+    element OperationalCategory
+    {
+        attribute category {xsd:normalizedString}
+    }
+
+email-list-def =
+	element EmailList
+	{
+		email-def*
+	}
+	
+email-def =
+	element Email
+	{
+		attribute address { email-address-def },
+		attribute style { token }?
+	}
+	
+text-message-list-def =
+	element TextMessageList
+	{
+		phone-def*	
+	}
+	
+phone-def =
+	element PhoneNumber
+	{
+		attribute provider { provider-name-def },
+		attribute number { phone-number-def }
+	}
+
+provider-name-def = ( "alltel" | 
+					  "att" | 
+					  "cellularone" | 
+					  "cingular" | 
+					  "nextel" | 
+					  "sprint" | 
+					  "suncom" | 
+					  "tmobile" | 
+					  "uscellular" | 
+					  "verizon" | 
+					  "virgin" )
+
+email-address-def = xsd:string { pattern=".{1,}@.{1,}[.].{1,}" }
+phone-number-def = xsd:string { pattern="[0-9]{10}" }

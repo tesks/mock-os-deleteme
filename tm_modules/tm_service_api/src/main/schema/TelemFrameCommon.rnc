@@ -1,0 +1,26 @@
+#
+# AMPCS common telemetry frame information schema
+#
+# Version: 1.0
+#
+# ChangeLog: V1.0 - Added for R8 - 11/28/17
+
+default namespace = "http://dsms.jpl.nasa.gov/mpcs"
+namespace rng = "http://relaxng.org/ns/structure/1.0"
+
+transferFrameInfo-def =
+    element TransferFrameInfo {
+        attribute scid { xsd:nonNegativeInteger },
+        attribute name { token },
+        element virtualChannel { xsd:nonNegativeInteger },
+        element seqCount { xsd:nonNegativeInteger },
+        element version { xsd:nonNegativeInteger },
+        element size { xsd:nonNegativeInteger },
+        element firstPacketPointer { xsd:nonNegativeInteger },
+        element isIdle { xsd:boolean },
+        element isBad { xsd:boolean },
+        element badReason { xsd:string }?,
+        element encodingType {
+            "ANY_TURBO" | "TURBO_1_2" | "TURBO_1_3" | "TURBO_1_6" | "CHECKSUM" | "REED_SOLOMON" | "UNENCODED"
+        }
+    }

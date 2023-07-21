@@ -1,0 +1,39 @@
+#
+# FSW to dictionary mappings schema.
+#
+# Defines the FSW version id, customer, and ground revision
+# associated with any dictionary version id. This is represented
+# as a many-to-many relationship.
+#
+# Copyright (c) 2016 California Institute of Technology, All Rights Reserved
+# JPL Proprietary Information
+#
+# Change Log:
+#   V1.0  04/28/16   Schema generated.
+#         06/13/2016 Adding optional attribute for MPDU size.
+#   V1.5  12/06/2016 Added fsw_directory
+
+namespace rng = "http://relaxng.org/ns/structure/1.0"
+datatypes xsd = "http://www.w3.org/2001/XMLSchema-datatypes"
+
+# Include common dictionary XML definitions
+include "CommonDictionary.rnc"
+
+# Start XML Document here
+start =
+  element FswToDictionaryMappings {
+    
+    header-def,
+    
+    element FswToDictionaryMappingVersion { xsd:normalizedString },
+    element FswToDictionaryMapping {
+      attribute FSW_release_version_id { symbol-def },
+      attribute FSW_version_id { xsd:unsignedLong },
+      attribute fsw_directory { symbol-def },
+      attribute customer { xsd:normalizedString },
+      attribute dictionary_version_id { symbol-def },
+      attribute ground_revision { xsd:unsignedInt },
+      attribute mpdu_size { xsd:unsignedInt }?,
+      attribute timestamp { xsd:normalizedString }
+    }+
+  }

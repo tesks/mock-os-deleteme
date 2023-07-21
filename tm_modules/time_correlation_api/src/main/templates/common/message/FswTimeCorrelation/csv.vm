@@ -1,0 +1,1 @@
+"FSW TIME CORRELATION",#if($sessionId)"$sessionId.toString()"#else""#end,"$eventTime","$packetSclk","$packetErt","$referenceFrameFound","$bitRate","$frameVcid","$frameVcfc","$frameLength","$frameSclk",#if($frameErt)"$frameErt"#else""#end,#if($frameEncoding)"$frameEncoding"#else""#end,"$bitRateIndex"

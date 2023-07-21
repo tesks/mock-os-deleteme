@@ -1,0 +1,28 @@
+# MPCS time schema
+#
+# Defines commonly-used time elements
+# Version: 3.1
+#
+# ChangeLog: V3.1 06/05/2017 Added scet-iso-time-def, scet-doy-time-def, and scet-time-def to support messages with extended scet precision
+
+namespace rng = "http://relaxng.org/ns/structure/1.0"
+datatypes xsd = "http://www.w3.org/2001/XMLSchema-datatypes"
+
+## Used for date/times that are not SCLK, SCET, or ERT. All times are GMT.
+iso-time-def =  xsd:string { pattern="[0123456789]{4}-[0123456789]{2}-[0123456789]{2}T[0123456789]{2}:[0123456789]{2}:[0123456789]{2}.[0123456789]{3}" }
+doy-time-def =  xsd:string { pattern="[0123456789]{4}-[0123456789]{3}T[0123456789]{2}:[0123456789]{2}:[0123456789]{2}.[0123456789]{3}" }
+time-def = iso-time-def | doy-time-def
+
+## Used for ERTs. All times are GMT.
+ert-iso-time-def = xsd:string { pattern="[0123456789]{4}-[0123456789]{2}-[0123456789]{2}T[0123456789]{2}:[0123456789]{2}:[0123456789]{2}.[0123456789]{3,7}" }
+ert-doy-time-def = xsd:string { pattern="[0123456789]{4}-[0123456789]{3}T[0123456789]{2}:[0123456789]{2}:[0123456789]{2}.[0123456789]{3,7}" }
+ert-time-def = ert-iso-time-def | ert-doy-time-def
+
+lst-time-def = xsd:string { pattern="SOL-[0123456789]{4}M[0123456789]{2}:[0123456789]{2}:[0123456789]{2}.[0123456789]{3}" }
+## A Spacecraft Clock time. Format is CCCCCCCCCC.FFF[FFFFFFFFF]
+sclk-time-def =  xsd:string { pattern="[0123456789]{1,10}[\.\-][0123456789]{1,10}" }
+
+## Used for SCETs. All times are GMT.
+scet-iso-time-def =  xsd:string { pattern="[0123456789]{4}-[0123456789]{2}-[0123456789]{2}T[0123456789]{2}:[0123456789]{2}:[0123456789]{2}.[0123456789]{3,9}" }
+scet-doy-time-def =  xsd:string { pattern="[0123456789]{4}-[0123456789]{3}T[0123456789]{2}:[0123456789]{2}:[0123456789]{2}.[0123456789]{3,9}" }
+scet-time-def = scet-iso-time-def | scet-doy-time-def

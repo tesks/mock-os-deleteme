@@ -1,0 +1,61 @@
+# 
+# AMPCS Generic PartialProductMessage RelaxNG Compact format XML specification.
+#
+# This message is published by the multimission product builder in the
+# downlink processor when it writes a partial data product to the file 
+# system.
+#
+# Version: 5.0
+#
+# ChangeLog: V4.0 3/14/2013 Updated to import new common session schema.
+# ChangeLog: V4.1 06/05/2017 Updated scet element to use scet-time-def.
+# ChangeLog: V5.0 11/28/2017 Major updates for R8
+#
+default namespace = "http://dsms.jpl.nasa.gov/mpcs"
+namespace rng = "http://relaxng.org/ns/structure/1.0"
+
+include "Times.rnc"
+include "ContextCommon.rnc"
+
+start = MPCSPartialProductMessage-def
+MPCSPartialProductMessage-def =
+    element MPCSPartialProductMessage {
+        context-def?, 
+        PartialProductMessage-def+ 
+    }
+PartialProductMessage-def =
+    element PartialProductMessage {
+        attribute eventTime { time-def },
+        context-def?,
+        element TransactionId { token },
+        element TransactionLog { token },
+        element Reason { token },
+        
+        element ReferenceProductMetadata {
+            attribute class { token },
+            
+            element GroundCreationTime { time-def },
+            element TestSessionId { xsd:integer }?,
+            element TestSessionHost { xsd:string }?,
+            element Scid { xsd:integer },
+            element Apid { xsd:integer },
+            element ProductName { token },
+            element Vcid { xsd:integer },
+            element GroundStatus { xsd:token },
+            element ProductVersion { xsd:token },
+            element DataFileName { xsd:string },
+            element SequenceId { xsd:string },
+            element SequenceVersion { xsd:integer },
+            element CommandNumber { xsd:integer },
+            element DvtCoarse { xsd:integer },
+            element DvtFine { xsd:integer },
+            element Sclk { sclk-time-def },
+            element Scet { scet-time-def },
+            element Lst { lst-time-def}?,
+            element LastPartErt { ert-time-def },
+            element TotalParts { xsd:integer },
+            element CfdpTransactionId { xsd:long },
+            element ProductChecksum { xsd:long },
+            element ProductFileSize { xsd:long }
+        }
+    }

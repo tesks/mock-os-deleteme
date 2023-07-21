@@ -1,0 +1,64 @@
+# AMPCS PDU Data Generator Run Configuration Schema
+#
+# This schema defines the XML used to configure each run of the 
+# AMPCS PDU generator.
+#
+# Version 1.0 - F. Tudor.
+# version 1.1 - MPCS-11854 - Allow 0 as source and destination ID
+
+include "CommonConfig.rnc"
+
+# Root element. Start XML document here.
+start =
+  element PduGeneratorRunConfig {
+    
+    # Packet APID - Valid range 0 - 4096
+    element PacketApid { xsd:positiveInteger  { maxInclusive = "4096"} },
+    
+    # Start packet sequence, unsigned integer
+    element StartPacketSeq { xsd:positiveInteger },
+    
+     # See the common schema for definition of this element
+    sclk-seed-def,
+    
+    # PDU body generation, required
+    element PduSeedData {
+    
+        # preferred PDU length, < 64K
+        element PreferredPduLength { xsd:positiveInteger { maxInclusive = "65535"}},
+        
+        # entity ID length, 1-8 
+        element EntityIdLength { xsd:positiveInteger { maxInclusive = "8"} },
+        
+        # source entity ID, unsigned integer
+        element SourceEntityId {  xsd:integer { minInclusive = "0" } },
+        
+        # destination entity ID, unsigned integer
+        element DestinationEntityId {  xsd:integer { minInclusive = "0" } },
+        
+        # transaction sequence length, 1-8
+        element TransactionSequenceLength { xsd:positiveInteger { maxInclusive = "8"} },
+        
+        # flag for transmission mode, true = acknowledged, false = unacknowledged. These translate to 0 and 1 in the actual PDU.
+        element TransmissionMode { xsd:boolean},
+        
+          # flag for segmentation control - boundaries, false = respected, true = not respected. These translate to 0 and 1 in the actual PDU.
+        element SegmentationControl { xsd:boolean},
+        
+        # flag for CRC generation, false = not present, true = present
+        element GenerateCrc {xsd:boolean},
+        
+        # error injection
+        element ErrorInjection {
+            # flag for dropping metadata PDU
+            element DropMeta { xsd:boolean},
+            
+            # flag for dropping data PDU
+            element DropData { xsd:boolean},
+            
+            # flag for dropping EOF PDU
+            element DropEof { xsd:boolean}
+        }
+    }
+}
+ 

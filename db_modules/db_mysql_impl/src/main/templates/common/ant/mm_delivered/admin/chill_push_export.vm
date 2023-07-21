@@ -1,0 +1,467 @@
+#set ( $shellName = "sh" )
+#shell( $shellName )
+
+# This script looks for files in the export directory, finds the oldest
+# one of a type we like, and then catenates all others of the same type,
+# finally renaming the aggregate the name of the oldest one and echoing
+# that as the result.
+#
+# The idea is to return a single large file instead of a bunch of small ones.
+#
+# Note that because the file timestamp granularity is only one second on most
+# *nixes, we use the file name instead. The file names have a disambiguator.
+#
+# Note also that we use the name of the first file we like instead of just
+# making one up; that ensures that we will not duplicate a file name.
+#
+# To skip the scp/ssh and just use cp/mv, set LOCAL to something.
+#
+# MPCS-4208 - Recast as velocity template.
+# MPCS-8384 - Use LOCAL with ssh as well as scp.
+
+echolog()
+{
+    echo "`date`: $1" | tee --append $LOG
+}
+
+
+echodebug()
+{
+    if test "X$DEBUG" = "Xtrue"
+    then
+        echolog "$1"
+    fi
+}
+
+
+push()
+{
+    # For remote files we need source, who/where, and destination
+    # If on a local disc, skip the who/where
+
+    if test "X$LOCAL" = "X"
+    then
+        scp -C -q -P $PORT ${1} ${2}:${3}
+    else
+        cp --force ${1} ${3}
+    fi
+}
+
+
+
+if test "X$WHO" = "X"
+then
+    WHO=`id -n -u`
+fi
+
+if test "X$WHERE" = "X"
+then
+    WHERE=localhost
+fi
+
+if test "X$JPLDIR" = "X"
+then
+    echo "Variable JPLDIR must be set" 1>&2
+    exit 2
+fi
+
+if test "X$CAPEDIR" = "X"
+then
+    CAPEDIR=$JPLDIR
+fi
+
+if test ! -d $CAPEDIR
+then
+    echo "Directory CAPEDIR does not exist: $CAPEDIR" 1>&2
+    exit 2
+fi
+
+if test "X$EXPORTDIR" = "X"
+then
+    EXPORTDIR=export_ldi
+fi
+
+EXPORT=$CAPEDIR/$EXPORTDIR
+
+if test ! -d $EXPORT
+then
+    echo "Directory EXPORTDIR does not exist: $EXPORT" 1>&2
+    exit 2
+fi
+
+LOG=$CAPEDIR/chill_push_export_v5_0_3.log
+
+rm -f $LOG
+
+SAFE=$CAPEDIR/safe
+
+if test ! -d $SAFE
+then
+    mkdir $SAFE >>$LOG 2>&1
+fi
+
+if test "X$PORT" = "X"
+then
+    PORT=22
+fi
+
+# MPCS-8384 - Support for extended SCET
+TABLE_SUFFIX=""
+
+if test "X$EXTENDED_SCET" = "XYES"
+then
+    TABLE_SUFFIX="2"
+fi
+
+# Force on for now
+DEBUG=true
+
+if test "X$DEBUG_PUSH" != "X"
+then
+    DEBUG=true
+fi
+
+SAVE=
+
+if test "X$SAVE_PUSH" != "X"
+then
+    SAVE=$CAPEDIR/save
+
+    if test ! -d $SAVE
+    then
+        mkdir $SAVE >>$LOG 2>&1
+    fi
+fi
+
+SLEEP=2
+MAX_TRIES=10
+DEST=$JPLDIR/dest
+TMP=$EXPORT/.$$
+
+CHANNEL_DATA="ChannelData_"
+CHANNEL="ChannelAggregate"
+COMMAND_MESSAGE="CommandMessage_"
+COMMAND_STATUS="CommandStatus_"
+END_SESSION="EndSession_"
+EVR="Evr${TABLE_SUFFIX}_"
+EVR_META="EvrMetadata_"
+FRAME="Frame_"
+FRAME_BODY="FrameBody_"
+HOST="Host_"
+LOGMESSAGE="LogMessage_"
+HEADER_CHANNEL="HeaderChannelAggregate"
+MONITOR_CHANNEL="MonitorChannelAggregate"
+SSE_CHANNEL="SseChannelAggregate"
+PACKET="Packet${TABLE_SUFFIX}_"
+PACKET_BODY="PacketBody_"
+PRODUCT="Product${TABLE_SUFFIX}_"
+SESSION="Session_"
+CONTEXT="ContextConfig_"
+CONTEXT_KV="ContextConfigKeyValue_"
+SSE_EVR="SseEvr${TABLE_SUFFIX}_"
+SSE_EVR_META="SseEvrMetadata_"
+SSE_PACKET="SsePacket${TABLE_SUFFIX}_"
+SSE_PACKET_BODY="SsePacketBody_"
+CFDP_FILE_GEN="CfdpFileGeneration"
+CFDP_FILE_UPL="CfdpFileUplinkFinished"
+CFDP_IND="CfdpIndication"
+CFDP_PDU_RCV="CfdpPduReceived"
+CFDP_PDU_SENT="CfdpPduSent"
+CFDP_REQ_RCV="CfdpRequestReceived"
+CFDP_REQ_RESULT="CfdpRequestResult"
+UPDATE="Update_"
+
+echolog "Starting"
+echolog ""
+
+while true
+do
+    # Get the (approximately) oldest guy, if any
+
+    while true
+    do
+        FIRST=`ls -c --reverse $EXPORT 2>/dev/null | head --lines=1`
+
+        if test "X$FIRST" != "X"
+        then
+            break
+        fi
+
+        # echolog "Nothing found, sleeping"
+
+        sleep $SLEEP
+    done
+
+    # Check the type
+
+    if expr "$FIRST" : "$HOST" >/dev/null 2>&1
+    then
+        CHOICE=$HOST
+
+    elif expr "$FIRST" : "$SESSION" >/dev/null 2>&1
+    then
+        CHOICE=$SESSION
+
+    elif expr "$FIRST" : "$END_SESSION" >/dev/null 2>&1
+    then
+        CHOICE=$END_SESSION
+
+    elif expr "$FIRST" : "$CONTEXT" >/dev/null 2>&1
+    then
+        CHOICE=$CONTEXT
+
+    elif expr "$FIRST" : "$CONTEXT_KV" >/dev/null 2>&1
+    then
+        CHOICE=$CONTEXT_KV
+
+    elif expr "$FIRST" : "$CHANNEL_DATA" >/dev/null 2>&1
+    then
+        CHOICE=$CHANNEL_DATA
+
+    elif expr "$FIRST" : "$CHANNEL" >/dev/null 2>&1
+    then
+        CHOICE=$CHANNEL
+
+    elif expr "$FIRST" : "$EVR" >/dev/null 2>&1
+    then
+        CHOICE=$EVR
+
+    elif expr "$FIRST" : "$EVR_META" >/dev/null 2>&1
+    then
+        CHOICE=$EVR_META
+
+    elif expr "$FIRST" : "$COMMAND_MESSAGE" >/dev/null 2>&1
+    then
+        CHOICE=$COMMAND_MESSAGE
+
+    elif expr "$FIRST" : "$COMMAND_STATUS" >/dev/null 2>&1
+    then
+        CHOICE=$COMMAND_STATUS
+
+    elif expr "$FIRST" : "$FRAME" >/dev/null 2>&1
+    then
+        CHOICE=$FRAME
+
+    elif expr "$FIRST" : "$FRAME_BODY" >/dev/null 2>&1
+    then
+        CHOICE=$FRAME_BODY
+
+    elif expr "$FIRST" : "$HEADER_CHANNEL" >/dev/null 2>&1
+    then
+        CHOICE=$HEADER_CHANNEL
+
+    elif expr "$FIRST" : "$MONITOR_CHANNEL" >/dev/null 2>&1
+    then
+        CHOICE=$MONITOR_CHANNEL
+
+    elif expr "$FIRST" : "$SSE_CHANNEL" >/dev/null 2>&1
+    then
+        CHOICE=$SSE_CHANNEL
+
+    elif expr "$FIRST" : "$PACKET" >/dev/null 2>&1
+    then
+        CHOICE=$PACKET
+
+    elif expr "$FIRST" : "$PACKET_BODY" >/dev/null 2>&1
+    then
+        CHOICE=$PACKET_BODY
+
+    elif expr "$FIRST" : "$PRODUCT" >/dev/null 2>&1
+    then
+        CHOICE=$PRODUCT
+
+    elif expr "$FIRST" : "$SSE_EVR" >/dev/null 2>&1
+    then
+        CHOICE=$SSE_EVR
+
+    elif expr "$FIRST" : "$SSE_EVR_META" >/dev/null 2>&1
+    then
+        CHOICE=$SSE_EVR_META
+
+    elif expr "$FIRST" : "$SSE_PACKET" >/dev/null 2>&1
+    then
+        CHOICE=$SSE_PACKET
+
+    elif expr "$FIRST" : "$SSE_PACKET_BODY" >/dev/null 2>&1
+    then
+        CHOICE=$SSE_PACKET_BODY
+
+    elif expr "$FIRST" : "$LOGMESSAGE" >/dev/null 2>&1
+    then
+        CHOICE=$LOGMESSAGE
+
+    elif expr "$FIRST" : "$CFDP_FILE_GEN" >/dev/null 2>&1
+    then
+        CHOICE=$CFDP_FILE_GEN
+
+    elif expr "$FIRST" : "$CFDP_FILE_UPL" >/dev/null 2>&1
+    then
+        CHOICE=$CFDP_FILE_UPL
+
+    elif expr "$FIRST" : "$CFDP_IND" >/dev/null 2>&1
+    then
+        CHOICE=$CFDP_IND
+
+    elif expr "$FIRST" : "$CFDP_PDU_RCV" >/dev/null 2>&1
+    then
+        CHOICE=$CFDP_PDU_RCV
+
+    elif expr "$FIRST" : "$CFDP_PDU_SENT" >/dev/null 2>&1
+    then
+        CHOICE=$CFDP_PDU_SENT
+
+    elif expr "$FIRST" : "$CFDP_REQ_RCV" >/dev/null 2>&1
+    then
+        CHOICE=$CFDP_REQ_RCV
+
+    elif expr "$FIRST" : "$CFDP_REQ_RESULT" >/dev/null 2>&1
+    then
+        CHOICE=$CFDP_REQ_RESULT
+
+    elif expr "$FIRST" : "$UPDATE" >/dev/null 2>&1
+    then
+        CHOICE=$UPDATE
+
+    else
+        # Found junk; shouldn't happen, delete and do nothing
+
+        echolog "Removing junk file $EXPORT/$FIRST"
+
+        rm --force $EXPORT/$FIRST >>$LOG 2>&1
+
+        continue
+    fi
+
+    # Catenate all files of the chosen type; use the name sort order, not the
+    # timestamp, which is probably of just one second granularity
+    #
+    # Use a temp file on the same filesystem so we can use mv at the end
+    # Use a dot (just in case) so it won't be picked up by ls
+    #
+    # Use find so as not to exceed the variable size limit, but don't trust
+    # the sort order.
+
+    echo -n >$TMP
+
+    find $EXPORT -maxdepth 1 -name "$CHOICE*" -print | sort |
+    while read LINE
+    do
+        echodebug "Adding $LINE to $FIRST"
+
+        cat $LINE >>$TMP
+
+        if test "X$SAVE" != "X"
+        then
+            cp $LINE $SAVE >>$LOG 2>&1
+        fi
+
+        rm --force $LINE >>$LOG 2>&1
+    done
+
+    # Move the built-up temp file back to the first name with a dot
+
+    DFIRST=.$FIRST
+    HERE_DFIRST=$EXPORT/$DFIRST
+    THERE_DFIRST=$DEST/$DFIRST
+    THERE_FIRST=$DEST/$FIRST
+
+    mv $TMP $HERE_DFIRST >>$LOG 2>&1
+
+    # Try to transfer to remote
+
+    TRY=0
+    OK=false
+
+    while test $TRY -lt $MAX_TRIES
+    do
+        TRY=`expr $TRY + 1`
+
+        echolog "Transferring $FIRST"
+
+        # Push it over
+        push $HERE_DFIRST $WHO@$WHERE $THERE_DFIRST >>$LOG 2>&1
+
+        STATUS=$?
+
+        if test $STATUS -eq 0
+        then
+            OK=true
+            break
+        fi
+
+        echolog "ERROR $HERE_DFIRST could not be copied: $STATUS $TRY"
+
+        # The file failed to copy, wait to retry
+        sleep $SLEEP
+    done
+
+    if test "X$OK" != "Xtrue"
+    then
+        echolog "ERROR Gave up on copying $HERE_DFIRST"
+
+        # Save it away
+        mv $HERE_DFIRST $SAFE/$FIRST >>$LOG 2>&1
+
+        # Attempt to get rid of a partial transfer.
+        # Don't take heroic measures.
+
+        if test "X$LOCAL" = "X"
+        then
+            ssh -p $PORT -C -q $WHO@$WHERE \
+                "rm --force $THERE_DFIRST" >>$LOG 2>&1
+        else
+            rm --force $THERE_DFIRST >>$LOG 2>&1
+        fi
+
+        continue
+    fi
+
+    # Get rid of local copy, we're done with it
+    rm --force $HERE_DFIRST >>$LOG 2>&1
+
+    # The file transferred successfully and needs to be renamed remotely
+
+    TRY=0
+    OK=false
+
+    while test $TRY -lt $MAX_TRIES
+    do
+        TRY=`expr $TRY + 1`
+
+        if test "X$LOCAL" = "X"
+        then
+            ssh -p $PORT -C -q $WHO@$WHERE \
+                "mv $THERE_DFIRST $THERE_FIRST" >>$LOG 2>&1
+        else
+            mv $THERE_DFIRST $THERE_FIRST >>$LOG 2>&1
+        fi
+
+        STATUS=$?
+
+        if test $STATUS -eq 0
+        then
+            OK=true
+            break
+        fi
+
+        echolog "ERROR $THERE_DFIRST could not be renamed: $STATUS $TRY"
+
+        # The remote command failed, wait to retry
+        sleep $SLEEP
+    done
+
+    if test "X$OK" != "Xtrue"
+    then
+        echolog "ERROR Gave up on moving $THERE_DFIRST"
+
+        # Attempt to get rid of it. Don't take heroic measures.
+
+        if test "X$LOCAL" = "X"
+        then
+            ssh -p $PORT -C -q $WHO@$WHERE \
+                "rm --force $THERE_DFIRST" >>$LOG 2>&1
+        else
+            rm --force $THERE_DFIRST >>$LOG 2>&1
+        fi
+    fi
+done

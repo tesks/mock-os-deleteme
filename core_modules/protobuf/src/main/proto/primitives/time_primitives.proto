@@ -1,0 +1,94 @@
+/**
+ * Copyright 2006-2018. California Institute of Technology.
+ * ALL RIGHTS RESERVED.
+ * U.S. Government sponsorship acknowledged.
+ *
+ * This software is subject to U. S. export control laws and
+ * regulations (22 C.F.R. 120-130 and 15 C.F.R. 730-774). To the
+ * extent that the software is subject to U.S. export control laws
+ * and regulations, the recipient has the responsibility to obtain
+ * export licenses or other export authority as may be required
+ * before exporting such information to foreign countries or
+ * providing access to foreign nationals.
+ */
+/**
+ * AMPCS common protobuf schema for time types.
+ *
+ * Version: 1.0
+ * ChangeLog:
+ * V1.0 - New for R8
+ */
+syntax = "proto3";
+
+
+option optimize_for = SPEED;
+option java_multiple_files = true;
+option java_package = "jpl.gds.serialization.primitives.time";
+option java_outer_classname = "ProtoBufTimePrimitiveSerialization";
+
+ /**
+  * Time Related Messages
+  *
+  * SCLK Time
+  */
+message Proto3Sclk {
+	int64 seconds = 1;
+	int64 nanos = 2;
+}
+
+/**
+ * LST Time
+ */
+ message Proto3Lst {
+ 	int64 milliseconds = 1;
+ 	int32 sol = 2;
+ }
+
+/**
+ * AccurateDateTime
+ */
+message Proto3Adt {
+    int64 milliseconds = 1;
+    int64 nanoseconds = 2;
+}
+
+/**
+ * Range of SCLK
+ */
+message Proto3SclkRange {
+	Proto3Sclk min = 1;
+	Proto3Sclk max = 2;
+}
+
+/**
+ * Range of ERT
+ */
+message Proto3ErtRange {
+	Proto3Adt min = 1;
+	Proto3Adt max = 2;
+}
+
+/**
+ * Range of RCT
+ */
+message Proto3RctRange {
+    Proto3Adt min = 1;
+    Proto3Adt max = 2;
+}
+
+/**
+ * Range of SCET
+ */
+message Proto3ScetRange {
+	Proto3Adt min = 1;
+	Proto3Adt max = 2;
+}
+
+/**
+ * SCLK Encoding
+ */
+message Proto3SclkEncoding {
+	uint32 coarseBits = 1;
+	uint32 fineBits = 2;
+	uint64 maxFine = 3;
+}

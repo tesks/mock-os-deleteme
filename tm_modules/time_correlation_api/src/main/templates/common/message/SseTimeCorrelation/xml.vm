@@ -1,0 +1,9 @@
+<SseTimeCorrelationMessage eventTime="$eventTime">
+   <packetSclk>$packetSclk</packetSclk>
+   <packetErt>$packetErt</packetErt>
+   <correlations>
+#foreach($correlation in $correlations)  
+       <correlation sclk="$correlation.getOne().toString()" ert="$correlation.getTwo().getFormattedErt(true)" />
+#end
+  </correlations>
+</SseTimeCorrelationMessage>

@@ -1,0 +1,37 @@
+# AMPCS Frame Data Generator Run Configuration Schema
+#
+# This schema defines the XML used to configure each run of the 
+# AMPCS Frame generator.
+#
+# Version 1.0 - F. Tudor.
+
+include "CommonConfig.rnc"
+
+# Root element. Start XML document here.
+start =
+  element FrameGeneratorRunConfig {
+    
+    # Packet APID - Valid range 0 - 63 (6 bits)
+    element Vcid { xsd:nonNegativeInteger  { maxInclusive = "63"} },
+    
+     # Spacecraft ID - Valid range 0 - 255 (8 bits)
+    element Scid { xsd:nonNegativeInteger  { maxInclusive = "255"} },
+    
+    # Start   - Valid range 0 - 16777215 (24 bits)
+    element StartVcfc { xsd:nonNegativeInteger  { maxInclusive = "16777215"} },
+    
+    # Frame Type, string
+    element FrameType { xsd:string },
+    
+    # flag - whether packets can span frames
+    element PacketSpanFrames { xsd:boolean}?,
+    
+    # flag for generating gaps
+    element GenerateGaps { xsd:boolean}?,
+    
+    # flag for generating regressions
+    element GenerateRegressions { xsd:boolean}?,
+    
+    # flag for generating reports
+    element GenerateReports { xsd:boolean}?
+}

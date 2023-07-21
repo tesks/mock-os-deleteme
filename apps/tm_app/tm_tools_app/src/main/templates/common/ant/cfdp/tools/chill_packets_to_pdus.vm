@@ -1,0 +1,27 @@
+#set ( $shellName = "sh" )
+#shell( $shellName )
+
+#init()
+
+#Java()
+       
+#set ( $headless = "true" )
+#SWT( $headless )
+ 
+#set( $tpsLibraries   =   ["xml_commons", "piccolo", "commons_cli", "commons_codec", "commons_lang", "commons_lang3", "commons_collections", "commons_http", "commons_logging", "stax_api", "woodstox", "jcommon", "velocity_engine_core", "mysql", "jing", "jackson", "shared"] )       
+#constructClasspath( $tpsLibraries )
+#addSpringClasspath()
+#constructLog4j2Classpath()
+
+#set ( $appName = "chill_frames_to_pdus" )
+#set ( $appClass = "jpl.gds.telem.packet.app.ExtractPdusFromPacketsApp" )
+#set ( $appArgs = "" )
+#set ( $headless = "false" )
+#set ( $doExec = "true" )
+#set ( $doLog = "true" )
+#set ( $minMem = "512m" )
+#set ( $maxMem = "1536m" )
+#set ( $responderHelper = "" )
+#set ( $sysProperties = "" )
+#set ( $includePassThruArgs = "true" )
+#execJavaSimple ( $appName $appClass $appArgs $headless $doExec $doLog $minMem $maxMem $responderHelper $sysProperties $includePassThruArgs )

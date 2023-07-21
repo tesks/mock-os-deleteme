@@ -1,0 +1,7 @@
+## MPCS-7941 changed replaceAll for " to prevent VM from randomly interpret the escape incorrectly
+#if ($header)
+ERT,SCET,SCLK,SOURCE,TYPE,ID,DATA,SESSION,CONTEXT
+#elseif ($trailer)
+#else
+$eventTime,,,MPCS,LOG $severity.toUpperCase(),$type,#set($mc=$message.replaceAll("[\r\n]+", " ").replaceAll('"', ""))"$mc",$sessionId,$contextId
+#end

@@ -1,0 +1,1 @@
+FSW_TIME_CORRELATION PacketSCLK=$packetSclk PacketERT=$packetErt FrameFound=$referenceFrameFound BitRate=$bitRate FrameVCID=$frameVcid FrameVCFC=$frameVcfc FrameLength=$frameLength FrameSCLK=$frameSclk #if($frameErt)FrameERT=$frameErt#end #if($frameEncoding)FrameEncoding=$frameEncoding#end BitRateIndex=$bitRateIndex

@@ -1,0 +1,8 @@
+<SequenceDirectiveMessage eventTime="$eventTime">
+	<SequenceDirective>
+		<CommandString>$commandString</CommandString>
+#if($scmfFile)	
+		<ScmfFile>$scmfFile</ScmfFile>
+#end		
+	</SequenceDirective>
+</SequenceDirectiveMessage>

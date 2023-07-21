@@ -1,0 +1,30 @@
+#set ( $shellName = "sh" )
+#shell( $shellName )
+
+
+DBNAME=${CHILL_MISSION}${dbName}
+
+printf "Enter database name suffix, if any:"
+read SUFFIX
+
+if test "X$SUFFIX" != "X"
+then
+    DBNAME="${DBNAME}$SUFFIX"
+fi
+
+echo
+echo "Database name to be compacted is ${DBNAME}"
+echo
+
+#databaseArgs()
+
+echo "Optimizing database ${DBNAME} to reclaim space ..."
+
+CMD="$CMD use ${DBNAME};"
+
+# MPCS-9105 - Handle extended SCET tables by default
+CMD="$CMD source $CHILL_GDS/bin/internal/sql/compact_v5_0_3.sql;"
+
+echo "Executing: mysql $CHILL_MYSQL_OPTIONS $dbHost $dbPort $dbUser $dbPwd -e \"$CMD\""
+
+mysql $CHILL_MYSQL_OPTIONS $dbHost $dbPort $dbUser $dbPwd -e "$CMD"

@@ -1,0 +1,35 @@
+#set ( $shellName = "sh" )
+#shell( $shellName )
+
+#init()
+
+#Java()
+
+#set ( $headless = "true" )
+#SWT( $headless )
+
+#set( $tpsLibraries = ["stax2_api","jersey2", "jaxrs", "gson", "shared", "snakeyaml", "spring_boot_starter_tomcat", "tomcat_embed_core", "tomcat_embed_el", "tomcat_embed_websocket", "hibernate", "validation_api", "jackson", "spring_web", "spring_webmvc", "spring_boot_starter_log4j2", "log4j_slf4j_impl", "slf4j_api", "log4j_api", "log4j_core", "jcl_over_slf4j", "jul_to_slf4j", "javamail", "commons_cli", "commons_codec", "commons_collections", "commons_digester", "commons_http", "commons_io", "commons_lang", "commons_lang3", "log4j_jul", "piccolo", "jing", "opencsv", "poi", "velocity_engine_core", "annotations", "guava", "jsr305", "error_prone_annotations", "j2objc_annotations", "animal_sniffer_annotations", "commons_configuration2", "commons_beanutils", "cfdp", "protobuf_java", "mysql"] )
+#constructClasspath( $tpsLibraries )
+#addSwagger2Classpath()
+#addSpringClasspath()
+#addSpringBootClasspath()
+#addJmsClasspath()
+#addDsneClasspath()
+#constructLog4j2Classpath()
+#addCssClasspath()
+
+#* MPCS-9031 2017-11-01 *#
+#addSecurityManager()
+
+#set ( $appName = "chill_cfdp" )
+#set ( $appClass = "jpl.gds.cfdp.clt.CfdpCltApp" )
+#set ( $appArgs = "" )
+#set ( $headless = "true" )
+#set ( $doExec = "true" )
+#set ( $doLog = "true" )
+#set ( $minMem = "128m" )
+#set ( $maxMem = "512m" )
+#set ( $responderHelper = "" )
+#set ( $sysProperties = "" )
+#set ( $includePassThruArgs = "true" )
+#execJavaSimple ( $appName $appClass $appArgs $headless $doExec $doLog $minMem $maxMem $responderHelper $sysProperties $includePassThruArgs )

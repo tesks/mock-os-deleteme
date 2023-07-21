@@ -1,0 +1,15 @@
+#set ( $shellName = "sh" )
+#shell( $shellName )
+
+#init()
+
+#Python()
+
+#set( $tpsLibraries = ["matplotlib","numpy","pmw","javax.json"] )
+#constructPythonpath ( $tpsLibraries )
+
+export MPLCONFIGDIR=$CHILL_GDS/config
+
+#set ( $scriptName = "lib/python/mpcsplot/chill_get_plots.py" )
+#set ( $excludeSite = "false" )
+#execPython ( $scriptName $excludeSite )

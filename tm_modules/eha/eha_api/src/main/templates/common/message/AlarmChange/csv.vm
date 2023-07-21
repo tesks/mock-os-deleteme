@@ -1,0 +1,3 @@
+#if($header)recordType,sessionId,channelId,channelName,fswName,module,sclk,ert,scet,lst,rct,type,raw,rawUnits,value,valueUnits,inAlarm,realtime,vcid,dssId,alarmChange
+#end
+#if ($body)"EHA",#if($sessionId)"$sessionId"#else""#end,#if($channelId)"$channelId"#else""#end,#if($title)"$title"#else""#end,#if($name)"$name"#else""#end,#if($module)"$module"#else""#end,"$sclk","$ert","$scet",#if($lst)"$lst"#else""#end,"$rct",#if($valType)"$valType"#else""#end,"$dataNumber",#if($dnUnits)"$dnUnits"#else""#end,#if($eu)"$eu"#else""#end,#if($euUnits)"$euUnits"#else""#end,"$inAlarm","$realTime",#if($vcid)"$vcid"#else""#end,#if($dssId >= 0)"$dssId"#else""#end,#if($alarmChange)"$alarmChange"#else""#end#end

@@ -1,0 +1,49 @@
+/*
+ * Copyright 2006-2019. California Institute of Technology.
+ * ALL RIGHTS RESERVED.
+ * U.S. Government sponsorship acknowledged.
+ *
+ * This software is subject to U. S. export control laws and
+ * regulations (22 C.F.R. 120-130 and 15 C.F.R. 730-774). To the
+ * extent that the software is subject to U.S. export control laws
+ * and regulations, the recipient has the responsibility to obtain
+ * export licenses or other export authority as may be required
+ * before exporting such information to foreign countries or
+ * providing access to foreign nationals.
+ */
+
+package jpl.gds.telem.ingest.state;
+
+import jpl.gds.telem.common.ITelemetryStatus;
+
+/**
+ * Interface intended to be used by the TI Worker Processing State
+ * information provider.
+ *
+ */
+public interface IIngestWorkerStatus extends ITelemetryStatus {
+
+    /**
+     * Indicates whether or not Ingest Worker is connected to
+     * the input source
+     *
+     * @return true is connected, false otherwise
+     */
+    boolean isConnected();
+
+    /**
+     * Indicates whether or not Ingest worker is receiving data
+     * from the input source
+     *
+     * @return true if data is flowing, false otherwise
+     */
+    boolean isFlowing();
+
+    /**
+     * Indicates whether or not Ingest worker is has acquired
+     * frame sync
+     *
+     * @return true if In Sync, false otherwise
+     */
+    boolean isInSync();
+}

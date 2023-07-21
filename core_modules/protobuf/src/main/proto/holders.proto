@@ -1,0 +1,46 @@
+ /**
+ * Copyright 2006-2018. California Institute of Technology.
+ * ALL RIGHTS RESERVED.
+ * U.S. Government sponsorship acknowledged.
+ *
+ * This software is subject to U. S. export control laws and
+ * regulations (22 C.F.R. 120-130 and 15 C.F.R. 730-774). To the
+ * extent that the software is subject to U.S. export control laws
+ * and regulations, the recipient has the responsibility to obtain
+ * export licenses or other export authority as may be required
+ * before exporting such information to foreign countries or
+ * providing access to foreign nationals.
+ */
+ /**
+ * AMPCS common protobuf schema for holder primitives.
+ *
+ * Version: 1.0
+ * ChangeLog:
+ * V1.0 -  New for R8
+ */
+syntax = "proto3";
+
+package holder;
+
+import "primitives/holder_primitives.proto";
+
+option optimize_for = SPEED;
+option java_multiple_files = true;
+option java_package = "jpl.gds.serialization.holder";
+option java_outer_classname = "ProtoBufHolderSerialization";
+
+message Proto3HeaderHolder{
+    Proto3AbstractHolder header = 1;
+}
+
+message Proto3TrailerHolder{
+    Proto3AbstractHolder trailer = 1;
+}
+
+message Proto3PacketIdHolder{
+    Proto3AbstractHolder packetId = 1;
+}
+
+message Proto3FrameIdHolder{
+    Proto3AbstractHolder frameId = 1;
+}

@@ -1,0 +1,14 @@
+<FileLoadMessage eventTime = "$eventTime">
+	<FileLoad>
+		<ICmdRequestId>$iCmdRequestId</ICmdRequestId>
+		<ICmdRequestStatus>$iCmdRequestStatus</ICmdRequestStatus>
+#if($iCmdRequestFailureReason)
+		<ICmdRequestFailureReason>$iCmdRequestFailureReason</ICmdRequestFailureReason>
+#end
+		<ScmfFile>$scmfFile</ScmfFile>
+		<Source>$sourceFile</Source>
+		<Destination>$destinationFile</Destination>
+		<FileType>$fileType</FileType>
+		<IsPartialFile>$isPartialFile</IsPartialFile>
+	</FileLoad>
+</FileLoadMessage>

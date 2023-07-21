@@ -1,0 +1,17 @@
+##
+## Added REAL-TIME vs. RECORDED information to notification message.
+##
+#if($inAlarm)
+#if($realTime)
+#set($rt="realtime")
+#else
+#set($rt="recorded")
+#end
+#foreach($alarm in $alarms)
+You have an alarm notification on $rt data received for the mission $missionName (ID=$missionId) during the MPCS session has the session ID $sessionId running on the host $sessionHost. At ERT=$ert, the channel $title (ID=$channelId) has changed to meet your alarm criteria (DN=$dataNumber#if($status),Status=$status#end#if($eu),EU=$eu#end).  The current alarms on this channel are:
+
+ALARM type="$alarm.getType().toString()" state="$alarm.getState()" level="$alarm.getLevel()" onEu="$alarm.isOnEu()"
+#end
+#else
+NONE
+#end

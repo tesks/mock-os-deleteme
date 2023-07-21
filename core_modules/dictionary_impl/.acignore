@@ -1,0 +1,16 @@
+.DS_Store 
+.pydevproject 
+.pmd 
+.settings
+build
+build/*
+target/
+*/target
+*/target/*
+*/build 
+*/build/* 
+*/dist 
+*/dist/* 
+*/rpm
+*/rpm/*
+ 

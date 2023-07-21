@@ -1,0 +1,1 @@
+"BAD FRAME",#if($sessionId)"$sessionId.toString()"#else""#end,"$eventTime",#if($stationInfo)"$ert","$bitRate","$numBits","$relayScid","$dssId"#else"","","","",""#end,#if($tfInfo)"$scid","$frameType","$vcid","$vcfc","$version","$size","$fpp","$idle","$bad","$badReason"#else"","","","","","","","","",""#end

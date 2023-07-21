@@ -1,0 +1,1 @@
+org.springframework.boot.diagnostics.FailureAnalyzer=jpl.gds.cfdp.processor.error.MissingRequiredPropertiesFailureAnalyzer,jpl.gds.cfdp.processor.error.DirectoryDoesNotExistFailureAnalyzer,jpl.gds.cfdp.processor.error.IOExceptionFailureAnalyzer

@@ -1,0 +1,3 @@
+#foreach($correlation in $correlations)  
+"SSE TIME CORRELATION",#if($sessionId)"$sessionId.toString()"#else""#end,"$eventTime","$packetSclk","$packetErt","$correlation.getOne().toString()","$correlation.getTwo().getFormattedErt(true)"
+#end

@@ -1,0 +1,41 @@
+#if ($body)
+<CommandMessage eventTime="$eventTime">
+    <SessionId>$sessionId</SessionId>
+    <SessionHost>$sessionHost</SessionHost>
+    <Command type="$commandType">
+#if($commandString)
+        <CommandString>$commandString</CommandString>
+#end
+        <RequestId>$requestId</RequestId>
+        <Status>$status</Status>
+        <Final>$final</Final>
+#if($rct)
+        <RCT>$rct</RCT>
+#end
+#if($originalFile)
+        <OriginalFile>$originalFile</OriginalFile>
+#end
+#if($scmfFile)
+        <ScmfFile>$scmfFile</ScmfFile>
+#end
+#if($failReason)
+        <FailReason>$failReason</FailReason>
+#end
+#if($checksum)
+        <Checksum>$checksum</Checksum>
+#end
+#if($totalCltus)
+        <TotalCltus>$totalCltus</TotalCltus>
+#end
+#if($dssId)
+        <DssId>$dssId</DssId>
+#end
+#if($bit1RadTime)
+        <Bit1RadTime>$bit1RadTime</Bit1RadTime>
+#end
+#if($lastBitRadTime)
+        <LastBitRadTime>$lastBitRadTime</LastBitRadTime>
+#end
+    </Command>
+</CommandMessage>
+#end

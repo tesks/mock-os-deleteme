@@ -1,0 +1,133 @@
+#set ( $shellName = "sh" )
+#shell( $shellName )
+
+# MPCS-11164 -  Set CHILL_MISSION
+#checkChillMission()
+
+# Note that @offset is set to zero. This is because the offset will be taken from
+# the upgraded database, but we need to provide some value for the create scripts.
+
+if [ -z "$CHILL_GDS" ]; then
+echo "Your CHILL_GDS environment variable is not set"
+exit 1
+fi
+
+DBNAME=${CHILL_MISSION}_ampcs_v5_0_3
+
+printf "Enter output database name suffix, if any:"
+read SUFFIX
+
+if test "X$SUFFIX" != "X"
+then
+DBNAME="${DBNAME}$SUFFIX"
+fi
+
+echo
+echo "Output database name will be ${DBNAME}"
+echo
+
+IDBNAME=${CHILL_MISSION}_ampcs_v4_0_0
+
+printf "Enter input database name suffix, if any:"
+read SUFFIX
+
+if test "X$SUFFIX" != "X"
+then
+IDBNAME="${IDBNAME}$SUFFIX"
+fi
+
+echo
+echo "Input database name will be ${IDBNAME}"
+echo
+
+echo "This script will upgrade the MySQL database for the ${CHILL_MISSION} MPCS installation from v4.0.0 to v5.0.3"
+echo "***NOTE: You should NOT rename your ${IDBNAME} database to ${DBNAME}***"
+printf "Your data will be preserved. Are you sure this is what you want to do? (y/n) "
+read ANSWER
+
+if [ "$ANSWER" != "y" -a "$ANSWER" != "Y" ]; then
+echo "Terminating without upgrading ${CHILL_MISSION} database..."
+exit 1
+fi
+
+printf "Do you want to add the extra time indexes? (y/n)"
+read EXTRA
+
+if test "$EXTRA" = "y" -o "$EXTRA" = "Y"
+then
+EXTRA=1
+echo "Extra indexes will be added"
+else
+EXTRA=0
+echo "Extra indexes will NOT be added"
+fi
+
+COMMON=$CHILL_GDS/bin/internal/sql
+SQ="'"
+
+# MPCS-10244 - Check if extended tables are present in previous version
+CMD=""
+CMD="SELECT COUNT(*) as c FROM information_schema.TABLES WHERE TABLE_SCHEMA = ${SQ}${IDBNAME}${SQ} AND TABLE_NAME = 'ChannelValue2';"
+EXTENDED=$(mysql $@ -e "$CMD")
+EXTENDED=`echo -n $EXTENDED | tail -c 2`
+echo "Extended is ${EXTENDED}"
+
+CMD=""
+CMD="$CMD drop database if exists $DBNAME;"
+CMD="$CMD create database $DBNAME;"
+CMD="$CMD use $DBNAME;"
+CMD="$CMD set @offset=0;"
+CMD="$CMD set @extra=$EXTRA;"
+CMD="$CMD set @mission=${SQ}${CHILL_MISSION}${SQ};"
+CMD="$CMD set @idbname=${SQ}${IDBNAME}${SQ};"
+CMD="$CMD source $COMMON/stored_v5_0_3.sql;"
+CMD="$CMD source $COMMON/master_create_v5_0_3.sql;"
+
+
+
+# MPCS-10660 - This file may not exitst when renaming a mission
+if [ -f "$COMMON/${CHILL_MISSION}_create_v5_0_3.sql" ]; then
+    echo "Will execute ${CHILL_MISSION}_create_v5_0_3.sql when creating database"
+    CMD="$CMD source $COMMON/${CHILL_MISSION}_create_v5_0_3.sql;"
+fi
+
+# MPCS-9105 - Handle extended SCET tables by default
+CMD="$CMD source $COMMON/create_extended_scet.sql;"
+
+CMD="$CMD source $COMMON/master_upgrade_v4_0_0_to_v5_0_3_part_1.sql;"
+CMD="$CMD source $COMMON/master_upgrade_v4_0_0_to_v5_0_3_part_2.sql;"
+CMD="$CMD source $COMMON/master_upgrade_v4_0_0_to_v5_0_3_part_3.sql;"
+CMD="$CMD source $COMMON/master_upgrade_v4_0_0_to_v5_0_3_part_4.sql;"
+CMD="$CMD source $COMMON/master_upgrade_v4_0_0_to_v5_0_3_part_5.sql;"
+CMD="$CMD source $COMMON/master_upgrade_v4_0_0_to_v5_0_3_part_6.sql;"
+CMD="$CMD source $COMMON/master_upgrade_v4_0_0_to_v5_0_3_part_7.sql;"
+CMD="$CMD source $COMMON/master_upgrade_v4_0_0_to_v5_0_3_part_8.sql;"
+
+# this does not exist in all missions
+if [ -f  $COMMON/${CHILL_MISSION}_upgrade_v4_0_0_to_v5_0_3.sql ]; then
+    CMD="$CMD source $COMMON/${CHILL_MISSION}_upgrade_v4_0_0_to_v5_0_3.sql;"
+fi
+
+CMD="$CMD source $COMMON/views_v5_0_3.sql;"
+
+if [ -f "$COMMON/${CHILL_MISSION}_views_v5_0_3.sql" ]; then
+    echo "Will execute ${CHILL_MISSION}_views_v5_0_3.sql when creating database"
+    CMD="$CMD source $COMMON/${CHILL_MISSION}_views_v5_0_3.sql;"
+fi
+
+# MPCS-10244 - Check if extended tables are present in previous version
+# - if they are, copy the data over from previous version
+# - if not, copy the from regular tables in current version and extend
+CMD="$CMD source $COMMON/upgrade_extended_scet.sql;"
+if [ "$EXTENDED" -eq "1" ]; then
+    CMD="$CMD CALL CopyExtended(${SQ}${IDBNAME}${SQ});"
+else
+    CMD="$CMD CALL PopulateExtended();"
+fi
+
+echo "Upgrading ${CHILL_MISSION} database..."
+mysql $@ $CHILL_MYSQL_OPTIONS -e "$CMD"
+
+echo ""
+echo "Finished upgrading ${CHILL_MISSION} database"
+

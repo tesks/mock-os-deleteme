@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>LAD</title>
+	<link rel="stylesheet" type="text/css" href="styles/defaultStyle.css">
+	
+	<script src="lib/jquery-1.12.4.min.js" type="text/javascript"></script>
+	<script src="lib/globalVars.js" type="text/javascript"></script>
+    <script src="lib/LADFunctions.js" type="text/javascript"></script>
+	<script type="text/javascript">
+		$(document).ready(function() {
+			$("#dataHelp").hide();
+            $("#settingsHelp").hide();
+            $("#infoHelp").hide();
+		});
+	</script>
+</head>
+<body>
+    <div class="Header">
+        <h1> GLOBAL LAD VIEWER </h1>
+        <div class="Table">
+            <div class ="Row">
+                <div class="Cell">
+                    <a href="index.html">Home</a>
+                </div>
+                <div class="Cell">
+                    <a href="data.html">Data</a>
+                </div>
+                <div class="Cell">
+                    <a href="settings.html">Settings</a>
+                </div>
+                <div class="Cell">
+                    <a href="info.html">Information</a>
+                </div>
+                <div class="Heading">
+                    <a href="help.html">Help</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+	<div class="body">
+        
+        <div class="Table">
+            <div class="Row">
+                <div class="Cell">
+                    <h2>External Resources</h2>
+                </div>
+            </div>
+            <div class="Row">
+                <div class="Cell">
+                    <a href="api.html"> Global LAD REST API </a>
+                </div>
+            </div>
+        </div>
+        <br><br>
+        
+        <div class="helpButtonDiv">
+            Select a page for help information<br>
+            <input type="button" id="dataHelpButton" class="dataButton" value="Data" onclick="showHelpInfo('data')"/>
+            <input type="button" id="settingsHelpButton" class="dataButton" value="Settings" onclick="showHelpInfo('settings')"/>
+            <input type="button" id="infoHelpButton" class="dataButton" value="Information" onclick="showHelpInfo('info')"/>
+        </div>
+        
+        <div id="dataHelp" class="dataHelpDiv">
+            <h2> Data </h2>
+			<img src="images/data/DataMain.jpg" alt="Data Layout">
+			<ol>
+				<lh><h3>Data Sections</h3></lh>
+				<li>Data Tree
+					<ul style="list-style-type:disc">
+						<li>Displays how data is stored in the GLAD down to the channel or event type.</li>
+						<li>If a channel list is too long, then the channels are further subdivided into categories for easier browsing.</li>
+					</ul>
+				</li>
+				<li>Tree Information
+					<ul style="list-style-type:disc">
+						<li>Provides statistical information about the tree level selected above.</li>
+						<li>The number of inserts listed for a level may not match the amount of data currently present in the GLAD due to configured memory constraints.</li>
+					</ul>
+				</li>
+				<li>Data Operation Selection
+					<ul style="list-style-type:disc">
+						<li>Displays the query and results panels for the labeled operation type.</li>
+						<li>Only a single operation can be viewed at once. Selecting the currently viewed operation type will hide all operations</li>
+						<ol type="i">
+							<li><a href="#GetData">Get Data</a> - Directly view data, generate a cURL command for retrieving data through a command-line prompt, or directly download data.</li>
+							<li><a href="#InsertData">Insert Data</a> - Directly insert a single data entry or generate a cURL command for inserting a single datra entry.</li>
+							<li><a href="#DeleteData">Delete Data</a> - Directly delete all data matching supplied parameters or generate a cURL command for deleting data.</li>
+						</ol>
+					</ul>
+				</li>
+				<li>Operation Parameters Table
+					<ul style="list-style-type:disc">
+						<li>Content of this section is dependent upon the operation being performed</li>
+					</ul>
+				</li>
+				<li>Results section
+					<ul style="list-style-type:disc">
+						<li>Contents displayed in this section are dependent upon the operation being performed and its results</li>
+					</ul>
+				</li>
+			</ol>
+			
+			<ol><h3 id="GetData">Get Data</h3></ol>
+			<img src="images/data/GetDataView.png" alt="Get Data Layout">
+			<ol>
+				<lh><h3>Get Data Options</h3></lh>
+
+				<li>Data Type
+					<ul style="list-style-type:disc">
+						<li>Select the type of data that should be queried from GLAD</li>
+					</ul>
+				</li>
+				<li>Data Source
+					<ul style="list-style-type:disc">
+						<li>Select the source of the desired data</li>
+					</ul>
+				</li>
+				<li>Recorded State
+					<ul style="list-style-type:disc">
+						<li>Select whether or not the data desired is recorded or realtime</li>
+					</ul>
+				</li>
+				<li>Time Type
+					<ul style="list-style-type:disc">
+						<li>Select the time type associated with the data</li>
+					</ul>
+				</li>
+				<li>Optional Parameters
+					<ul style="list-style-type:disc">
+						<li>Channel Id: Filter by a particular Channel Id</li>
+						<li>Session Number: Filter by a session</li>
+						<li>Host: Specify the host of the process that generated the data</li>
+						<li>Venue: Filter results by FSW venue</li>
+						<li>Dss Id: Filter by Dss Id (station)</li>
+						<li>Vcid: Filter by the Virtual Channel Id</li>
+						<li>Scid: Filter by a spacecraft id</li>
+						<li>Max Results: The max number of results</li>
+						<li>Lower Bound Time: Return data with time value greater than the lower bound</li>
+						<li>Upper Bound Time: Return data with time value less than the upper bound</li>
+						<li>Verified: True if GlobaLAD should return only verified data. False if GlobalLAD should return both verified and unverified Data. The data is verified if GlobalLAD can return everything that has ever existed in that time range. If the last data point was trimmed due to the data depth and was removed after the specified lower bound time, the data is considered unverified because there is a possibility data points are missing from the query</li>
+						<li>Binary Response: Downloads the data as a binary file</li>
+						<li>Output Format: Select the output format when downloading the data</li>
+						<li>Show Column Headers: Select if the column headers should be displayed when download the data</li>
+					</ul>
+				</li>
+
+				<lh><h3>View Data</h3></lh>
+				<li>After specifying all desired query parameters clicking the 'View Data' button will display the returned data on the web page</li>
+				<img src="images/data/GetDataViewResult.png" alt="Get Data Layout">
+
+				<lh><h3>Generate Curl Command</h3></lh>
+				<li>The 'Generic curl command' button can be used to see the curl command  based on current configuration parameters</li>
+				<img src="images/data/GetDataViewGenerateCurl.png" alt="Get Data Layout">
+
+				<lh><h3>Download Data</h3></lh>
+				<li>After specifying the desired query parameters clicking the 'Download Data'
+					button will download the results of the query as a JSON file</li>
+			</ol>
+
+			<br/><br/>
+
+			<ol><h3 id="InsertData">Insert Data</h3></ol>
+			<img src="images/data/InsertDataView.png" alt="Get Data Layout">
+			<ol>
+				<lh><h3>Insert Data Options</h3></lh>
+
+				<li>Data Options
+					<ul style="list-style-type:disc">
+						<li>Data Type: The type of telemetry being inserted</li>
+						<li>Data Source: The inserted data's source</li>
+						<li>Record State: Indicates if the record is realtime or recorded telemetry</li>
+					</ul>
+				</li>
+				<li>Data Field Parameters
+					<ul style="list-style-type:disc">
+						<li>The fields in the left column are all required for an insertion to be successful. Enter a value for each entry</li>
+						<li>These values are not all required and depend on the Data Type being inserted</li>
+					</ul>
+				</li>
+				<li>Insert Data
+					<ul style="list-style-type:disc">
+						<li>Click the 'Insert Data' button when ready to insert telemetry</li>
+					</ul>
+				</li>
+				<li>Generate Curl Command
+					<ul style="list-style-type:disc">
+						<li>Click the 'Generate curl command' if you wish to view the curl command for the options that are set </li>
+					</ul>
+				</li>
+				<br/>
+				<img src="images/data/InsertDataViewGenerateCurl.png" alt="Get Data Layout">
+
+				<br/>
+				<li>A successful insertion will show the message</li>
+				<img src="images/data/InsertDataSuccess.png" alt="Get Data Layout">
+			</ol>
+
+			<br/><br/>
+
+			<ol><h3 id="DeleteData">Delete Data</h3></ol>
+			<img src="images/data/DeleteDataView.png" alt="Get Data Layout">
+			<ol>
+				<lh><h3>Delete Data Options</lh></h3>
+
+				<li>Data Options
+					<ul style="list-style-type:disc">
+						<li>Data Type: The type of telemetry being deleted</li>
+						<li>Data Source: The source of the data to be deleted</li>
+						<li>Record State: Indicates if the record is realtime or recorded telemetry</li>
+					</ul>
+				</li>
+				<li>Optional Parameters
+					<ul style="list-style-type:disc">
+						<li>Id: The ID of the telemetry being deleted</li>
+						<li>Session Number: The session number to remove the data from</li>
+						<li>Scid: The spacecraft id</li>
+						<li>Host: The host where the data exists</li>
+						<li>Venue: The venue to remove the data from</li>
+					</ul>
+				</li>
+
+				<li>Delete Data
+					<ul style="list-style-type:disc">
+							<li>Click the 'Delete Data' button when ready to delete data</li>
+					</ul>
+				</li>
+				<li>Generate Curl Command
+					<ul style="list-style-type:disc">
+						<li>Click the 'Generate curl command' if you wish to view the curl command for the options that are set </li>
+					</ul>
+				</li>
+
+				<br/>
+				<img src="images/data/DeleteDataViewGenerateCurl.png" alt="Get Data Layout">
+
+				<br/><br/>
+
+				<li>A successful deletion will show the message</li>
+				<img src="images/data/DeleteDataViewSuccess.png" alt="Get Data Layout">
+			</ol>
+        </div>
+        
+
+        <div id="settingsHelp" class="settingsHelpDiv">
+            <h2> Settings Help </h2>
+            <img src="images/data/SettingsMainView.png" alt="Data Layout">
+			<ol>
+				<lh><h3>Global LAD Settings</h3></lh>
+
+				<li>Depth
+					<ul style="list-style-type:disc">
+						<li>The Depth table refers to how many entries of a telemetry type are kept in the Global LAD </li>
+						<li>This table contains the current depth setting for each telemetry type. To modify a particular type select the drop-down menu on the left and enter a new depth value in the right box.</li>
+						<li>Click the 'update' button and select 'ok' on the pop-up dialog shown</li>
+						<img src="images/data/SettingsViewUpdateDepth.png" alt="Data Layout">
+						<br/>
+						<li>Verify the value is updated in the table</li>
+					</ul>
+				</li>
+				<li>LAD Data Options
+					<ul style="list-style-type:disc">
+						<li>Download LAD Data Image: This will create and download a current image of the data inside Global LAD</li>
+						<li>Upload LAD Data Image: This will upload a saved image of the Global LAD and replace the current content with the uploaded image</li>
+						<li>Wipe LAD Data: This will wipe out ALL data currently in the Global LAD</li>
+						<li>Disconnect Clients: This will disconnect all clients from the Global LAD</li>
+					</ul>
+				</li>
+			</ol>
+        </div>
+
+        
+        <div id="infoHelp" class="infoHelpDiv">
+            <h2> Information Help </h2>
+            <img src="images/data/InformationMainView.png" alt="Data Layout">
+            <ol>
+            	<lh><h3>Global LAD Information</h3></lh>
+
+            	<ul style="list-style-type:disc">
+            		<li>Here you will see information about the current state of the Global LAD socket server</li>
+            	</ul>
+            	<ul style="list-style-type:disc">
+            		<li><b>Open Clients</b>: See information about clients currently connected to the Global LAD socket server</li>
+            		<li><b>Closed Clients</b>: See information about clients that have disconnected from the Global LAD socket server</li>
+            	</ul>
+            </ol>
+        </div>
+	</div>
+</body>
+</html>

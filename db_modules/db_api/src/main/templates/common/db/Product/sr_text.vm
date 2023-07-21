@@ -1,0 +1,28 @@
+#if ($header)
+#set($ert="ERT                           ")
+#set($scet="SCET                          ")
+#set($sclk="SCLK                          ")
+#set($prod="PRODUCT   ")
+#set($apid="APID      ")
+#set($prodType="PRODUCT_TYPE                  ")
+#set($dvt="DVT                           ")
+#set($totalParts="TOTAL_PARTS                   ")
+#set($fileSize="FILESIZE                      ")
+#set($gs="GROUND_STATUS                 ")
+#set($reqId="REQUEST_ID                    ")
+${ert}	${scet}	${sclk}	${prod}	${apid}	${prodType}	${dvt}	${totalParts}	${fileSize}	${gs}	${reqId}	SESSION
+#elseif ($trailer)
+#else
+#if($ert)#{set}($ert=$formatter.anCsprintf("%-30s", $ert))#end
+#if($scet)#{set}($scet=$formatter.anCsprintf("%-30s", $scet))#end
+#if($sclk)#{set}($sclk=$formatter.anCsprintf("%-30s", $sclk))#end
+#{set}($prod="PRODUCT")#{set}($prod = $formatter.anCsprintf("%-10s", $prod))
+#if($apid)#{set}($apid=$apid.toString())#{set}($apid = $formatter.anCsprintf("%-10s", $apid))#end
+#if($productType)#{set}($prodType = $formatter.anCsprintf("%-30s", $productType))#end
+#if($dvtCoarse&&$dvtFine)#{set}($dvt = "DVT="+$dvtCoarse + "-" + $dvtFine)#{set}($dvt = $formatter.anCsprintf("%-30s", $dvt))#end
+#if($totalParts)#{set}($totalParts = "TOTAL="+$totalParts.toString())#{set}($totalParts = $formatter.anCsprintf("%-30s", $totalParts))#end
+#if($fileSize)#{set}($fileSize = "SIZE="+$fileSize.toString())#{set}($fileSize = $formatter.anCsprintf("%-30s", $fileSize))#end
+#if($groundStatus)#{set}($gs = $formatter.anCsprintf("%-30s", $groundStatus.toString()))#end
+#{set}($reqId = "REQUEST=0")#{set}($reqId = $formatter.anCsprintf("%-30s", $reqId))
+${ert}	${scet}	${sclk}	${prod}	${apid}	${prodType}	${dvt}	${totalParts}	${fileSize}	${gs}	${reqId}	$sessionId
+#end

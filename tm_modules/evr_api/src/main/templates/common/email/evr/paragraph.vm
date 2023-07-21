@@ -1,0 +1,7 @@
+#if($realTime=="true")
+#set($rt="realtime")
+#else
+#set($rt="recorded")
+#end
+You have a $rt EVR notification for the mission $missionName (ID=$missionId) during the MPCS session $sessionId running on the host $sessionHost. At ERT=$ert, the EVR $name (ID=$event) was received and it meets your notification criteria (Message=$message,Level=$level,Module=$module,OpsCat=$opscat).
+

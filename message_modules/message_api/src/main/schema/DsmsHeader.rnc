@@ -1,0 +1,29 @@
+#
+# MPCS DISA Header RelaxNG schema
+#
+namespace rng = "http://relaxng.org/ns/structure/1.0"
+datatypes xsd = "http://www.w3.org/2001/XMLSchema-datatypes"
+default namespace = "http://dsms.jpl.nasa.gov/mpcs"
+namespace dsms = "http://dsms.jpl.nasa.gov/globalschema"
+
+dsmsHeader-def = 
+## MPCS version of the DSMS header element
+element dsms:DSMSHeader
+{
+        element dsms:DSMS_CREATION_TIME { xsd:string { pattern="[0123456789]{4}-[0123456789]{3}T[0123456789]{2}:[0123456789]{2}:[0123456789]{2}.[0123456789]{3,7}" }},
+        element dsms:DSMS_MESSAGE_TYPE { token },
+        element dsms:DSMS_MESSAGE_PURPOSE { token }?,
+        element dsms:DSMS_SCHEMA_NAME { xsd:anyURI },
+        element dsms:DSMS_SCHEMA_VERSION { token },
+        element dsms:DSMS_SOURCE_NAME { token },
+        element dsms:DSMS_MISSION_ID { xsd:nonNegativeInteger },
+        element dsms:DSMS_MISSION_ABBREVIATION { token },
+        element dsms:DSMS_SPACECRAFT_ID { xsd:nonNegativeInteger },
+        element dsms:DSMS_SPACECRAFT_NAME { token },
+        element dsms:DSMS_PRODUCT_ID { token }?,
+        element dsms:DSMS_MPCS_SESSION_ID { token }?,
+        element dsms:DSMS_MPCS_SESSION_HOST { token }?,
+        element dsms:DSMS_MPCS_PERSPECTIVE_ID { token }?,
+        element dsms:DSMS_MPCS_SESSION_VCID { token }?,
+        element dsms:DSMS_MPCS_SESSION_DSSID { token }?
+}

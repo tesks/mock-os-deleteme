@@ -1,0 +1,191 @@
+#
+# Monitor channel dictionary schema.
+#     
+# Defines MON-0158 DSN Station monitor channels, both original source
+# channel and derived channels. These are traditionally termed
+# "M" channels.
+#
+# Contents of the monitor channel dictionary are entirely 
+# multimission and must align with the DSN Specification
+# of MON-0158 SFDUs.
+#
+# Copyright (c) 2013 California Institute of Technology, All Rights Reserved
+# JPL Proprietary Information
+#
+# NOTE OF WARNING: New missions (created after 9/22/14)
+# should not use this schema for monitor
+# channels. New monitor dictionaries should use the multimission channel
+# schema.
+#
+# Change Log:
+#   V1.0  Date Unknown   Original version
+#   V1.1  05/28/13       Imported common schema. Major
+#                        commenting and re-organization
+#   V1.2  09/16/14       Renamed to "Old".
+# namespace rng = "http://relaxng.org/ns/structure/1.0"
+
+# Include monitor/header common definitions
+include "MonitorHeaderCommonDictionary.rnc"
+
+# Start XML document here
+start = monitor-channel-dictionary-def
+
+# The monitor channel dictionary root element
+monitor-channel-dictionary-def =
+
+    element MonitorChannelDictionary {
+    
+        # Standard dictionary version header and general change log 
+        header-def, 
+        
+        # Defines all the M channels
+        monitor-channels-def
+    }
+    
+# Defines the list of monitor channels, both original/basic and derived    
+monitor-channels-def = element channels { (monitor-channel-def | derived-monitor-channel-def)+ }
+
+# The definition for an original/basic monitor channel, i.e., a channel that is decommed
+# straight from MON-0158 SFDUs.
+monitor-channel-def =
+
+    element monitor_channel {
+    
+        # Basic monitor channel IDs start with "M-" and range from 0 to 4095. 
+        m-h-channel-id-def,
+        
+        # The measurement ID for the channel. This is its unique index within the
+        # monitor channel dictionary and happens to match the channel number.
+        attribute measurement_id { xsd:nonNegativeInteger { maxInclusive = "4095" } },
+
+        # Operational category
+        ops-cat-def,
+        
+        # Subsystem
+        subsystem-def,
+
+        # Channel name displayed by GDS tools
+        channel-name-def,
+        
+        # The channel data type
+        channel-type-def,
+        
+        # Units associated with the channel DN. 
+        channel-units-def,
+        
+        # Optional display format for the channel DN. 
+        io-format-def?,
+        
+        # An optional description of the channel. May be multi-line.
+        comment-def?,
+        
+        # If a status channel, these are the valid state values.
+        states-def?,
+        
+        # Optional: data number to engineering units conversion.
+        # Works only to convert integer or floating-point to floating-point.
+        dn-eu-conversion-def?
+    }
+    
+    
+# Derived channels can be of two types. The ground derived by Java uses a 
+# coded Java class to reprocess one or more parent channel
+# values into new channel values. The ground derived by bit unpacking extracts
+# and packs bits from one parent channel value into one new channel value.
+derived-monitor-channel-def =
+    monitor-derivation-by-java-def | monitor-derivation-by-bit-unpacking-def
+    
+
+# Defines a monitor channel created via Java derivation
+monitor-derivation-by-java-def =
+
+    element monitor_derivation_by_java {
+    
+        # Derived monitor channel IDs start with "M-" and range from 0 to 9999.
+        m-h-channel-id-def,
+        
+        # The measurement ID for the channel. This is its unique index within the
+        # monitor channel dictionary and happens to match the channel number.
+        attribute measurement_id { measurement-id-range-def },
+       
+        # Operational category
+        ops-cat-def,
+        
+        # Subsystem
+        subsystem-def,
+        
+        # Channel name displayed by GDS tools
+        channel-name-def,
+        
+        # The data type of derived channel value
+        channel-type-def,
+        
+        # The units associated with the channel DN
+        channel-units-def,
+        
+        # Optional display format for the channel DN
+        io-format-def?,
+
+        # An optional description of the channel. May be multi-line.
+        comment-def?,
+        
+        # If a status channel, these are the valid state values.
+        states-def?,
+        
+        # Optional: device to engineering units conversion,
+        # works only to convert integer or floating-point to floating-point.
+        dn-eu-conversion-def?,
+        
+        # The definition of the Java derivation that produces this channel
+        derivation-java-def
+    }
+    
+# Defines a monitor channel derived by bit unpack    
+monitor-derivation-by-bit-unpacking-def =
+
+    element monitor_derivation_by_bit_unpacking {
+    
+        # Derived monitor channel IDs start with "M-" and range from 0 to 9999.
+        m-h-channel-id-def,
+        
+        # The measurement ID for the channel. This is its unique index within the
+        # monitor channel dictionary and happens to match the channel number.
+        attribute measurement_id { measurement-id-range-def },
+       
+        # Operational category
+        ops-cat-def,
+        
+        # Subsystem
+        subsystem-def,
+        
+        # Channel name displayed by GDS tools
+        channel-name-def,
+        
+        # The resulting data type of the bit unpacking operation.
+        attribute type { int-channel-type-list-def },
+        
+        # The units associated with the channel DN
+        channel-units-def,
+        
+        # Optional display format for the channel DN
+        io-format-def?,
+     
+        # An optional description of the channel. May be multi-line.
+        comment-def?,
+        
+        # If a status channel, these are the valid state values.
+        states-def?,
+        
+        # Optional: data number to engineering units conversion.
+        # Works only to convert integer or floating-point to floating-point.
+        dn-eu-conversion-def?,
+        
+        # The definitions of the bit unpack operation
+        derivation-bitunpack-def
+    }
+    
+# Hard-coded operational category for MON channels.
+ops-cat-def = attribute ops_cat { "M" }
+        
+# Hard-coded subsystem for MON channels.
+subsystem-def = attribute subsystem { "MON" }

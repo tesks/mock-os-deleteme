@@ -1,0 +1,74 @@
+#set ( $shellName = "sh" )
+#shell( $shellName )
+
+#checkForHelpOption()
+#checkChillMission()
+
+if test "$showHelp" = "true"
+then
+printf "${CHILL_MISSION} chill_create_pdpp_database --user <username> [Other-MySQL-options]"
+
+    printf "The environment variable named "CHILL_GDS" must point to the root of the MPCS installation (one level above the MPCS "bin" directory). If this environment variable is not present, the script will fail.
+
+    To execute the script, it should simply be run from the command line. The script will first prompt you for a suffix to the standard database names. The usual answer to this is to enter an empty string. The script then will prompt you to confirm that the databases should be created. If 'y' is entered, then database creation will occur. If 'n' is entered, then the script will exit with no changes having been made.
+
+    The script will then prompt you to supply the host-offset for the database host. If you are a developer, you may enter "0". Otherwise, entire the host-offset assigned to the database host. The value is an integer between 0 and 255 inclusive.
+
+    The script will then prompt you for the extra time indexes. If 'y' is entered, the extra time indexes will be incorporated. If 'n' is entered, they will not.
+
+    This script has no options, it simply passes everything through to MySQL. A password may be required.
+
+    Some missions have an extra index to support ECDR generation. Those missions will ask an extra question at the end to determine the correct index to add. The accepted values are ERT or SCET.
+
+    Post-Requisite: You must run chill_grant_pdpp_permissions on all newly-created MPCS databases."
+
+    exit 1
+fi
+
+#init()
+
+# MPCS-8179  06/09/16: Versioned PDPP DV to V1.1.0
+# MPCS-8311  09/06/16: Can change the suffix when creating the database.
+
+NAME="${CHILL_MISSION}_pdpp_automation"
+
+
+printf "Enter database name suffix, if any:"
+read SUFFIX
+
+if test "X$SUFFIX" = "X"
+then
+	SUFFIX="v1_3_0"
+fi
+
+NAME="${NAME}_$SUFFIX"
+echo "Database name will be ${NAME}"
+echo
+echo
+
+
+echo "This script will create the ${NAME} database for AMPCS Post Downlink Product Processing."
+echo "Any existing PDPP data in that database will be lost."
+
+printf "Are you sure this is what you want to do? (y/n) "
+read ANSWER
+
+if [ "$ANSWER" != "y" -a "$ANSWER" != "Y" ]; then
+        echo "Terminating without any changes to the PDPP database..."
+        exit 1
+fi
+
+CMD="DROP DATABASE IF EXISTS ${NAME};"
+CMD="$CMD CREATE DATABASE ${NAME};"
+CMD="$CMD USE ${NAME};"
+
+CMD="$CMD source $CHILL_GDS/bin/internal/sql/pdpp_create_v1_3_0.sql;"
+
+# MPCS-11563 - 02/2020 - Add check for mission specific PDPP sql
+if [ -f "$CHILL_GDS/bin/internal/sql/${CHILL_MISSION}_pdpp_create_v1_3_0.sql" ]; then
+    echo "Will execute $CHILL_GDS/bin/internal/sql/${CHILL_MISSION}_pdpp_create_v1_3_0.sql when creating database"
+    CMD="$CMD source $CHILL_GDS/bin/internal/sql/${CHILL_MISSION}_pdpp_create_v1_3_0.sql;"
+fi
+
+echo "Creating database, ${NAME}, for PDPP..."
+mysql $CHILL_MYSQL_OPTIONS $@ -e "$CMD"

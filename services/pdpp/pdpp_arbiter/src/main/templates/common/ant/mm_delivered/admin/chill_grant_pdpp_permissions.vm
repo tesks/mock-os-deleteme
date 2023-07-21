@@ -1,0 +1,246 @@
+#set ( $shellName = "sh" )
+#shell( $shellName )
+
+#init()
+
+# For testing, change this
+PERFORM=true
+
+if test "X${1}" = "X-h" -o "X${1}" = "X--help"
+then
+    echo "${0} [--username mpcs] [mysql arguments]" 1>&2
+    exit 1
+fi
+
+PERMS="ALL PRIVILEGES"
+
+# MPCS-6522 JM 02/23/15 Find subnets file
+# MPCS-7781/MPCS-7809 JM 12/02/15 Remove entries before adding new ones. Extensive changes.
+# MPCS-8311 09/06/16: Can change the suffix when creating the database.
+
+if test -z "${CHILL_DB_SUBNETS}"
+then
+    # User didn't set it, try the standard configurations
+
+    TRY1="${CHILL_GDS}/config/${CHILL_MISSION}/subnets.conf"
+
+    if test -r ${TRY1} -a -f ${TRY1}
+    then
+        export CHILL_DB_SUBNETS="${TRY1}"
+    else
+        TRY2="${CHILL_GDS}/config/subnets.conf"
+
+        if test -r ${TRY2} -a -f ${TRY2}
+        then
+            export CHILL_DB_SUBNETS="${TRY2}"
+        else
+            echo "Cannot find or read database subnets file as ${TRY1} or ${TRY2}" 1>&2
+            exit 1
+        fi
+    fi
+
+elif test ! -r "${CHILL_DB_SUBNETS}" -o ! -f "${CHILL_DB_SUBNETS}"
+then
+    echo "Cannot find or read database subnets file: CHILL_DB_SUBNETS='${CHILL_DB_SUBNETS}'" 1>&2
+    exit 1
+fi
+
+echo "Using database subnets file ${CHILL_DB_SUBNETS}"
+
+# Make sure that shell wildcards are not expanded
+set -o noglob
+
+# Allow --username as the first argument only
+
+USERNAME=mpcs
+SHIFT=0
+
+for OPTION
+do
+    if test ${SHIFT} -eq 1
+    then
+        # Get user name and do not continue
+
+        USERNAME="${OPTION}"
+        SHIFT=2
+        break
+
+    elif test "X${OPTION}" = "X--username"
+    then
+        # Option specified, expect user name and continue
+
+        SHIFT=1
+
+    else
+        # Did not find option, do not continue looking
+        break
+    fi
+done
+
+if test ${SHIFT} -eq 1
+then
+    echo "--username option not followed by user name" 1>&2
+    echo "${0} [--username mpcs] [mysql arguments]"    1>&2
+    exit 1
+fi
+
+TUSERNAME=`echo "${USERNAME}" | tr -d ' '`
+
+if test "${USERNAME}" != "${TUSERNAME}"
+then
+    echo "User name must not contain blanks" 1>&2
+    exit 1
+fi
+
+if test `expr "X${USERNAME}" : "X-"` -gt 0
+then
+    echo "User name must not begin with a dash" 1>&2
+    exit 1
+fi
+
+if test "${USERNAME}" = ""
+then
+    echo "User name cannot be empty" 1>&2
+    exit 1
+fi
+
+# MPCS-7781/MPCS-7809 JM 12/02/15 Lowercase and check against root
+# MPCS-7809 JM 12/02/15 Lowercase and check against root
+
+USERNAME=`echo "${USERNAME}" | tr A-Z a-z`
+
+if test "${USERNAME}" = "root"
+then
+    echo "User name cannot be 'root'" 1>&2
+    exit 1
+fi
+
+# Ignore arguments we processed
+shift ${SHIFT}
+
+# Check for it occurring again or not at the beginning
+for OPTION
+do
+    if test "X${OPTION}" = "X--username"
+    then
+        echo "--username must be first option" 1>&2
+        exit 1
+    fi
+done
+
+DBARGS=${1+"$@"}
+
+#set ( $operation = "grant" )
+
+NAME="${CHILL_MISSION}_pdpp_automation"
+
+
+printf "Enter database name suffix, if any:"
+read SUFFIX
+
+if test "X$SUFFIX" = "X"
+then
+	SUFFIX="v1_3_0"
+fi
+
+NAME="${NAME}_$SUFFIX"
+
+echo
+echo "Database name will be ${NAME}"
+echo "User name ${USERNAME}"
+echo "Additional arguments '${DBARGS}'"
+echo
+
+#SQLOperation( $operation )
+
+CMD=""
+
+# MPCS-7781/MPCS-7809 JM 12/02/15 Get rid of previous entries
+
+# Get rid of the empty user
+
+CMD="${CMD} DELETE FROM mysql.user         WHERE User='';"
+CMD="${CMD} DELETE FROM mysql.db           WHERE User='';"
+CMD="${CMD} DELETE FROM mysql.tables_priv  WHERE User='';"
+CMD="${CMD} DELETE FROM mysql.columns_priv WHERE User='';"
+CMD="${CMD} DELETE FROM mysql.procs_priv   WHERE User='';"
+
+# Get rid of the entries for all hosts for the database and user
+# Do NOT delete from user table as that will kill the password
+
+CMD="${CMD} DELETE FROM mysql.db           WHERE Db='${NAME}' AND User='${USERNAME}';"
+CMD="${CMD} DELETE FROM mysql.tables_priv  WHERE Db='${NAME}' AND User='${USERNAME}';"
+CMD="${CMD} DELETE FROM mysql.columns_priv WHERE Db='${NAME}' AND User='${USERNAME}';"
+CMD="${CMD} DELETE FROM mysql.procs_priv   WHERE Db='${NAME}' AND User='${USERNAME}';"
+
+# MPCS-6522 JM 02/23/15 Redo loop to use subnets file
+# which can have blank lines or comments.
+# NB: the hash is a special character to both bash and Velocity,
+# so be careful and double-check any changes to that logic.
+
+FOUND=0
+
+while read i
+do
+    # Trim blanks fore and aft
+    i=`echo ${i}`
+
+    if test -z "${i}"
+    then
+        continue
+    fi
+
+    # Look for comments (need single quotes for Velocity to be able to parse)
+    # MPCS-7249 JM 06/15/15 Remove expr and replace with sed
+
+    i=`echo "${i}" | sed -e 's/#.*$//'`
+
+    # Trim blanks aft again
+    i=`echo ${i}`
+
+    # May be empty now
+
+    if test -z "${i}"
+    then
+        continue
+    fi
+    
+    # MPCS-9314 12/04/17 - for MariaDB we need to make sure the user is
+	# created before we grant them any permissions
+	CMD="${CMD} CREATE USER IF NOT EXISTS '${USERNAME}'@'${i}';"
+    CMD="${CMD} GRANT ${PERMS} ON ${NAME}.* TO '${USERNAME}'@'${i}';"
+    CMD="${CMD} GRANT SUPER ON *.* TO '${USERNAME}'@'${i}';"
+
+    FOUND=1
+
+done <${CHILL_DB_SUBNETS}
+
+if test ${FOUND} -eq 0
+then
+    echo "No subnets found in the subnets.conf file."
+    echo "Old permissions will be removed and no new ones established."
+fi
+
+CMD="${CMD} FLUSH PRIVILEGES;"
+
+TEXT=`echo "${CMD}" | sed "s/;/;\n/g"`
+
+echo
+echo "Executing:"
+echo "${TEXT}"
+echo
+
+set +o noglob
+
+# Do the real work
+
+STATUS=0
+
+if test "X${PERFORM}" = "Xtrue"
+then
+    mysql ${CHILL_MYSQL_OPTIONS} ${DBARGS} -e "${CMD}"
+
+    STATUS=${?}
+fi
+
+exit ${STATUS}

@@ -1,0 +1,64 @@
+# 
+# AMPCS TelemetryFrameSummaryMessage RelaxNG Compact format XML specification.
+#
+# This message is published periodically by the AMPCS downlink processor
+# to indicate the status of frame processing. It is possible that these numbers will
+# suffer rollover if a session runs long enough.
+#
+# Version: 5.0
+#
+# ChangeLog: V4.0 2/14/2013 Updated to import common session schema
+# ChangeLog: V4.1 5/19/2015 Added bitrate per MPCS-7348
+# ChangeLog: V5.0 5/18/17 Major updates for AMPCS R8
+#
+namespace rng = "http://relaxng.org/ns/structure/1.0"
+datatypes xsd = "http://www.w3.org/2001/XMLSchema-datatypes"
+default namespace = "http://dsms.jpl.nasa.gov/mpcs"
+
+include "ContextCommon.rnc"
+include "Times.rnc"
+
+start = MPCSTelemetryFrameSummaryMessage-def
+
+MPCSTelemetryFrameSummaryMessage-def = element MPCSTelemetryFrameSummaryMessage {
+     context-def?,
+     Message-def+
+}
+
+Message-def = element TelemetryFrameSummaryMessage {
+    attribute eventTime { time-def },
+    context-def?,
+    element inSync { xsd:boolean },
+    element numFrames { xsd:nonNegativeInteger },
+    element idleFrames { xsd:nonNegativeInteger },
+    element deadFrames { xsd:nonNegativeInteger },
+    element badFrames { xsd:nonNegativeInteger },
+    element frameBytes { xsd:nonNegativeInteger },
+    element outOfSyncBytes { xsd:nonNegativeInteger },
+    element outOfSyncCount { xsd:nonNegativeInteger },
+    element bitrate { xsd:double },
+    element frameSummaries {
+        frameSummary-def*
+    }?,
+    element encodingSummaries {
+        encodingSummary-def*
+    }?
+}
+
+frameSummary-def = element frameSummary {
+    attribute frameType { token },
+    attribute instanceCount { xsd:nonNegativeInteger },
+    attribute sequenceCount { xsd:nonNegativeInteger },
+    attribute vcid { xsd:nonNegativeInteger },
+    attribute lastErtTime {ert-time-def }
+}
+
+encodingSummary-def = element encodingSummary {
+    attribute encodingType { token },
+    attribute instanceCount { xsd:nonNegativeInteger },
+    attribute sequenceCount { xsd:nonNegativeInteger },
+    attribute vcid { xsd:nonNegativeInteger },
+    attribute lastErtTime {ert-time-def },
+    attribute badFrameCount { xsd:nonNegativeInteger },
+    attribute errorCount { xsd:nonNegativeInteger }
+}

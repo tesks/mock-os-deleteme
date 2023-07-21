@@ -1,0 +1,51 @@
+# 
+# AMPCS SseTimeCorrelationMessage RelaxNG Compact format XML specification.
+#
+# This message is published by the AMPCS downlink processor when it
+# encounters an SSE time correlation packet in the telemetry stream.
+# Note that more than one time correlation record/message may be published
+# in the same JMS message.
+#
+# Version: 4.0
+#
+# ChangeLog: V3.0 3/14/2013 Updated to import the new common session schema.
+# ChangeLog: V4.0 11/28/2017 Major updates for R8
+#
+default namespace = "http://dsms.jpl.nasa.gov/mpcs"
+namespace rng = "http://relaxng.org/ns/structure/1.0"
+
+include "ContextCommon.rnc"
+include "Times.rnc"
+
+start = MPCSSseTimeCorrelationMessage-def
+
+MPCSSseTimeCorrelationMessage-def =
+    element MPCSSseTimeCorrelationMessage
+     {
+        context-def?, 
+        Message-def+      
+    }
+    
+Message-def =
+    element SseTimeCorrelationMessage
+    {
+        attribute eventTime { time-def },
+        context-def?,
+        element packetSclk { sclk-time-def },
+        element packetErt { ert-time-def },
+        correlations-def
+    }
+    
+correlations-def =
+	element correlations
+	{
+		correlation-def+
+	}
+
+correlation-def = 
+	element correlation
+	{
+		attribute sclk { sclk-time-def },
+		attribute ert { ert-time-def }
+	}
+	

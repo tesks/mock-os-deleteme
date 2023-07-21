@@ -1,0 +1,56 @@
+#set( $height = ($channelList.size() * 180) + 180 )
+<html>
+<head>
+	<style type="text/css" media="print">
+		.noprint
+		{
+			display: none;
+		}
+	</style>
+	<title>Plot-Oh-Matic</title>
+</head>
+<body>
+	<div class="noprint">
+		<h2>If you would like to <em>bookmark, email, or print</em> this plot, use the permalink below</h2>
+		<a href="$permaLink" target="_blank">$permaLink</a><br />
+	</div>
+	<applet code="plot2.class" codebase="applets/plot_oh_matic" width="800" height="$height">
+	<param name="numberoffiles"  value="$numChannels" />
+	<param name="timeplottype"  value="$timeType" />
+	 
+#foreach( $channel in $channelList )
+    <param name="inputfile$velocityCount" value="$channel.getDataFileName()" />
+    #if($channel.getChannelName())
+		<param name="channelname$velocityCount" value="$channel.getChannelName()" />
+	#else
+		<param name="channelname$velocityCount" value="NO-NAME-FOUND" />
+	#end
+#end
+	  
+	<param name="plotevrs" value="$plotEvrs.toUpperCase()" />
+	#if($outputEvrFilePath)
+	<param name="evrname" value="$outputEvrFilePath">
+	#end
+	<param name="reportURL" value="$reportURL">
+	
+	</applet>
+	<div class="noprint">
+		<br>
+		<br>
+		<b>Some hidden tricks:</b>
+		<ol>
+			<li>To zoom on an EHA plot:</EM> click and drag (try it!)</li>
+			<li>To filter by EVR level</EM> on an EVR display: click on the EVR labels on the left side of the plot. Click again to restore the view.</li>
+			<li>To step through EVRs</EM>: first click anywhere on the EVR display. A small red box appears in the upper left corner to show the display is "active". Then use the "<" and ">" buttons to step through the (filtered) EVR's.</li>
+			<li>To show full range on Y-axis</EM> on an EHA plot: click the y-axis scale numbers at the left side of the display</li>
+		</ol>
+		<b>Notes and Idiosyncrasies:</b>
+		<ol>
+			<li>Cursor alignment: The EHA cursors are aligned to each other in time. Clicking on an EHA panel causes the cursor in all of the panels (EVR and EHA) to jump to the mouse location. The EVR cursor can be moved independently by clicking (or stepping) in the EVR window.</li>
+			<li>All event times are loaded to the nearest millisecond. Sometimes, events overlap. Use the arrow buttons to scroll through simultaneous events.</li>
+			<li>Data points with ERT prior to January 1, 2008 are filtered out during the load. This is done to deal with a bug that caused anomalous ERT times in ATLO (PFR 14340).</li>
+		</ol>
+		<em>Author: David Oh (<a href="mailto:david.y.oh@jpl.nasa.gov">david.y.oh@jpl.nasa.gov</a>)</em>
+	</div>
+</body>
+</html>

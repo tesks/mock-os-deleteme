@@ -1,0 +1,24 @@
+#if ($body)
+---
+Log
+---
+SessionId=$sessionId
+SessionHost=$sessionHost
+SessionFragment=$sessionFragment
+ContextId=$contextId
+#if ($eventTime)
+EventTime=$eventTime
+#end
+#if ($rct)
+RCT=$rct
+#end
+#if ($severity)
+Severity=$severity
+#end
+#if ($type)
+LogMessageType=$type
+#end
+#if ($message)
+Message=$message
+#end
+#end

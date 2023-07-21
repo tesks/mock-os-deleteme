@@ -1,0 +1,8 @@
+#macro( escape $field)
+#if($field.toString())#set($field=$field.toString().replace('\', '\\').replace('"', '\"'))
+#else#set($field="")
+#{end}
+$field#end
+#if($header)
+record_type,channel_id,channel_name,data_type,dn_to_eu,dn_units,eu_units,module,subsystem,ops_category,channel_format,io_format,eu_io_format#else
+"channel_dictionary","#escape($id)","#escape($title)","#escape($type)","#if($dnToEu)ON#{else}OFF#end","#if($nullTool.isNull($dnUnits))none","#elseif($dnUnits == "")none","#else#escape($dnUnits)","#end#if($nullTool.isNull($euUnits))none","#elseif($euUnits == "")none","#{else}#escape($euUnits)","#{end}#escape($module)","#escape($subsystem)","#escape($opsCategory)","#escape($channelFormat)","#escape($ioFormat)","#escape($euIoFormat)"#end

@@ -1,0 +1,37 @@
+# AMPCS ClientHeartbeatMessage RelaxNG Compact format XML specification.
+#
+# This message is published by JMS subscriber clients to indicate that
+# they are alive.  A unique client ID (source) is included.
+#
+namespace rng = "http://relaxng.org/ns/structure/1.0"
+datatypes xsd = "http://www.w3.org/2001/XMLSchema-datatypes"
+default namespace = "http://dsms.jpl.nasa.gov/mpcs"
+
+include "ContextCommon.rnc"
+include "Times.rnc"
+
+# Start XML document here
+start = MPCSClientHeartbeatMessage-def
+
+# The whole DISA message
+MPCSClientHeartbeatMessage-def = element MPCSClientHeartbeatMessage {
+    
+    context-def?,
+        
+    # The heartbeat message context itself
+    ClientHeartbeatMessage-def
+   
+}
+
+# This is the client heartbeat message element
+ClientHeartbeatMessage-def = element ClientHeartbeatMessage {
+
+    # The time at which this heartbeart message was created
+    attribute eventTime { time-def },
+    
+    context-def?,
+    
+    # The identifier of the client publishing this message
+    element source { xsd:string }
+}
+ 

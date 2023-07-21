@@ -1,0 +1,4 @@
+#if ($body)
+Command SessionId=$sessionId SessionHost=$sessionHost Type=$commandType #if($commandString)CommandString=$commandString #{end}RequestId=$requestId Status=$status Final=$final EventTime=$eventTime#if($rct) RCT=$rct#end#if($originalFile) Original=$originalFile#end#if($scmfFile) SCMF=$scmfFile#end#if($failReason) FailReason=$failReason#end#if($checksum) Checksum=$checksum#end#if($totalCltus) TotalCltus=$totalCltus#end#if($dssId) DssId=$dssId#end#if($bit1RadTime) Bit1RadTime=$bit1RadTime#end#if($lastBitRadTime) LastBitRadTime=$lastBitRadTime#end
+
+#end

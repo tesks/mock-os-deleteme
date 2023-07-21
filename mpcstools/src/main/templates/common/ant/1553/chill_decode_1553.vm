@@ -1,0 +1,13 @@
+#set ( $shellName = "sh" )
+#shell( $shellName )
+
+#init()
+
+#Python()
+
+#set( $tpsLibraries = ["cheetah"] )
+#constructPythonpath ( $tpsLibraries )
+
+#set ( $scriptName = "lib/python/buslog/chill_decode_1553.py" )
+#set ( $excludeSite = "false" )
+#execPython ( $scriptName $excludeSite )

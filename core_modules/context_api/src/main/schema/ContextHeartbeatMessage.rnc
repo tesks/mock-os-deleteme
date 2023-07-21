@@ -1,0 +1,53 @@
+#
+# AMPCS ContextHeartbeatMessage RelaxNG Compact format XML specification
+#
+# ContextHeartbeatMessage is issued upon instigation of a persistent MPCS service.
+# and periodically during the life of the service until the
+# service is complete (as signified by an EndOfSessionMessage)
+# It contains all relevant identifying information regarding
+# the MPCS session.
+#
+# ChangeLog
+# Version: V1.0
+# V1.0 Created schema for R8.1
+#
+#
+namespace rng = "http://relaxng.org/ns/structure/1.0"
+datatypes xsd = "http://www.w3.org/2001/XMLSchema-datatypes"
+default namespace = "http://dsms.jpl.nasa.gov/mpcs"
+
+include "Times.rnc"
+include "ContextConfiguration.rnc"
+include "ServiceConfiguration.rnc"
+
+start = MPCSContextHeartbeatMessage-def
+
+MPCSContextHeartbeatMessage-def = 
+## Root element.
+element MPCSContextHeartbeatMessage {
+    context-def?,
+    heartbeatMessage-def
+}
+
+heartbeatMessage-def = 
+## The MPCS-specific body element.
+element ContextHeartbeatMessage {
+    ## The time this message was created, in the format YYYY-MM-DDTHH:MM:SS.ttt, GMT.
+    attribute eventTime { time-def },
+    
+    context-def?,
+    
+    ## Indicates if the message is from a standalone SSE application
+    element fromSSE {xsd:boolean},
+    
+    ## The start time of the session, which is the same as the start time in the SessionId. Format is YYYY-MM-DDTHH:MM:SS.ttt, GMT.
+    element startTime { time-def },
+    
+    element Contexts { 
+        context-config-def, 
+        
+        ## ServiceConfiguration element
+        ServiceConfiguration-def?
+    }
+    
+}

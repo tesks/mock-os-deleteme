@@ -1,0 +1,4 @@
+#if ($body)
+Product SessionId=$sessionId SessionHost=$sessionHost APID=$apid #if($productType)ProductType=$productType #{end}AbsolutePath=$fullPath CommandNumber=$commandNumber Scet=$scet #if($lst)Lst=$lst #{end}#if($rct)RCT=$rct #{end}ERT=$ert Sclk=$sclk CoarseDVT=$dvtCoarse FineDVT=$dvtFine TotalParts=$totalParts SeqID=$seqId SeqVersion=$seqVersion GroundStatus=$groundStatus #if($vcid)VCID=$vcid #{end}
+
+#{end}

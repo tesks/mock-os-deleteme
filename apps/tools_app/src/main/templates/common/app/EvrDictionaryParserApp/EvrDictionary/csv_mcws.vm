@@ -1,0 +1,8 @@
+#macro( escape $field)
+#if($field.toString())#set($field=$field.toString().replace('\', '\\').replace('"', '\"'))
+#else#set($field="")
+#{end}
+$field#end
+#if($header)
+record_type,evr_id,evr_name,level,module,ops_cat,nargs,format#else
+"evr_dictionary","#escape($id)","#escape($title)","#escape($level)","#escape($module)","#escape($opsCat)","#escape($nargs)","#escape($format)"#{end}

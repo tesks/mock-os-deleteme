@@ -1,0 +1,28 @@
+#if($header)
+#else
+<RequestStatus>
+  <SubmitTime>$submitTime</SubmitTime>
+  <RequestID>$requestId</RequestID>
+#if($userId)
+  <UserID>$userId</UserID>
+#end
+#if($roleId)
+  <RoleID>$roleId</RoleID>
+#end
+  <RequestStatus>$status</RequestStatus>
+  <StatusUpdateTime>$statusUpdateTime</StatusUpdateTime>
+#if($nullTool.isNotNull($includedInExeList))
+  <IncludedInExeList>$includedInExeList</IncludedInExeList>
+#end
+#if($filename)
+  <Filename>$filename</Filename>
+#end
+#if($bitrates)
+  <BitrateRange>
+#foreach($val in $bitrates)
+    <Bitrate>$val</Bitrate>
+#end
+  </BitrateRange>
+#end
+</RequestStatus>
+#end

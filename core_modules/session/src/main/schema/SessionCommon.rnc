@@ -1,0 +1,478 @@
+# AMPCS Common Session Schema
+# 
+# This schema contains two primary elements: SessionId and Session.
+# These definitions are intended for import into other schema.
+# This schema contains no start element and is not intended for
+# standalone use.
+# 
+# SessionId uniquely identifies an AMPCS session and provides
+# the information needed to locate it. All the AMPCS
+# messages include the SessionId element, as do product EMD files.
+# 
+# Session, which includes the SessionId element, describes all
+# the attributes of a session. It is used when writing out the 
+# entire session configuration (SessionConfig.xml files and
+# chill_get_sessions XML output) and is also used in the
+# session start and heartbeat messages. All of these have their
+# own schema files, which import this one.
+# 
+# Comments on every element specifically indicate whether
+# the value in the XML file, if supplied to an AMPCS application
+# that starts a new session, will be used by that new session
+# or will be ignored.
+# 
+# Because this schema is used for many difference purposes and in
+# many configurations, comments also indicate when an optional 
+# element is required and when it is not. The major types of
+# configurations are:
+# 
+# UPLINK-ONLY: This is indicated by a DownlinkConnectionType of UNKNOWN.
+# Downlink ports and hosts are not required in this configuration, which
+# supports only standalone uplink.
+# 
+# DOWNLINK-ONLY: This is indicated by an UplinkConnectionType of UNKNOWN.
+# Uplink ports and hosts are not required in this configuration, which
+# supports only standalone downlink.
+# 
+# INTEGRATED: This is indicated when both UplinkConnectionType and
+# DownlinkConnectionType have values other than UNKNOWN. Both FSW and
+# SSE host, port, and dictionary elements are required (unless there
+# is no SSE).
+# 
+# SSE-DOWNLINK-ONLY: This is indicated by an UplinkConnectionType of UNKNOWN
+# and lack of a FswDictionaryDir element.
+# 
+# CONFIGURATIONS WITHOUT SSE: If SSE is not supported by the current
+# mission, or a configuration that does not require any SSE operations,
+# applications, or data access, SSE ports, hosts, and dictionary elements
+# are not required.
+# 
+# Version: 3.2
+# 
+# ChangeLog: V3.0 06/03/2013 Original Version
+#            V3.1 07/10/2013 Changes for NEN_SN
+#            V3.2 01/21/2020 InputFormat allows only uppercase letters and underscore
+
+namespace rng = "http://relaxng.org/ns/structure/1.0"
+
+
+## Defines the new style SessionId element.
+session-id-def =
+    element SessionId {
+        
+        ## Defines basic session key and description information
+        element BasicSessionInfo {
+            
+            ## The unique ID number of the session. This number is
+            ## assigned by AMPCS when the session in created in the database.
+            ## If no database was used or the session is yet undefined, 
+            ## the session number must be 0.
+            ## 
+            ## NEW SESSION USAGE:
+            ## A new session started using an XML file will NOT use this value.
+            ## AMPCS always assigns a new one.
+            element Number { xsd:nonNegativeInteger },
+            
+            ## Numeric spacecraft identifier. Will be populated by AMPCS if 
+            ## not supplied, based upon current mission configuration.
+            ## 
+            ## NEW SESSION USAGE:            
+            ## A new session started using an XML file will use this value.
+            element SpacecraftId { xsd:nonNegativeInteger }?,
+            
+            ## The name of the session. This is user-specified and is required.
+            ## 
+            ## NEW SESSION USAGE:
+            ## A new session started using an XML file will use this value.
+            element Name { session-name-def },
+            
+            ## The type of the session. This is user-specified and is optional.
+            ## 
+            ## NEW SESSION USAGE:
+            ## A new session started using an XML file will use this value.
+            element Type { session-type-def }?,
+            
+            ## The description of the session. This is user-specified and is 
+            ## optional.
+            ## 
+            ## NEW SESSION USAGE:
+            ## A new session started using an XML file will use this value.
+            element Description { session-description-def }?
+        },
+        
+        ## Defines venue information sufficient to locate the session and its LAD.
+        element Venue {
+            
+            ## The user running the session. This is required, but does not have
+            ## to match the current user's login name.
+            ## 
+            ## NEW SESSION USAGE:            
+            ## A new session started using an XML file will use this value.
+            element User { user-def },
+            
+            ## The host on which the session was run. This is required.
+            ## 
+            ## NEW SESSION USAGE:
+            ## A new session started using an XML file will NOT use this value.
+            ## The session host is always set to the host the session runs on.
+            element Host { host-def },
+            
+            ## The database ID of the host on which the session was run. This
+            ## is required and is automatically assigned by AMPCS. Must be -1
+            ## or omitted if not known.
+            ## 
+            ## A new session started using an XML file will NOT use this value.
+            element HostId { xsd:integer }?
+        },
+        
+        ## The start time of the session, in the format YYYY-MM-DDTHH:MM:SS.ttt, GMT. 
+        ## This is reset by AMPCS each time a new session is started. It cannot be
+        ## used by a user to indicate when a session should start.
+        ## 
+        ## A new session started using this file will NOT use this value. AMPCS
+        ## always assigns a new one.
+        element StartTime { session-time-def },
+        
+        ## The end time of the session, in the format YYYY-MM-DDTHH:MM:SS.ttt, GMT. 
+        ## This may or may not be present, since the session may not have ended. It
+        ## is assigned by AMPCS.
+        ## 
+        ## A new session started using an XML file will NOT use this value. AMPCS
+        ## always assigns a new one.
+        element EndTime { session-time-def }?
+    }
+
+## Defines the Session element, which completely describes an AMPCS session.
+session-def =
+    element Session {
+        
+        ## Include the session and venue identification information. 
+        session-id-def,
+        
+        ## Version of the AMPCS software that produced this session information.
+        ## This information is output-only for AMPCS. It is not used by any 
+        ## application. 
+        element AmpcsVersion { mpcs-version-def }?,
+        
+        ## Full name of the session in the AMPCS database. Supplied by AMPCS
+        ## when creating the session in the database, and may be used as an
+        ## alternate unique key within a specific host.
+        ## 
+        ## NEW SESSION USAGE:
+        ## A new session started using an XML file will NOT use this value. AMPCS
+        ## always assigns a new one.
+        element FullName { xsd:string }?,
+        
+        ## The flight software dictionary version used by the session. This 
+        ## is required in all but SSE-only configurations.
+        ## 
+        ## NEW SESSION USAGE:
+        ## A new session started using an XML file will use this value.
+        element FswVersion { version-def }?,
+        
+        ## The SSE/GSE software dictionary version used by the session. 
+        ## This is optional if there is no SSE in the current configuration. 
+        ## If there is an SSE, this value must be supplied. 
+        ## 
+        ## NEW SESSION USAGE:
+        ## A new session started using an XML file will use this value.
+        element SseVersion { version-def }?,
+        
+        ## Flag indicating whether the flight software downlink was/is to be run 
+        ## as part of the session. Assumed to be false if not present. Used 
+        ## only by the integrated chill application. 
+        element RunFswDownlink { xsd:boolean }?,
+        
+        ## Flag indicating whether the SSE software downlink was/is to be run 
+        ## as part of the session. Assumed to be false if not present. Used
+        ## only by the integrated chill application.
+        element RunSseDownlink { xsd:boolean }?,
+        
+        ## Flag indicating whether the uplink was/is to be run 
+        ## as part of the session. Assumed to be false if not present. Used
+        ## only by the integrated chill application.
+        element RunUplink { xsd:boolean }?,
+        
+        ## Top-level path to the flight dictionary directory. This is required
+        ## in all but SSE-only configurations.
+        ## The mission name will be automatically appended, then the FswVersion,
+        ## to locate the dictionary files.
+        ## 
+        ## NEW SESSION USAGE:
+        ## A new session started using an XML file will use this value.
+        element FswDictionaryDirectory { directory-def }?,
+        
+        ## Top-level path to the SSE dictionary directory. This is optional if 
+        ## there is no SSE in the current configuration. If there is an SSE, this
+        ## value must be supplied. The mission name will be automatically appended, 
+        ## then the SseVersion, to locate the dictionary files.
+        ## 
+        ## NEW SESSION USAGE:
+        ## A new session started using an XML file will use this value.
+        element SseDictionaryDirectory { directory-def }?,
+        
+        ## Session output directory path. 
+        ## 
+        ## If the OutputDirOverridden flag is set, this is required and 
+        ## will be used as is by a new session. If this directory does not 
+        ## exist, it will be created by AMPCS.
+        ## 
+        ## NEW SESSION USAGE:
+        ## If the override flag is not set, this element will be populated by AMPCS 
+        ## when a new session is created, and any existing value in the XML
+        ## file will NOT be used.
+        element OutputDirectory { directory-def }?,
+        
+        ## Flag indicating whether the session output directory is overridden 
+        ## by the user. Assumed to be false if not supplied. 
+        ## 
+        ## NEW SESSION USAGE:
+        ## If this flag is set to true, and 
+        ## the XML is supplied to an AMPCS application that creates an output
+        ## directory, the value of OutputDirectory will be used as the 
+        ## session output directory. If this flag is false, AMPCS will automatically
+        ## create a new output directory.
+        element OutputDirOverridden { xsd:boolean }?,
+        
+        ## Defines the full set of venue information.
+        element VenueInformation {
+            
+            ## The AMPCS venue type. This indicates the type of environment in which 
+            ## the session is run. This is required.
+            ## 
+            ## NEW SESSION USAGE:            
+            ## A new session started using an XML file will use this value.
+            element VenueType {
+                "TESTSET" | "TESTBED" | "ATLO" | "OPS" | "CRUISE" | "SURFACE" | "ORBIT"
+            },
+            
+            ## The input data format for the downlink processor. This is required.
+            ## UNKNOWN value is used in uplink-only session configurations. 
+            ## 
+            ## NEW SESSION USAGE:
+            ## A new session started using an XML file will use this value.            
+            element InputFormat { input-format-def },
+            
+            ## The downlink connection type. Indicates the type of connection 
+            ## to the data source. This is required. Should be UNKNOWN for 
+            ## uplink-only sessions.
+            ## NEW SESSION USAGE:
+            ## A new session started using an XML file will use this value.                       
+            element DownlinkConnectionType {
+                "UNKNOWN"
+                | "FILE"
+                | "DATABASE"
+                | "CLIENT_SOCKET"
+                | "SERVER_SOCKET"
+                | "NEN_SN_SERVER"
+                | "NEN_SN_CLIENT"
+                | "TDS"
+            },
+            
+            ## The uplink connection type. This is required. Indicates the type of connection 
+            ## to the command sink. Should be UNKNOWN for downlink-only sessions.
+            ## 
+            ## NEW SESSION USAGE:
+            ## A new session started using an XML file will use this value.              
+            element UplinkConnectionType {
+                "UNKNOWN" | "SOCKET" | "COMMAND_SERVICE"
+            },
+            
+            ## The Testbed Name. Required only for ATLO and TESTBED venue types. Will
+            ## be ignored in all other cases.
+            ## 
+            ## NEW SESSION USAGE:
+            ## A new session started using an XML file will use this value.   
+            element TestbedName { testbed-def }?,
+            
+            ## Downlink stream ID, indicating which flight stream is being processed. 
+            ## Required only for ATLO and TESTBED venues. Will be ignored in all other cases.
+            ## 
+            ## NEW SESSION USAGE:
+            ## A new session started using an XML file will use this value.
+            element DownlinkStreamId {
+                "TZ" | "LV" | "SA" | "Command Echo" | "Selected DL" | "Not applicable"
+            }?,
+            
+            ## The Session data source station filter. Optional. If set, only downlink data 
+            ## from the indicated station will be processed and telemetry without
+            ## a station ID will be tagged with this value. If not present, data 
+            ## from all stations will be processed, and telemetry without a station
+            ## will be tagged with a station ID of 0.
+            ## 
+            ## NEW SESSION USAGE:
+            ## A new session started using an XML file will use this value.   
+            element SessionDssId { xsd:nonNegativeInteger }?,
+            
+            ## The Session virtual channel identifier filter. If set, only downlink 
+            ## data from the indicated virtual channel will be processed. If not 
+            ## present, data from all virtual channels will be processed.
+            ## 
+            ## NEW SESSION USAGE:
+            ## A new session started using an XML file will use this value.   
+            element SessionVcid { xsd:nonNegativeInteger }?,
+            
+            ## The input file for the downlink processor. Required only if the 
+            ## DownlinkConnectionType is FILE or if the DownlinkConnectionType
+            ## is TDS. In the former case, this value is the path to the data
+            ## file to process. In the latter, it is the path to a PVL file.
+            ## 
+            ## NEW SESSION USAGE:
+            ## A new session started using an XML file will use this value.
+            element InputFile { file-def }?,
+            
+            ## Session key (number) to be used if replaying data from the database, 
+            ## i.e., if DownlinkConnectionType is DATABASE. Required in that case,
+            ## ignored in all other configurations.
+            ## 
+            ## NEW SESSION USAGE:
+            ## A new session started using an XML file will use this value.
+            element DatabaseSessionKey { xsd:nonNegativeInteger }?,
+            
+            ## Session host to be used if replaying data from the database, i.e.,
+            ## if DownlinkConnectionType is DATABASE.  Required in that case,
+            ## ignored in all other configurations.
+            ## 
+            ## NEW SESSION USAGE:
+            ## A new session started using an XML file will use this value.
+            element DatabaseSessionHost { host-def }?,
+            
+            ## JMS sub-topic for publication of real-time messages, to be 
+            ## prepended to the automatic JMS topic name if supplied. Used only 
+            ## for OPS, CRUISE, and SURFACE venues, and always optional. Will be
+            ## ignored in non-OPS configurations.
+            ## 
+            ## NEW SESSION USAGE:
+            ## A new session started using an XML file will use this value.           
+            element JmsSubtopic { sub-topic-def }?,
+            
+            ## JMS Topic for publication of real-time messages. Populated by 
+            ## AMPCS and cannot be overridden by the user.
+            ## 
+            ## NEW SESSION USAGE:
+            ## A new session started using an XML file will NOT use this value.              
+            element Topic { topic-def }?
+        },
+        
+        ## Defines uplink sink and downlink source host and port information.
+        element HostInformation {
+            
+            ## The flight data source host. Not required in uplink-only sessions; 
+            ## required in all others.
+            ## 
+            ## NEW SESSION USAGE:
+            ## A new session started using an XML file will use this value.     
+            element FswDownlinkHost { host-def }?,
+            
+            ## The flight command sink host. Not required in downlink-only sessions;
+            ## required in all others.
+            ## 
+            ## NEW SESSION USAGE:
+            ## A new session started using an XML file will use this value.                
+            element FswUplinkHost { host-def }?,
+            
+            ## The SSE data source and command sink host. Optional if 
+            ## there is no SSE. If there is an SSE, this value must be supplied.
+            ## 
+            ## NEW SESSION USAGE:
+            ## A new session started using an XML file will use this value.
+            element SseHost { host-def }?,
+            
+            ## The flight command sink port. Not required in downlink-only sessions.
+            ## Required in all others.
+            ## 
+            ## NEW SESSION USAGE:
+            ## A new session started using an XML file will use this value.
+            element FswUplinkPort { port-def }?,
+            
+            ## The SSE command sink port.  Optional if there is no SSE. Not 
+            ## required in downlink-only sessions. If there is an SSE, this 
+            ## value must be supplied in all other configurations.
+            ## 
+            ## NEW SESSION USAGE:
+            ## A new session started using an XML file will use this value.           
+            element SseUplinkPort { port-def }?,
+            
+            ## The flight data source port. Not required in uplink only sessions.
+            ## Required in all other configurations.
+            ## 
+            ## NEW SESSION USAGE:
+            ## A new session started using an XML file will use this value.
+            element FswDownlinkPort { port-def }?,
+            
+            ## The SSE data source port.  Optional if there is no SSE.  Not 
+            ## required in uplink-only sessions. If there is an SSE, this 
+            ## value must be supplied in all other configurations.
+            ## 
+            ## NEW SESSION USAGE:
+            ## A new session started using an XML file will use this value.            
+            element SseDownlinkPort { port-def }?
+        },
+        
+        ## Version of this session configuration. A mismatch with the
+        ## current version of AMPCS will prevent use of the XML file.
+        attribute version { "3" }
+    }
+
+## Definition of an ISO time field
+session-iso-time-def =
+    xsd:string {
+        pattern =
+            "[0123456789]{4}-[0123456789]{2}-[0123456789]{2}T[0123456789]{2}:[0123456789]{2}:[0123456789]{2}.[0123456789]{3}"
+    }
+
+## Definition of a day-of-year time field
+session-doy-time-def =
+    xsd:string {
+        pattern =
+            "[0123456789]{4}-[0123456789]{3}T[0123456789]{2}:[0123456789]{2}:[0123456789]{2}.[0123456789]{3}"
+    }
+
+## Definition of a session time, which may be ISO or DOY
+session-time-def = session-iso-time-def | session-doy-time-def
+
+## Valid pattern for a session name
+session-name-def = xsd:token { pattern = "[A-Za-z0-9_\-]{1,64}" }
+
+## Valid pattern for a session type
+session-type-def = xsd:token { pattern = "[^%&<>]{1,64}" }
+
+## Valid pattern for a session description
+session-description-def = xsd:token { pattern = "[^%&<>]{1,255}" }
+
+## Valid pattern for a user name
+user-def = xsd:token { pattern = "[A-Za-z0-9_\-]{1,32}" }
+
+## Valid pattern for a host name or IP
+host-def = xsd:token { pattern = "[A-Za-z0-9_\-\.]{1,64}" }
+
+## Valid pattern for a testbed name
+testbed-def = xsd:token { pattern = "[A-Za-z0-9_\-]{1,32}" }
+
+## Valid pattern for a flight or SSE dictionary version
+version-def = xsd:token { pattern = ".{1,64}" }
+
+## Valid pattern for an MPCS version
+mpcs-version-def = xsd:token { pattern = "[A-Za-z0-9\./]{1,16}" }
+
+## Valid pattern for a directory path
+directory-def = xsd:token { pattern = ".{1,1024}" }
+
+## Valid pattern for a file path
+file-def = xsd:token { pattern = ".{1,1024}" }
+
+## Valid pattern for a sub-topic name
+sub-topic-def = xsd:token { pattern = "[A-Za-z0-9_\-\.]{1,32}" }
+
+## Valid pattern for a topic name
+topic-def = xsd:token { pattern = "[A-Za-z0-9_\-\.]{1,128}" }
+
+## Valid range for a port number
+port-def = xsd:nonNegativeInteger { minInclusive = "1" maxInclusive = "65535" }
+
+## Valid range for a LAD port number, which may have a zero value if the
+## session was not written to the database.
+lad-port-def = xsd:nonNegativeInteger { minInclusive = "0" maxInclusive = "65535" }
+
+## valid pattern for input format
+input-format-def = xsd:token { pattern = "[A-Z_]{1,32}" }

@@ -1,0 +1,19 @@
+# AMPCS multi-session schema.
+# 
+# This schema defines the XML output of tools that 
+# return metadata about multiple sessions.
+# 
+# Version: 1.0
+#
+# ChangeLog: V1.0 3/12/2013 Original Schema
+#
+namespace rng = "http://relaxng.org/ns/structure/1.0"
+datatypes xsd = "http://www.w3.org/2001/XMLSchema-datatypes"
+
+include "SessionCommon.rnc"
+
+## The XML root element
+start = sessions-def
+
+## One Sessions element, which contains 0 or more Session elements.
+sessions-def = element Sessions { session-def* }

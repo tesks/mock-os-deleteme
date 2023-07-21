@@ -1,0 +1,3 @@
+#if($header)
+channel-ID,channel-Mnemonic,channel-Type,DN-units,DN2EU-flag,EU-units,Channel-format#else
+$id,#if($nullTool.isNotNull($title))$title,#else,#end$typeDrf,#if($nullTool.isNull($dnUnits))none,#elseif($dnUnits == "")none,#else$dnUnits,#end#if($dnToEu)ON,#{else}OFF,#end#if($nullTool.isNull($euUnits))none#elseif($euUnits == "")none#{else}$euUnits#end,$channelFormat#end

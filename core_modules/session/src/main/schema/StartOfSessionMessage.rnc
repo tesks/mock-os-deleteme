@@ -1,0 +1,57 @@
+#
+# AMPCS StartOfSessionMessage RelaxNG Compact format XML specification
+#
+# StartOfSessionMessage is issued upon instigation of an AMPCS session.
+# It uniquely identifies the session in progress. When the
+# session is complete, an EndOfSessionMessage will be issued.
+#
+# Version: 6.1
+#
+# ChangeLog:
+# V3.0 Updated to import new common session schema.
+# V4.0 Updated to include service configuration
+# V5.0 Updated the global lad host and port  information.
+# V6.0 Major updates for AMPCS R8
+# V6.1 Refactored ServiceConfiguration element definition to its own schema
+#
+namespace rng = "http://relaxng.org/ns/structure/1.0"
+datatypes xsd = "http://www.w3.org/2001/XMLSchema-datatypes"
+default namespace = "http://dsms.jpl.nasa.gov/mpcs"
+
+include "SessionCommon.rnc"
+include "ContextCommon.rnc"
+include "Times.rnc"
+include "ServiceConfiguration.rnc"
+
+start = MPCSStartOfSessionMessage-def
+
+MPCSStartOfSessionMessage-def = 
+## Root element. 
+element MPCSStartOfSessionMessage {
+    context-def?,
+    startOfSessionMessage-def
+}
+
+startOfSessionMessage-def = 
+## The MPCS specific body element.
+element StartOfSessionMessage {
+    ## The time this message was created, in the format YYYY-MM-DDTHH:MM:SS.ttt, GMT.
+    attribute eventTime { time-def },
+    
+    context-def?,
+    
+    ## Indicates if the message is from a standalone SSE application
+    element fromSSE {xsd:boolean},
+    
+    ## The start time of the session. Format is YYYY-MM-DDTHH:MM:SS.ttt, GMT.
+    element startTime { time-def },
+    
+    ## The full definition  of the session
+    element Sessions {
+       session-def
+    },
+    
+    ## The service configuration associated with the session.
+    ## Refactored ServiceConfiguration out to a schema
+    ServiceConfiguration-def?
+}

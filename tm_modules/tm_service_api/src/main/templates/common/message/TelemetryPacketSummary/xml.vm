@@ -1,0 +1,20 @@
+#if ($body)
+<PacketExtractSumMessage eventTime = "$eventTime">
+  <fromSSE>$fromSse</fromSSE>
+  <numFrameGaps>$numFrameGaps</numFrameGaps>
+  <numFrameRegressions>$numFrameRegressions</numFrameRegressions>
+  <numFrameRepeats>$numFrameRepeats</numFrameRepeats>
+  <numValidPackets>$numValidPackets</numValidPackets>
+  <numIdlePackets>$numIdlePackets</numIdlePackets>
+  <numInvalidPackets>$numInvalidPackets</numInvalidPackets>
+  <numStationPackets>$numStationPackets</numStationPackets>
+
+#if ($summaryList)
+  <packetSummaries>
+#foreach($sum in $summaryList)  
+       <packetSummary packetType="#if($sum.getPacketType())$sum.getPacketType()#end" vcid="$sum.getVcid()" apid="$sum.getApid()" apidName="$sum.getApidName()" instanceCount="$sum.getCount()" lastScetTime="$sum.getLastScetStr()" lastLstTime=#if($sum.getLastSolStr())"$sum.getLastSolStr() "#else" "#end lastSclkTime="$sum.getLastSclkStr()" lastErtTime="$sum.getLastErtStr()" lastSequenceNum="$sum.getSeqCount()"/>
+#end
+  </packetSummaries>
+#end
+</PacketExtractSumMessage>
+#end

@@ -1,0 +1,91 @@
+datatypes xsd = "http://www.w3.org/2001/XMLSchema-datatypes"
+
+# This is the schema for algorithm config files (TBD: or dictionary?).
+# TBD: centralize all algorithm definitions, or split into separate files?
+# The algorithm configurations provides definitions separate from dictionaries
+# and config files
+# that use the algorithms, in order to encapsulate details such as the Java
+# class name.
+start = algorithms-def
+
+algorithms-def = element algorithms { 
+    attribute schema_version { "1.0" }
+    & sclk-extractors-def?
+    & validators-def?
+    & transformers-def?
+    & decommutators-def?
+    & secondary-packet-header-extractor-def?
+}
+
+# Validators are algorithms that produce a boolean return value, indicating
+# whether data is good or bad.  Examples include checksums or bounds checks.
+validators-def = element validators {
+    element validator {
+        common-algorithm-def
+    }*
+}
+
+# Sclk extractors are algorithms that produce a canonical Sclk object from
+# arbitrary bytes. AMPCS can then use the Sclk to timetag telemetry.
+sclk-extractors-def = element sclk_extractors {
+   element sclk_extractor {
+        common-algorithm-def
+   }*
+}
+
+# Transformers are algorithms that take an input byte array and return some 
+# other byte array, which AMPCS will continue processing.
+transformers-def = element transformers {
+    element transformer {
+        common-algorithm-def
+   }*
+}
+
+# Decommutators are algorithms that take an input byte array and "consume" the
+# data.  AMPCS does not expect a return value and does no further processing on
+# that data.
+decommutators-def = element decommutators {
+    element decommutator {
+        common-algorithm-def
+   }*
+}
+
+# Secondary packet header extractors take an input byte array and offset
+# and return a secondary packet header object. They can be pointed at
+# from the APID dictionary.
+secondary-packet-header-extractor-def = element secondary_packet_header_extractors {
+    element secondary_packet_header_extractor {
+        common-algorithm-def
+    }*
+}
+
+common-algorithm-def =
+    # id is used to reference all types of algorithms from other files,
+    # including time configuration and decom maps.
+    attribute id { xsd:string },
+    # The algorithm implementation class.
+    java-class-name-def,
+    static-args-def?,
+    var-args-def?
+
+
+
+# String pattern for defining a java class name, which should include the
+# full package name.
+java-class-name-def =  element java_class {
+    xsd:token
+}
+
+# Static args is a map of elements, where each element name is the name of an
+# argument, and the text within the element is the value of that argument.
+static-args-def = element static_args {
+    element * { xsd:string }*
+}
+
+# Var args is a map of elements, where each element name is the name of an
+# argument that will be provided
+# by a decom map.  This definition is used to help users validate decom maps by
+# making sure their algorithm calls provide declared arguments.
+var-args-def = element var_args {
+    element * { empty } *
+}

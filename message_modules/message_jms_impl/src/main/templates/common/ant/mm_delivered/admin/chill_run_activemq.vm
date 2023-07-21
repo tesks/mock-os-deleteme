@@ -1,0 +1,2 @@
+#!/bin/sh
+$CHILL_GDS/bin/internal/chill_run_activemq start

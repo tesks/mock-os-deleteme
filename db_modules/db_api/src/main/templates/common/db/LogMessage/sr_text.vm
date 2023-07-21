@@ -1,0 +1,23 @@
+##DEFAULT_WIDTH(30),DEFAULT_WIDTH(30),DEFAULT_WIDTH(30),SMALL_WIDTH(10),LARGE_WIDTH(50),DEFAULT_WIDTH(30),DEFAULT_WIDTH(30),DEFAULT_WIDTH(30)
+#set($ndScet="-----------------------")
+#set($ndSclk="----------------")
+#if ($header)
+#set($eventTime="EVENT_TIME                    ")
+#set($scet="SCET                          ")
+#set($sclk="SCLK                          ")
+#set($log="LOG       ")
+#set($level="LEVEL                         ")
+#set($class="CLASS                         ")
+#set($msg="MESSAGE                       ")
+${eventTime}	${scet}	${sclk}	${log}	${level}	${class}	${msg}	SESSION CONTEXT
+#elseif ($trailer)
+#else
+#if($eventTime)#{set}($eventTime= $formatter.anCsprintf("%-30s", $eventTime))#{end}
+#{set}($scet= $formatter.anCsprintf("%-30s", $ndScet))
+#{set}($sclk= $formatter.anCsprintf("%-30s", $ndSclk))
+#{set}($log="LOG")#{set}($log= $formatter.anCsprintf("%-10s", $log))
+#if($severity)#{set}($level= $formatter.anCsprintf("%-30s", $severity.toUpperCase()))#{end}
+#if($type)#{set}($type= $formatter.anCsprintf("%-30s", $type))#{end}
+#if($message)#{set}($msg= $formatter.anCsprintf("%-30s", $message.replaceAll("[\r\n]+", " ")))#{end}
+${eventTime}	${scet}	${sclk}	${log}	${level}	${type}	${msg}	$sessionId $contextId
+#end

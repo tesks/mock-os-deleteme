@@ -1,0 +1,3 @@
+#if ($body)
+"Evr","$sessionId","$sessionHost","#if($name)$name#{end}","#if($module)$module#{end}","#if($level)$level#{end}","#if($event)$event#{end}","#if($vcid)$vcid#{end}","#if($dssId >= 0)$dssId#{end}","$fromSse","#if($nullTool.isNotNull($realTime))$realTime#{end}","#if($sclk)$sclk#{end}","#if($scet)$scet#{end}","#if($lst)$lst#{end}","#if($ert)$ert#{end}","#if($rct)$rct#{end}","#if($message)$message#{end}","$mdKeysList","$mdValsList"
+#{end}

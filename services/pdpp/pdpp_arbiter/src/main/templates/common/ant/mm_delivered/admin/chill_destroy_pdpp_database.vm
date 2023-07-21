@@ -1,0 +1,52 @@
+#set ( $shellName = "sh" )
+#shell( $shellName )
+
+#checkForHelpOption()
+#checkChillMission()
+
+if test "$showHelp" = "true"
+then
+printf "${CHILL_MISSION} chill_destroy_pdpp_database --user <username> [Other-MySQL-options]"
+
+    printf "The chill_destroy_database script is used to remove the current version of the MPCS database. This script will empty out the contents of the database tables, remove the database, and remove the "mpcs" MySQL user account.
+
+    The MySQL executable must be in your executable path to use this script. A MySQL user name and password must be supplied. In the default MPCS configuration, the username "mpcs" may be used for all missions except MSL; there is no password in this case. For MSL, the "mpcs" username does not possess the privileges to perform the action.
+
+    The environment variable named "CHILL_GDS" must point to the root of the MPCS installation (one level above the MPCS "bin" directory). If this environment variable is not present, the script will fail.
+
+    To execute this script, it should simply be run from the command line. The script will prompt you for the database name suffix. The usual answer to this is the empty string. The script then will prompt you to confirm that the database should be destroyed. If 'y' is entered, then database destruction will occur. If 'n' is entered, then the script will exit with no changes having been made.
+
+    There are no special options for this script: all are passed through to MySQL."
+
+    exit 1
+fi
+
+#init()
+
+# MPCS-8179 06/09/16: Versioned PDPP DV to V1.0.0
+# MPCS-10216 10/19/18: Update PDPP DV to V1.2.0
+# MPCS-11563 2/18/2020: Update PDPP DV to V1.3.0
+
+NAME="${CHILL_MISSION}_pdpp_automation_v1_3_0"
+
+#if ( $isUnitTest )
+
+    NAME="${CHILL_MISSION}_pdpp_automation_v1_3_0"
+
+#end
+
+echo "This script will delete the ${NAME} database for AMPCS Post Downlink Product Processing."
+echo "Any existing PDPP data in that database will be lost."
+
+printf "Are you sure this is what you want to do? (y/n) "
+read ANSWER
+
+if [ "$ANSWER" != "y" -a "$ANSWER" != "Y" ]; then
+        echo "Terminating without any changes to the PDPP database..."
+        exit 1
+fi
+
+CMD="DROP DATABASE IF EXISTS ${NAME};"
+
+echo "Deleting database, ${NAME}, for PDPP..."
+mysql $CHILL_MYSQL_OPTIONS $@ -e "$CMD"

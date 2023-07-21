@@ -1,0 +1,3 @@
+#if($body)
+$formatter.anCsprintf("%-25s",$sclk.toString())$formatter.anCsprintf("%-40s",$ert.toString())$formatter.anCsprintf("%-60s",$name)$formatter.anCsprintf("%-10s",$module)$formatter.anCsprintf("%-25s",$level)$message
+#end

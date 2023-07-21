@@ -1,0 +1,134 @@
+ /**
+ * Copyright 2006-2018. California Institute of Technology.
+ * ALL RIGHTS RESERVED.
+ * U.S. Government sponsorship acknowledged.
+ *
+ * This software is subject to U. S. export control laws and
+ * regulations (22 C.F.R. 120-130 and 15 C.F.R. 730-774). To the
+ * extent that the software is subject to U.S. export control laws
+ * and regulations, the recipient has the responsibility to obtain
+ * export licenses or other export authority as may be required
+ * before exporting such information to foreign countries or
+ * providing access to foreign nationals.
+ */
+/**
+ * AMPCS common protobuf schema for frame information.
+ *
+ * Version: 2.0
+ * ChangeLog:
+ * V1.0 New for R8.0
+ * V2.0 Added TransferFrameDefinition, TelemetryFrameHeader, and associated inner objects
+ */
+syntax = "proto3";
+
+package frame;
+
+import "primitives/key_value.proto";
+
+option optimize_for = SPEED;
+option java_multiple_files = true;
+option java_package = "jpl.gds.serialization.frame";
+option java_outer_classname = "ProtoBufTelemetryFrameInfoSerialization";
+
+enum Proto3InvalidFrameCode {
+    OK = 0;
+    RS_ERROR = 1;
+    CRC_ERROR = 2;
+    BAD_VERSION = 3;
+    BAD_SCID = 4;
+    BAD_HEADER = 5;
+    UNKNOWN = 6;
+    BAD_VCID = 7;
+    BAD_PKT_POINTER = 8;
+    TURBO_ERROR = 9;
+}
+
+message Proto3TransferFrameDefinition {
+	int32 caduBitSize = 1;
+	int32 encodedCaduBitSize = 2;
+	int32 encodingBitSize = 3;
+	string name = 4;
+	
+	enum Proto3EncodingType {
+		TURBO_1_2 = 0;
+		TURBO_1_3 = 1;
+		TURBO_1_4 = 2;
+		TURBO_1_6 = 3;
+		REED_SOLOMON = 4;
+		UNENCODED = 5;
+		BYPASS = 6;
+		ANY_TURBO = 7;
+	}
+	
+	Proto3EncodingType encoding = 5;
+	int32 asmBitSize = 6;
+	bytes asm = 7;
+	int32 primaryHeaderSize = 8;
+	int32 secondaryHeaderSize = 9;
+	int32 operationalControlSize = 10;
+	int32 frameErrorControlSize = 11;
+	int32 headerErrorControlSize = 12;
+	int32 dataAreaSize = 13;
+	int32 pduHeaderSize = 14;
+	bool arrivesWithAsm = 15;
+	
+	message Proto3FrameFormatDefinition {
+		string frameHeaderClass = 1;
+		string frameErrorControlClass = 2;
+		
+		enum Proto3FrameFormatDefinitionTypeName {
+			CCSDS_TM_1 = 0;
+			CCSDS_AOS_2_MPDU = 1;
+			CCSDS_AOS_2_BPDU = 2;
+			CUSTOM_CLASS = 3;
+			UNKNOWN = 4;
+		}
+		
+		Proto3FrameFormatDefinitionTypeName type = 3;
+	}
+	
+	Proto3FrameFormatDefinition formatType = 16;
+	Proto3KeyValue attributes = 17;
+	string description = 18;
+	
+	message Proto3FrameTimeFieldDefinition {
+		int32 offset = 1;
+		int32 size = 2;
+		
+		enum Proto3FrameTimeFieldDefinitionTimecodeType {
+			PROJECT_SCLK = 0;
+			CUSTOM_SCLK = 1;
+			CUSTOM_CLASS = 2;
+		}
+		
+		Proto3FrameTimeFieldDefinitionTimecodeType type = 3;
+		
+		string extractorClass = 4;
+		map<string, int32> params = 5;
+	}
+	
+	Proto3FrameTimeFieldDefinition timeField = 19;
+}
+
+message Proto3TelemetryFrameInfo {
+    oneof hasScid { int32 spacecraftId = 1; }
+    string name = 2;
+    oneof hasVcid { int32 vcid = 3; }
+    int32 seqCount = 4;
+    int32 version = 5;
+    int32 size = 6;
+    int32 firstPacketPointer = 7;
+    bool isFrameIdle = 8;
+    bool isDeadCode = 9;
+    bool isFrameBad = 10;
+    Proto3InvalidFrameCode badReason = 11;
+    
+    message Proto3TelemetryFrameHeader {
+    	string headerClass = 1;
+    	bytes headerBytes = 2;
+    	repeated int32 idleVcids = 3;
+    }
+    
+    Proto3TelemetryFrameHeader header = 12;
+    Proto3TransferFrameDefinition format = 13;
+}

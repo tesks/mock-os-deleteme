@@ -1,0 +1,295 @@
+#!/bin/bash
+###############################################
+# Initialization for the AMPCS Project
+#
+echo "Setting up AMPCS Development Environment"
+###############################################
+#
+# General AMPCS Build Naming Conventions
+#
+###############################################
+export GDS_JAVA_OPTS=
+export MAVEN_OPTS='-Xms1024M -Xmx2048M -Xss128M -XX:MetaspaceSize=512M -XX:MaxMetaspaceSize=1024M -XX:+CMSClassUnloadingEnabled'
+export AMPCS_PROJECTS="mpcstools datagen generic juno micro_adaptation msl nsyt ody shared_lib smap"
+
+unset AMPCS_WORKSPACE_ROOT
+export CHILL_GDS_TEST=~/Documents/JPL/dev/AMPCS_test_Dev
+export CHILL_GDS_DICT=~/Documents/JPL/dev/AMPCS_dict_Dev
+
+#
+# AMPCS Baseline Roots
+#
+export JAVA8_HOME=`/usr/libexec/java_home -v 1.8`
+
+export AMPCS_BASELINE_ROOT=~/Documents/JPL/dev/mpcs-git
+
+export AMPCSR73="AMPCSR73"
+export AMPCSR74="AMPCSR74"
+export AMPCSR75="AMPCSR75"
+export AMPCSR76="AMPCSR76"
+export AMPCSR80="AMPCSR80${AMPCS_ALTERNATIVE_BRANCH}"
+
+unset AMPCS_WORKSPACE_SUFFIX
+
+#
+# $CHILL_GDS must be set to something that will not initially be found in the $PATH
+#
+export CHILL_GDS="CHILL_GDS_IS_NOT_SET"
+export ORIGINAL_PYTHONPATH=$PYTHONPATH
+
+function printAmpcsHelp() {
+ echo "*****************************************************************************"
+ echo "AMPCS Aliases:"
+ echo "  R73   - Set AMPCS R7.3.x Environment (Maven Build with Java 8)"
+ echo "  R74   - Set AMPCS R7.4.x Environment (Maven Build with Java 8)"
+ echo "  R75   - Set AMPCS R7.5.x Environment (Maven Build with Java 8)"
+ echo "  R76   - Set AMPCS R7.6.x Environment (Maven Build with Java 8)"
+ echo "  R80   - Set AMPCS R8.0.x Environment (Maven Build with Java 8)"
+ echo "  J8    - Set Java 8 Environment"
+ echo "  ampcs - Print this help screen"
+ echo ""
+ echo "Make sure to customize the definitions of these values:"
+ echo ""
+ echo "  JAVA8_HOME           (${JAVA8_HOME})"
+ echo ""
+ echo "  PYTHONPATH           (${PYTHONPATH})"
+ echo ""
+ echo "  AMPCS_BASELINE_ROOT  (${AMPCS_BASELINE_ROOT})"
+ echo "  MVN_LOCAL_REPO_AMPCS (${MVN_LOCAL_REPO_AMPCS})"
+ echo ""
+ echo "  AMPCSR73             (${AMPCSR73}): ${AMPCS_BASELINE_ROOT}/${AMPCSR73}"
+ echo "  AMPCSR74             (${AMPCSR74}): ${AMPCS_BASELINE_ROOT}/${AMPCSR74}"
+ echo "  AMPCSR75             (${AMPCSR75}): ${AMPCS_BASELINE_ROOT}/${AMPCSR75}"
+ echo "  AMPCSR76             (${AMPCSR76}): ${AMPCS_BASELINE_ROOT}/${AMPCSR76}"
+ echo "  AMPCSR80             (${AMPCSR80}): ${AMPCS_BASELINE_ROOT}/${AMPCSR80}"
+ echo ""
+ echo "at the top of the file \"~/bin/ampcs\" to match your file structure and"
+ echo "and Java configuration."
+ echo ""
+ echo "NOTE: This script assumes that all baselines are in the same parent directory"
+ echo "      as defined by the value of \"\$AMPCS_BASELINE_ROOT\" (also defined in"
+ echo "      the file \"~/bin/ampcs\")."
+ echo "*****************************************************************************"
+}
+
+function _ampcs() {
+ # If an argument is passed, use it
+ if [[ "X${1}" != "X" ]]; then
+  AMPCS_ALTERNATIVE_BRANCH="${1}"
+ fi
+
+ # If ${AMPCS_ALTERNATIVE_BRANCH} is empty then set to '_baseline'
+ if [[ "X${AMPCS_ALTERNATIVE_BRANCH}" == "X" ]]; then
+  AMPCS_ALTERNATIVE_BRANCH='baseline'
+ fi
+
+ # Check to be sure that ${AMPCS_ALTERNATIVE_BRANCH} starts with an underscore
+ if [[ ${AMPCS_ALTERNATIVE_BRANCH} != _* ]]; then
+  AMPCS_ALTERNATIVE_BRANCH="_${AMPCS_ALTERNATIVE_BRANCH}"
+ fi
+ export AMPCS_ALTERNATIVE_BRANCH
+
+ # Set AMPCS_WORKSPACE_ROOT
+ export AMPCS_WORKSPACE_ROOT="AMPCSR80${AMPCS_ALTERNATIVE_BRANCH}"
+
+ # Set project and baseline specific local maven repo
+ export MVN_LOCAL_REPO_AMPCS=${HOME}/.m2/repository${AMPCS_ALTERNATIVE_BRANCH}_AMPCS
+
+ # Make sure local repo directory exists
+ mkdir -p ${MVN_LOCAL_REPO_AMPCS}
+
+ # Set project specific settings.xml file
+ export MVN_SETTINGS_AMPCS="${HOME}/.m2/settings.xml.ampcs${AMPCS_ALTERNATIVE_BRANCH}"
+
+ # Set project specific ${MVN} command that uses project specific settings.xml and local repo
+ export MVN="mvn -s ${MVN_SETTINGS_AMPCS} -Dmaven.repo.local=${MVN_LOCAL_REPO_AMPCS}"
+
+ # Set the baseline
+ setBaselineAMPCS ${AMPCS_WORKSPACE_ROOT} && goAMPCS
+
+ # Go there...
+ cd ${AMPCS_WORKSPACE_ROOT}
+
+ # Print help message
+ printAmpcsHelp
+
+ #
+ # Start ActiveMQ
+ #
+ activemq start
+}
+
+function _path() {
+ arg=$1
+ if [ "X$arg" == "X" ]; then
+  arg=$path
+ fi
+ for f in {1..50}; do p=`echo $arg | cut -d\: -f$f`; if [ "${#p}" = "0" ] ; then break ; fi ; echo $p; done
+}
+
+function remove_java_home_from_path() {
+ TEMP_PATH=$(_path $PATH | grep -v $JAVA_HOME)
+ TEMP_PATH=$(echo $TEMP_PATH | sed -e 's/ /:/g')
+ export PATH=$TEMP_PATH
+# echo "Removed $JAVA_HOME from PATH"
+}
+
+function add_java_home_to_path() {
+ export PATH=$JAVA_HOME/bin:$PATH
+# echo "Added $JAVA_HOME to PATH"
+}
+
+function remove_gds_from_path() {
+ if [ "X$AMPCS_WORKSPACE_ROOT" != "X" ]; then
+  TEMP_PATH=$(_path $PATH | grep -v $CHILL_GDS | grep -v ".*_scripts")
+  TEMP_PATH=$(echo $TEMP_PATH | sed -e 's/ /:/g')
+  export PATH=$TEMP_PATH
+#  echo "Removed $AMPCS_WORKSPACE_ROOT from PATH"
+ fi
+}
+
+function add_gds_to_path() {
+ if [ "X${1}" != "X" ]; then
+  if [ "X${1}" != "Xcore" ]; then
+   PATH=$CHILL_GDS/bin:$CHILL_GDS/bin/tools:$CHILL_GDS/bin/test:$CHILL_GDS/bin/internal:$CHILL_GDS/bin/admin:$PATH
+  fi
+#  echo "Added $AMPCS_WORKSPACE_ROOT to PATH"
+ fi
+}
+
+function goAMPCS() {
+ if [ "X${AMPCS_WORKSPACE_ROOT}" == "X" ]; then
+  echo "\$AMPCS_WORKSPACE_ROOT is not set. Please select an AMPCS baseline first."
+ elif [ "X${1}" != "X" ]; then
+  ADAPTATION_DIR="${AMPCS_WORKSPACE_ROOT}${AMPCS_ADAPTATIONS}/${1}${WORKSPACE_SUFFIX}"
+  cd "$ADAPTATION_DIR" >/dev/null 2>&1 && echo "=========== Switched to the '$(echo ${1}|tr [a-z] [A-Z]) Adaptation' ===========" || echo "XXXXXXXXXXX Cannot switch to the '$(echo ${1}|tr [a-z] [A-Z]) Adaptation' XXXXXXXXXXX"
+  if [ "X${1}" != "Xcore" ]; then
+   remove_gds_from_path
+   export CHILL_GDS="${ADAPTATION_DIR}${WORKSPACE_SUFFIX}/dist/${1}"
+   add_gds_to_path ${1}
+  fi
+ else
+  cd "${AMPCS_WORKSPACE_ROOT}"
+ fi
+}
+
+function setJavaVersionAMPCS() {
+ remove_java_home_from_path
+ unset
+ case ${1} in
+  7)
+   export JAVA_HOME=${JAVA7_HOME}
+   echo "=========== Setting R7 Environment ==========="
+   ;;
+  8)
+   export JAVA_HOME=${JAVA8_HOME}
+   echo "=========== Setting R8 Environment ==========="
+   ;;
+  *)
+   echo "======== Invalid Java Version: ${1} =========="
+   ;;
+ esac
+ add_java_home_to_path
+}
+
+function setBaselineAMPCS() {
+ unset PYTHONPATH
+ unset AMPCS_WORKSPACE_SUFFIX
+ unset AMPCS_ADAPTATIONS
+ case ${1} in
+ *"R73"*)
+   setJavaVersionAMPCS 8
+   export AMPCS_WORKSPACE_ROOT=${AMPCS_BASELINE_ROOT}/${1}
+   export AMPCS_ADAPTATIONS="/adaptations"
+   ;;
+ *"R74"*)
+   setJavaVersionAMPCS 8
+   export AMPCS_WORKSPACE_ROOT=${AMPCS_BASELINE_ROOT}/${1}
+   export AMPCS_ADAPTATIONS="/adaptations"
+   ;;
+ *"R75"*)
+   setJavaVersionAMPCS 8
+   export AMPCS_WORKSPACE_ROOT=${AMPCS_BASELINE_ROOT}/${1}
+   export AMPCS_ADAPTATIONS="/adaptations"
+   ;;
+ *"R76"*)
+   setJavaVersionAMPCS 8
+   export AMPCS_WORKSPACE_ROOT=${AMPCS_BASELINE_ROOT}/${1}
+   export AMPCS_ADAPTATIONS="/adaptations"
+   ;;
+ *"R8"*)
+   setJavaVersionAMPCS 8
+   export AMPCS_WORKSPACE_ROOT=${AMPCS_BASELINE_ROOT}/${1}
+   export AMPCS_ADAPTATIONS="/adaptations"
+   ;;
+ *)
+   echo "Cannot determine R7 or R8 style baselines from specified baseline name, \"${1}\"."
+   echo "Please be sure that the baseline name contains the characters \"R7\" or \"R8\"."
+   return -1
+   ;;
+ esac
+ PATH=${AMPCS_WORKSPACE_ROOT}/git_scripts:$PATH
+ PATH=${AMPCS_WORKSPACE_ROOT}/cm_scripts:$PATH
+ PATH=${AMPCS_WORKSPACE_ROOT}/ci_scripts:$PATH
+ export PYTHONPATH=${AMPCS_WORKSPACE_ROOT}/mpcstools/python:$ORIGINAL_PYTHONPATH
+ alias i="${AMPCS_WORKSPACE_ROOT}/git_scripts/git_issues.sh"
+}
+
+alias ampcs="printAmpcsHelp"
+
+alias R73="setBaselineAMPCS ${AMPCSR73} && goAMPCS"
+alias R74="setBaselineAMPCS ${AMPCSR74} && goAMPCS"
+alias R75="setBaselineAMPCS ${AMPCSR75} && goAMPCS"
+alias R76="setBaselineAMPCS ${AMPCSR76} && goAMPCS"
+alias R80="_ampcs ${AMPCS_ALTERNATIVE_BRANCH}"
+alias R8="R80"
+
+alias r7=R7
+alias r73=R73
+alias r74=R74
+alias r75=R75
+alias r76=R76
+alias r8=R8
+alias r80=R80
+
+alias J8="setJavaVersionAMPCS 8"
+alias j8="setJavaVersionAMPCS 8"
+
+alias m20="r8;goAMPCS m20"
+alias smap="r8;goAMPCS smap"
+alias nsyt="r8;goAMPCS nsyt"
+alias build=_build
+alias baseline="echo \"\$AMPCS_WORKSPACE_ROOT\" | awk -F / 'NF > 1 {print $NF}'"
+alias path='_path $PATH'
+alias ll='ls -l $*'
+alias lf='ls -la $* | egrep -v ^d | cut -c60-'
+alias lld='ls -lad $*'
+alias lt='ls -latr $*'
+alias ltd='ls -latrd $*'
+alias jdbg=GDS_JAVA_OPTS="$GDS_JAVA_OPTS -Xdebug -Xrunjdwp:transport=dt_socket,address=5005,server=y,suspend=,suspend=y"
+alias t="tree -d -I 'oldsrc|src|doc|*scripts|structure_101_repo|micro_adaptation|lib|dist|target|rpc*|tps|capabilities' --noreport $*"
+alias rdebug='export OLD_GDS_JAVA_OPTS=${GDS_JAVA_OPTS};export GDS_JAVA_OPTS="-Xdebug -Xrunjdwp:transport=dt_socket,address=5005,server=y,suspend=y"'
+alias nodebug='export GDS_JAVA_OPTS=${OLD_GDS_JAVA_OPTS};unset OLD_GDS_JAVA_OPTS'
+alias ff='find . -name "$*"'
+alias setbaseline='source ~/bin/ampcs $1'
+
+#
+# Build Aliases
+#
+alias fulltest='${MVN} integration-test -am -amd $*'
+alias smoke='${MVN} -DskipTests -DskipPythonTests integration-test -am -amd $*'
+alias pysmoke='${MVN} -DskipTests integration-test -am -amd $*'
+alias unit='${MVN} test -am -amd $*'
+alias funit='${MVN} surefire:test -am -amd $*'
+alias mcc='rm -rf ${MVN_LOCAL_REPO_AMPCS}/gov/nasa/jpl/ammos;${MVN} clean -DskipTests -DskipPythonTests -DskipSmokeTests -am -amd $*'
+alias mb='${MVN} install -DskipTests -DskipPythonTests -DskipSmokeTests -am -amd $*'
+alias mc='${MVN} clean -DskipTests -DskipPythonTests -DskipSmokeTests -am -amd $*'
+alias mbt='${MVN} install -am -amd $*'
+alias mcbt='${MVN} clean install -am -amd $*'
+alias mcb='${MVN} clean install -DskipTests -DskipPythonTests -DskipSmokeTests -am -amd $*'
+alias mccb='mcc;mb'
+alias killchill="kill -9 $(ps aux | grep chill | egrep -v "grep | ps" | awk '{print $2}')"
+alias r8work='_ampcs workspace'
+alias r8base='_ampcs baseline'
+alias r8="_ampcs ${AMPCS_ALTERNATIVE_BRANCH}"
+

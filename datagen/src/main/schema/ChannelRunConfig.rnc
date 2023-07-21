@@ -1,0 +1,247 @@
+# AMPCS Channel Data Generator Run Configuration Schema
+#
+# This schema defines the XML used to configure each run of the 
+# AMPCS Channel generator.
+#
+# Version 1.0 - M. DeMore
+# Version 1.1 - M. DeMore add optional DesiredFillPercent element
+# Version 1.2 - M. DeMore add optional filter by channel data type 
+#               (MPCS-6333)
+# Version 1.3 - M. DeMore import common schema and use common
+#               definitions. No actual schema changes. 
+#               (MPCS-6854 - 11/21/14)
+# Version 1.4 - M. Verdugo add optional DesiredNumFiles element 
+#               (MPCS-9375 - 01/02/18)
+#
+
+include "CommonConfig.rnc"
+
+# Root element. Start XML document here.
+start =
+  element ChannelGeneratorRunConfig {
+  
+    # See the common schema for definition of these elements
+    
+    desired-size-def,    # IGNORED in CUSTOM generation mode
+    desired-files-def?,  # IGNORED in CUSTOM generation mode
+    desired-fill-def?,   # IGNORED in CUSTOM generation mode
+    desired-report-def?,
+    integer-seed-def?,   # IGNORED in CUSTOM generation mode
+    unsigned-seed-def?,  # IGNORED in CUSTOM generation mode
+    float-seed-def?,     # IGNORED in CUSTOM generation mode
+    sclk-seed-def,
+    string-seed-def?,    # IGNORED in CUSTOM generation mode
+    enum-seed-def?,      # IGNORED in CUSTOM generation mode
+    boolean-seed-def?,   # IGNORED in CUSTOM generation mode
+    
+    # Seed data channel packet body generation. If omitted, all values will default.
+    # Note that there are three separate modes for channel generation: RANDOM,
+    # BY APID, and CUSTOM. Therefore, this element is divided into 3 sub-elements,
+    # only one of which may be defined.
+    element ChannelSeedData {
+    
+       # Use this seed element to place channels into pre-channelized packets 
+       # randomly.  In this case, patterns can be used to select channels 
+       # in the dictionary.  The maximum and minumum number of channel samples
+       # per packet can be defined, as can the maximum packet size. The system
+       # will select the number of channels per packet randomly between the
+       # maximum and minimum and will ensure the maximum packet size is not 
+       # exceeded. It is possible to include invalid channel indices and
+       # corrupted packets in the generated data.
+       element Random {
+       
+           # Optional element to define which packet APIDs to generate and how many
+           # packets to generate for each APID before rotating to the next APID in 
+           # the sequence. If omitted, the system will use all channel APIDs defined
+           # in the mission configuration file, and will use a rotation value of
+           # 1.
+           packets-per-apid-def?,
+       
+           # Channel ID selector. Value should be a posix regular expression and
+           # should be enclosed in a CDATA block if it includes characters that
+           # interfere with XML parsing.  Channels witn IDs matching this pattern
+           # will be selected from the dictionary for inclusion in the result file.
+           # Defaults to ".*" (all levels).
+           element IdPattern { text }?,
+           
+           # Channel name selector. Value should be a posix regular expression and
+           # should be enclosed in a CDATA block if it includes characters that
+           # interfere with XML parsing.  Channels with names matching this pattern
+           # will be selected from the dictionary for inclusion in the result file.
+           # Defaults to "*" (all names).
+           element NamePattern { text }?,
+           
+           # Channel ops category selector. Value should be a posix regular expression and
+           # should be enclosed in a CDATA block if it includes characters that
+           # interfere with XML parsing.  Channels with operational categories matching 
+           # this pattern will be selected from the dictionary for inclusion in the 
+           # result file. Defaults to ".*" (all categories).
+           element OpsCatPattern { text }?,
+           
+           # Channel module selector. Value should be a posix regular expression and
+           # should be enclosed in a CDATA block if it includes characters that
+           # interfere with XML parsing.  Channels with modules matching 
+           # this pattern will be selected from the dictionary for inclusion in the 
+           # result file. Defaults to ".*" (all modules).
+           element ModulePattern { text }?,
+           
+           # Channel subsystem selector. Value should be a posix regular expression and
+           # should be enclosed in a CDATA block if it includes characters that
+           # interfere with XML parsing.  Channels with subsystems matching 
+           # this pattern will be selected from the dictionary for inclusion in the 
+           # result file. Defaults to ".*" (all subsystems).
+           element SubsystemPattern { text }?,
+           
+           # MPCS-6333 - 7/1/14. Add DataTypes element.
+           #
+           # Channel data type selector. This is a comma-separated list of data
+           # type names. If specified, ONLY channels with these data types will
+           # be included, regardless of their match to other filters. Valid data
+           # types are SIGNED_INT, UNSIGNED_INT, FLOAT, DIGITAL, STATUS, and ASCII.
+           # Defaults to all data types.
+           element DataTypes { text }?,
+           
+           # Indicates whether to traverse channel definitions in the dictionary
+           # sequentially or randomly. Default is SEQUENTIAL.
+           element ChannelTraversalType { traversal-type-def }?,
+           
+           # Maximum size for pre-channelized packets. Should be less than or
+           # equal to the maximum packet size for the mission. Defaults to the
+           # maximum packet size in the mission configuration.
+           element MaxChannelPacketSize { xsd:positiveInteger }?,
+           
+           # Minimum number of channel samples per packet. Defaults to 1. 
+           element MinPacketSamples { xsd:positiveInteger }?,
+           
+           # Maximum number of channel samples per packet. Defaults to 2000. 
+           element MaxPacketSamples { xsd:positiveInteger }?,
+           
+           # Indicates whether to include invalid indices. Defaults to false.
+           include-invalid-indices-def?,
+           
+           # Percentage of packets with invalid indices. Defaults to 0.0.
+           invalid-index-percent-def?,
+                        
+           # List of invalid channel indices
+           invalid-index-def*,
+           
+           # Indicates whether to include corrupted packets. Defaults to false.
+           # Currently UNSUPPORTED.
+           include-invalid-packets-def?
+       }
+       |
+       # Use this seed element when you want to specify which channels go into
+       # which pre-channelized packets by APID. Each channel listed for each
+       # APID will be included in the packet exactly once, in the order
+       # indicated. It is possible to include invalid channel indices and
+       # corrupted packets in the generated data.
+       element ByApid {
+       
+           # Optional element to define which packet APIDs to generate and how many
+           # packets to generate for each APID before rotating to the next APID in 
+           # the sequence. If omitted, the system will use all channel APIDs defined
+           # in the mission configuration file, and will use a rotation value of
+           # 1.
+           packets-per-apid-def?,
+           
+           # Defines the channels in one packet APID. Must match a pre-channelized 
+           # packet APID defined in the mission configuration file.
+           element ChannelsPerApid {
+           
+              # APID number
+              attribute apid { apid-def },
+              
+              # List of channel IDs to include in this APID. Duplicates will
+              # be removed.
+              element ChannelId { channel-id-def }+
+           }+,
+           
+           # Indicates whether to include packets with invalid channel indices. 
+           # Defaults to false.
+           include-invalid-indices-def?,
+           
+           # Percentage of packets with invalid indices. Defaults to 0.0.
+           invalid-index-percent-def?,
+           
+           # List of invalid channel indices
+           invalid-index-def*,
+           
+           # Indicates whether to include corrupted packets. Defaults to false.
+           # Currently UNSUPPORTED.
+           include-invalid-packets-def?
+       }
+       |
+       # Use this seed element to specify the exact series of desired pre-channelized
+       # packets, including the exact channel IDs and DN values for each packet.
+       # It is not posisble to generate any invalid packets. The DesiredFileSize
+       # and all other configuration for error injection and random behaviors will
+       # be ignored.
+       element Custom {
+          
+          # Defines desired packets, in order. There must be at least one of these.
+          element Packet {
+          
+              # APID for this packet. Must match a pre-channelized packet APID
+              # defines in the mission configuration file.
+              attribute apid { apid-def },
+              
+              # Defines desired channel samples in this packet, in order.
+              element Value {
+              
+                  # Channel ID for this sample
+                  attribute channelId { channel-id-def },
+                  
+                  # DN value for this sample. Will be parsed assuming the DN
+                  # data type of the channel in the dictionary. A type mismatch
+                  # will result in an error.
+                  attribute dnValue {xsd:string}
+              }+
+           }+
+       }
+    }
+}
+  
+
+# Pattern for channel IDs
+# Defines the allowed pattern for forming telemetry channel IDs
+channel-id-def = xsd:token {  pattern="[A-Za-z]{1}[A-Za-z0-9]{0,3}-[0-9]{4}" } 
+
+# Invalid channel index element
+invalid-index-def = element InvalidIndex {
+
+    # Channel index. May be hex or decimal.
+    attribute index { hex-int-16 }
+}
+
+# Indicates whether to include ramdomly include invalid channel indices in 
+# packets. 
+include-invalid-indices-def = element IncludeInvalidIndices { xsd:boolean }
+              
+# Approximate percentage of packets with invalid indices to generate.
+# If IncludeInvalidIndices is true, at least one invalid packet is 
+# guaranteed, even if this number is 0.0.
+invalid-index-percent-def = element InvalidIndexPercent { xsd:float 
+      { minInclusive="0.0" maxInclusive="100.0" }}
+
+# Indicates whether to include random channel packets with corrupted 
+# binary bodies. Currently UNSUPPORTED.
+include-invalid-packets-def = element IncludeInvalidChannelPackets {xsd:boolean}
+
+# Defines which packet APIDs to generate and how many
+# packets to generate for each APID before rotating to the next APID in 
+# the sequence.
+packets-per-apid-def = element PacketsPerApid {
+
+   # Defines one packet APID to include in generated data and its 
+   # rotation count. 
+   element ApidCount {
+   
+       # APID for this packet. Must match a pre-channelized packet APID
+       # defined in the mission configuration file.
+       attribute apid { apid-def },
+       
+       # Number of packets to generate for this APID before rotating to
+       # the next one.
+       attribute count { xsd:positiveInteger }
+   }+
+}

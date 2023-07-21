@@ -1,0 +1,1 @@
+"SCMF",#if($iCmdRequestId)"$iCmdRequestId"#else""#end,#if($iCmdRequestStatus)"$iCmdRequestStatus"#else""#end,#if($iCmdRequestFailureReason)"$iCmdRequestFailureReason"#else""#end,"$eventTime","$scmfFile"

@@ -1,0 +1,142 @@
+namespace rng = "http://relaxng.org/ns/structure/1.0"
+datatypes xsd = "http://www.w3.org/2001/XMLSchema-datatypes"
+
+
+start = alarm-notification-def
+
+alarm-notification-def = 
+	element AlarmNotification
+	{
+		notification-list-def
+	}
+	
+notification-list-def =
+	element NotificationList
+	{
+		notification-def*
+	}
+
+notification-def = 
+	element Notification
+	{
+		attribute name { token },
+		attribute mode { mode-def }?,
+		(alarm-list-def &
+		email-list-def &
+		text-message-list-def)
+	}
+
+mode-def = ( "realtime" | 
+             "recorded" | 
+             "none"     | 
+             "all" )
+    
+alarm-list-def =
+	element AlarmList
+	{
+		(channel-alarm-def | module-alarm-def | ops-category-alarm-def |  subsystem-alarm-def)+
+	}
+	
+channel-alarm-def = 
+    element ChannelListAlarm
+    {
+    	alarm-state-attr-def,
+    	(channel-elem-def* &
+    	channel-range-def*)
+    }
+
+channel-elem-def = 
+    element Channel
+    { 
+        attribute id { channel-id-def } 
+    }
+    
+channel-range-def =
+    element ChannelRange
+    {
+    	attribute start { channel-id-def },
+    	attribute end { channel-id-def }
+    }
+    
+module-alarm-def =
+    element ModuleAlarm
+    {
+    	alarm-state-attr-def,
+    	module-def+
+    }
+
+module-def =
+    element Module 
+    { 
+        attribute module { token }
+    }
+
+ops-category-alarm-def =
+    element OperationalCategoryAlarm
+    {
+    	alarm-state-attr-def,
+    	category-def+
+    }
+
+category-def =
+    element OperationalCategory
+    { 
+        attribute category { token }
+    }
+    
+subsystem-alarm-def =
+    element SubsystemAlarm
+    {
+    	alarm-state-attr-def,
+    	subsystem-def+
+    }
+    
+subsystem-def =
+    element Subsystem 
+    { 
+        attribute subsystem { token }
+    }
+
+email-list-def =
+	element EmailList
+	{
+		email-def*
+	}
+	
+email-def =
+	element Email
+	{
+		attribute address { email-address-def },
+		attribute style { token }?
+	}
+	
+text-message-list-def =
+	element TextMessageList
+	{
+		phone-def*	
+	}
+	
+phone-def =
+	element PhoneNumber
+	{
+		attribute provider { provider-name-def },
+		attribute number { phone-number-def }
+	}
+
+provider-name-def = ( "alltel" | 
+					  "att" | 
+					  "cellularone" | 
+					  "cingular" | 
+					  "nextel" | 
+					  "sprint" | 
+					  "suncom" | 
+					  "tmobile" | 
+					  "uscellular" | 
+					  "verizon" | 
+					  "virgin" )
+	
+alarm-state-attr-def = attribute state { "YELLOW" | "YELLOW_FIRST" | "RED" | "RED_FIRST" | "CHANGE_ANY" | "CHANGE_CLEAR" | "CHANGE_SET" }
+channel-id-def = xsd:string { pattern="[a-zA-Z0-9]{1,}-[0-9]{1,}" }
+host-name-def = xsd:string { pattern=".{1,}[.].{1,}" }
+email-address-def = xsd:string { pattern=".{1,}@.{1,}[.].{1,}" }
+phone-number-def = xsd:string { pattern="[0-9]{10}" }

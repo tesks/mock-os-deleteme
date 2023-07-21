@@ -1,0 +1,210 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    MPCS Session schema
+    
+    The Session schema uniquely identifies an MPCS instance/session. All MPCS
+    messages and EMD files include the smaller Session element. Session-related messages 
+    include the full SessionConfiguration element.
+    
+    Version=6
+    Date=08/25/2011
+-->
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified" 
+    targetNamespace="http://dsms.jpl.nasa.gov/mpcs" 
+    xmlns:mpcs="http://dsms.jpl.nasa.gov/mpcs">
+
+    <xs:element name="Session">
+        <xs:annotation>
+            <xs:documentation>Defines the session identification element, which 
+                uniquely identifies the MPCS test session.</xs:documentation>
+        </xs:annotation>
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element ref="mpcs:SessionId"/>
+                <xs:element ref="mpcs:VenueType"/>
+                <xs:element ref="mpcs:Venue"/>
+                <xs:element minOccurs="0" ref="mpcs:StartTime"/>
+                <xs:element minOccurs="0" ref="mpcs:EndTime"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+    
+    <xs:element name="SessionId">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element minOccurs="0" ref="mpcs:Number"/>
+                <xs:element minOccurs="0" ref="mpcs:SpacecraftId"/>
+                <xs:element ref="mpcs:Name"/>
+                <xs:element ref="mpcs:FswDictionaryDir" minOccurs="0"/>
+                <xs:element ref="mpcs:FswDictionaryVersion" minOccurs="0"/>          
+                <xs:element minOccurs="0" name="Type" type="xs:string">
+                    <xs:annotation>
+                        <xs:documentation>The type of the session</xs:documentation>
+                    </xs:annotation>
+                </xs:element>
+                <xs:element minOccurs="0" ref="mpcs:Description"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+    <xs:element name="Number" type="xs:nonNegativeInteger">
+        <xs:annotation>
+            <xs:documentation>The unique ID number of the session</xs:documentation>
+        </xs:annotation>
+    </xs:element>
+    <xs:element name="Name" type="xs:string">
+        <xs:annotation>
+            <xs:documentation>The name of the session.</xs:documentation>
+        </xs:annotation>
+    </xs:element>
+    <xs:element name="Description" type="xs:string">
+        <xs:annotation>
+            <xs:documentation>The description of the session.</xs:documentation>
+        </xs:annotation>
+    </xs:element>
+    <xs:element name="Venue">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element ref="mpcs:VenueType"/>
+                <xs:element ref="mpcs:TestbedName" minOccurs="0"/>
+                <xs:element minOccurs="0" ref="mpcs:User"/>
+                <xs:element minOccurs="0" ref="mpcs:Host"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+    <xs:element name="FswDictionaryDir" type="xs:string">
+        <xs:annotation>
+            <xs:documentation>The top level dictionary directory used for the session</xs:documentation>
+        </xs:annotation>
+    </xs:element>
+    <xs:element name="FswDictionaryVersion" type="xs:string">
+        <xs:annotation>
+            <xs:documentation>The d</xs:documentation>
+        </xs:annotation>
+    </xs:element>
+    <xs:element name="User" type="xs:string">
+        <xs:annotation>
+            <xs:documentation>The user running the session</xs:documentation>
+        </xs:annotation>
+    </xs:element>
+    <xs:element name="Host" type="xs:string">
+        <xs:annotation>
+            <xs:documentation>The host on which the session was run</xs:documentation>
+        </xs:annotation>
+    </xs:element>
+      <xs:element name="TestbedName" type="xs:string">
+        <xs:annotation>
+            <xs:documentation>The testbed on which the session was run</xs:documentation>
+        </xs:annotation>
+    </xs:element>
+    <xs:element name="StartTime">
+        <xs:annotation>
+            <xs:documentation>The start time of the session, in the format YYYY-MM-DDTHH:MM:SS.ttt, GMT. </xs:documentation>
+        </xs:annotation>
+        <xs:simpleType>
+            <xs:restriction base="xs:string">
+                <xs:pattern value="[0123456789]{4}-[0123456789]{2}-[0123456789]{2}T[0123456789]{2}:[0123456789]{2}:[0123456789]{2}.[0123456789]{3}"/>
+            </xs:restriction>
+        </xs:simpleType>
+    </xs:element>
+    <xs:element name="EndTime">
+        <xs:annotation>
+            <xs:documentation>The end time of the session, in the format 
+                YYYY-MM-DDTHH:MM:SS.ttt, GMT. </xs:documentation>
+        </xs:annotation>
+        <xs:simpleType>
+            <xs:restriction base="xs:string">
+                <xs:pattern value="[0123456789]{4}-[0123456789]{2}-[0123456789]{2}T[0123456789]{2}:[0123456789]{2}:[0123456789]{2}.[0123456789]{3}"/>
+            </xs:restriction>
+        </xs:simpleType>
+    </xs:element>
+    
+    <xs:element name="SessionConfiguration">
+        <xs:annotation>
+            <xs:documentation>Defines the session identification element, which uniquely 
+                identifies the MPCS test session.</xs:documentation>
+        </xs:annotation>
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element ref="mpcs:SessionId"/>
+                <xs:element ref="mpcs:FswVersion"/>
+                <xs:element minOccurs="0" ref="mpcs:SseVersion"/>
+                <xs:element minOccurs="0" ref="mpcs:RunFswDownlink"/>
+                <xs:element minOccurs="0" ref="mpcs:RunSseDownlink"/>
+                <xs:element ref="mpcs:DictionaryDirectory"/>
+                <xs:element minOccurs="0" ref="mpcs:SseDictionaryDirectory"/>
+                <xs:element minOccurs="0" ref="mpcs:OutputDirectory"/>
+                <xs:element minOccurs="0" ref="mpcs:DownlinkSpacecraftSide"/>
+                <xs:element minOccurs="0" ref="mpcs:SpacecraftId"/>
+                <xs:element ref="mpcs:VenueInformation"/>
+                <xs:element ref="mpcs:HostInformation"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+    <xs:element name="FswVersion" type="xs:string"/>
+    <xs:element name="SseVersion" type="xs:string"/>
+    <xs:element name="RunFswDownlink" type="xs:boolean"/>
+    <xs:element name="RunSseDownlink" type="xs:boolean"/>
+    <xs:element name="DictionaryDirectory" type="xs:string"/>
+    <xs:element name="SseDictionaryDirectory" type="xs:string"/>
+    <xs:element name="OutputDirectory" type="xs:string"/>
+    <xs:element name="DownlinkSpacecraftSide">
+        <xs:simpleType>
+            <xs:restriction base="xs:token">
+                <xs:enumeration value="A"/>
+                <xs:enumeration value="B"/>
+            </xs:restriction>
+        </xs:simpleType>
+    </xs:element>
+    <xs:element name="SpacecraftId" type="xs:nonNegativeInteger"/>
+    <xs:element name="VenueInformation">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element minOccurs="0" ref="mpcs:InputFormat"/>
+                <xs:element minOccurs="0" ref="mpcs:InputFile"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+    <xs:element name="VenueType">
+        <xs:annotation>
+            <xs:documentation>The venue type</xs:documentation>
+        </xs:annotation>
+        <xs:simpleType>
+            <xs:restriction base="xs:token">
+                <xs:enumeration value="TESTSET"/>
+                <xs:enumeration value="TESTBED"/>
+                <xs:enumeration value="ATLO"/>
+                <xs:enumeration value="CRUISE"/>
+                <xs:enumeration value="SURFACE"/>
+                <xs:enumeration value="OPS"/>
+            </xs:restriction>
+        </xs:simpleType>
+    </xs:element>
+    <xs:element name="InputFormat" type="xs:string">
+        <xs:annotation>
+            <xs:documentation>The input data format for downlink</xs:documentation>
+        </xs:annotation>
+    </xs:element>
+    <xs:element name="InputFile" type="xs:string">
+        <xs:annotation>
+            <xs:documentation>The input file for downlink</xs:documentation>
+        </xs:annotation>
+    </xs:element>
+    <xs:element name="HostInformation">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element minOccurs="0" ref="mpcs:FswHost"/>
+                <xs:element minOccurs="0" ref="mpcs:SseHost"/>
+                <xs:element minOccurs="0" ref="mpcs:FswUplinkPort"/>
+                <xs:element minOccurs="0" ref="mpcs:SseUplinkPort"/>
+                <xs:element minOccurs="0" ref="mpcs:FswDownlinkPort"/>
+                <xs:element minOccurs="0" ref="mpcs:SseDownlinkPort"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+    <xs:element name="FswHost" type="xs:string"/>
+    <xs:element name="SseHost" type="xs:string"/>
+    <xs:element name="FswUplinkPort" type="xs:nonNegativeInteger"/>
+    <xs:element name="SseUplinkPort" type="xs:nonNegativeInteger"/>
+    <xs:element name="FswDownlinkPort" type="xs:nonNegativeInteger"/>
+    <xs:element name="SseDownlinkPort" type="xs:nonNegativeInteger"/>
+</xs:schema>

@@ -1,0 +1,8 @@
+## MPCS-7941 changed replaceAll for " to prevent VM from randomly interpret the escape incorrectly
+#if ($header)
+ERT,SCET,SCLK,SOURCE,TYPE,ID,DATA,SEQUENCE_ID,REALTIME,SESSION
+#elseif ($trailer)
+#else
+#if($ert)$ert#end,#if($scet)$scet#end,#if($sclk)$sclk#end,#if($fromSse)SSE#{elseif}($realTime)FSW RT#{else}FSW REC#{end},EVR#if($nullTool.isNotNull($level)) $level.toUpperCase()#end,#if($name)$name#end,"#if($message)#set($mc=$message.replaceAll("[\r\n]+", " ").replaceAll('"', ""))$mc#end",#{set}($index=0)#{set}($val=false)#{foreach}($key in $metadataKeys)#{if}($key.convert()=="SequenceId")#{set}($val=$metadataVals.get($index))#{end}#{set}($index=$index+1)#{end}#if($val)$val#{else}NOT_FOUND#end
+,$realTime,$sessionId
+#end

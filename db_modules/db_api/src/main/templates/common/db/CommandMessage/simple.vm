@@ -1,0 +1,7 @@
+#if ($body)
+#if ($commandString)
+$formatter.anCsprintf("%-30s",$eventTime.toString())$formatter.anCsprintf("%-25s",$commandType.toString())$commandString.toString()
+#else
+$formatter.anCsprintf("%-30s",$eventTime.toString())$formatter.anCsprintf("%-25s",$commandType.toString())
+#end
+#end

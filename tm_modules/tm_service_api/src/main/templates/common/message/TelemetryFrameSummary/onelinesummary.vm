@@ -1,0 +1,1 @@
+SYNC SUMMARY #if($inSync==true)In Sync=Yes#else In Sync=No #end Frame Bytes=$frameBytes Frames=$numFrames at $eventTime

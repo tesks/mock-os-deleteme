@@ -1,0 +1,23 @@
+#if ($body)
+<LogMessage>
+   <SessionId>$sessionId</SessionId>
+   <SessionHost>$sessionHost</SessionHost>
+   <SessionFragment>$sessionFragment</SessionFragment>
+   <ContextId>$contextId</ContextId>
+#if ($eventTime)
+   <EventTime>$eventTime</EventTime>
+#end
+#if ($rct)
+   <RCT>$rct</RCT>
+#end
+#if ($severity)
+   <Severity>$severity</Severity>
+#end
+#if ($type)
+   <LogMessageType>$type</LogMessageType>
+#end
+#if ($message)
+   <Message><![CDATA[$message]]></Message>
+#end  
+</LogMessage>
+#end

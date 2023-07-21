@@ -1,0 +1,7 @@
+<ProductStartedMessage eventTime="$eventTime">
+  <type>$type</type>
+  <vcid>$vcid</vcid>
+  <apid>$apid</apid>
+  <totalParts>$totalParts</totalParts>
+  <transactionId>$transId</transactionId>
+</ProductStartedMessage>

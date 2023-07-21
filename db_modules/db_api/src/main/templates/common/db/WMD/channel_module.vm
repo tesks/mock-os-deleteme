@@ -1,0 +1,14 @@
+#if($body)
+<Channel>
+	#if($channelId)
+		<ChannelID>$channelId</ChannelID>
+	#if($channelName)
+		<ChannelName>$channelName</ChannelName>
+	#else
+		<ChannelName>NO-NAME-FOUND</ChannelName>
+	#end
+	#elseif($stem)
+		<Stem>$stem</Stem>
+	#end
+</Channel>
+#end

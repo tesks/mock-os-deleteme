@@ -1,0 +1,41 @@
+# 
+# AMPCS FrameSequenceAnomalyMessage RelaxNG Compact format XML specification.
+#
+# This message is published whenever the downlink processor sees an anomaly
+# in the frame sequence for a specific VCID (gap, regregression, or duplicate
+# in the sequence). Note that there may be more than one anomaly record/message
+# per JMS message.
+#
+# Version: 3.0
+#
+# ChangeLog: V2.0 3/14/2013 Updated to import new common session schema.
+# ChangeLog: V2.1 3/30/16 Updated frame encoding types (MPCS-7993) corrected spelling of REED_SOLOMON per
+#            MGSS ECR-117883
+# ChangeLog: V3.0 11/28/2-17 Major updates for R8
+
+default namespace = "http://dsms.jpl.nasa.gov/mpcs"
+namespace rng = "http://relaxng.org/ns/structure/1.0"
+
+include "ContextCommon.rnc"
+include "StationCommon.rnc"
+include "TelemFrameCommon.rnc"
+
+start = MPCSFrameSeqAnomalyMessage-def
+
+MPCSFrameSeqAnomalyMessage-def =
+    element MPCSFrameSequenceAnomalyMessage {
+        context-def?, 
+        Message-def+ 
+    }
+Message-def =
+    element FrameSequenceAnomalyMessage {
+        attribute eventTime { time-def },
+        context-def?,
+        element anomalyType { "Transfer Frame Gap" | "Transfer Frame Regression" | 
+             "Transfer Frame Repeat" },
+        element expectedVcfc { xsd:nonNegativeInteger },
+        element actualVcfc { xsd:nonNegativeInteger },
+        stationInfo-def,
+        transferFrameInfo-def
+    }
+

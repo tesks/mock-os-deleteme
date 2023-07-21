@@ -1,0 +1,2 @@
+use generic_ampcs_v5_0_3;
+CALL SmallCache();

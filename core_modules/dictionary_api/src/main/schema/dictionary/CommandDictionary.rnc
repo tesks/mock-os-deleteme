@@ -1,0 +1,653 @@
+#
+# AMPCS Multi-mission flight command dictionary schema.
+#     
+# This schema defines a common, multi-mission format for expression of the 
+# command portion of the flight-ground dictionary. 
+# Refer to the CCSDS Packet Telemetry Standard for bit and byte ordering of values. 
+# All values that are inserted to the command stream are assumed to be in 
+# Global Data Representation (GDR) format with the most significant element first.
+#
+# Copyright (c) 2015 California Institute of Technology, All Rights Reserved
+# JPL Proprietary Information
+#
+# Change Log:
+#   V1.0  05/20/12   Original version
+#   V1.1  05/20/13   Moved into AMPCS, normalized header 
+#                    format, minor reorganization.
+#   V2.0  07/08/13   Removed optional element structures
+#   V2.1  09/18/13   Minor updates in response to DMS SIS Review
+#   V3.0  11/08/13   Major updates in response to command
+#                    dictionary refactoring 
+#   V4.0  01/08/14   Major updates in response to command
+#                    dictionary implementation
+#   V4.1  07/14/14   Delete space in numeric-arg-length-def
+#   V4.2  07/14/14   Introduce hex-only-int format type in
+#                    CommonDictionary.rnc and use that for opcode
+#   V5.0  08/05/15   Reduced length of string arguments,
+#                    clarified comments for time arguments and units,
+#                    made time units optional. Removed change logs
+#                    at the command level. Made definition of HW 
+#                    command opcode match that on FSW command. 
+#                    Deprecated numeric_arg in factory of specific
+#                    it, unsigned, and float types. Allow integer argument
+#                    bit lengths not a multiple of 8. Added command class
+#                    to FSW commands. Added uplink file types.
+#   V5.1  09/29/15   Correct floating point argument length
+#                    and clarify that all lengths are bit lengths. 
+#   V5.2  11/09/15   Enlarged opcodes to 32 bits.
+#   V5.3  04/28/16   Allow default values for unsigned/integer
+#                    args to be stated in hex.
+#                    This is the final change for AMPCS R7.3 (MGSS ECR-117883)
+#   v5.4 09/06/17    Update comment re: enum_arg for clarity
+
+namespace rng = "http://relaxng.org/ns/structure/1.0"
+datatypes xsd = "http://www.w3.org/2001/XMLSchema-datatypes"
+
+# Include common dictionary XML definitions
+include "CommonDictionary.rnc"
+
+# Start XML Document here
+start = command-dictionary-def
+
+# Top-level element for the command dictionary. This contains a common header, 
+# any enumeration definitions for command arguments, and the list of command 
+# definitions.
+command-dictionary-def = element command_dictionary {
+
+    # Standard dictionary version header and general change log 
+	header-def,
+	
+    #
+    # Uplink file type definitions. If omitted, there are two types 
+    # by default:
+    # GENERIC = 0
+    # SEQUENCE = 1
+	file-types-def?,
+
+	# Define 0 or more enumeration tables for use by command arguments
+	element enum_definitions { enum-table-def* }?,
+	
+	# Define 0 or more commands
+	element command_definitions { command-definition-def* }
+}
+
+#
+# Uplink file types indicate the types of files that can be
+# uplinked by the current mission. The type is identified 
+# in the encoded file load.
+file-types-def = element uplink_file_types {
+    # Defines a single file type
+    element file_type {
+    
+         # The name of this file type, for user interfaces 
+         attribute name { symbol-def-32 },
+         
+         # The numeric ID of this file type, for encoding in
+         # the binary file load.
+         attribute id {xsd:nonNegativeInteger}
+    }+
+}
+         
+# A command definition can be a FSW command or a hardware command
+command-definition-def = fsw-command-def | hw-command-def
+
+# Defines a flight software command. These types of commands have
+# arguments.
+fsw-command-def = element fsw_command {
+
+    # Enlarge opcode to 32 bits
+    #
+    # The opcode is an unsigned integer occupying 32 bits, represented as hex. 
+    # Must be unique.
+    attribute opcode { hex-only-int-32 }, 
+    
+    # The unique name of the command. This is how the command will be 
+    # represented on displays.
+	attribute stem { stem-def },
+	
+	# Added command-class-def. Defaults to "FSW"
+	attribute class { fsw-command-class-def }?,
+	
+	#
+	# Zero or more command arguments. 
+    element arguments {
+        (numeric-argument-def | enum-argument-def | var-string-argument-def | 
+        fixed-string-argument-def | time-argument-def | boolean-argument-def | 
+        repeat-argument-def | fill-argument-def | int-argument-def |
+        unsigned-argument-def | float-argument-def )+
+    }?,
+  
+    # This is used to category different commands into groups. Possible 
+    # category names are "module", "ops category", "subsystem", ...
+    # It is possible that there are multiple ways of organizing groups of 
+    # commands, so that there may be more than one category entry for a command.
+    categories-def?,
+    
+    # The long description of the command.
+    element description { xsd:string }?,
+    
+    # Additional dictionary attributes, defined using an key-value XML 
+    # container. Use this to capture additional mission-specific 
+    # information on a command.
+	attributes-def?
+
+}
+
+# Defines a flight hardware command. Hardware commands are unique in
+# that they do not have arguments.
+hw-command-def = element hw_command {
+
+    # Corrected from hex-int. Decimal format is not permitted.
+    # Enlarged to 32 bits
+    #
+    # The opcode is an unsigned integer represented as hex. Must be 
+    # unique.
+    attribute opcode { hex-only-int-32 }, 
+    
+    # The unique name of the command. This is how the command will be 
+    # represented on displays.
+	attribute stem { stem-def },
+  
+    # This is used to category different commands into groups. Possible 
+    # category names are "module", "ops category", "subsystem", ...
+    # It is possible that there are multiple ways of organizing groups of 
+    # commands, so that there may be more than one category entry for a command.
+    categories-def?,
+    
+    # The long description of the command.
+    element description { xsd:string }?,
+    
+    # Additional dictionary attributes, defined using an key-value XML 
+    # container. Use this to capture additional mission-specific 
+    # information on a command.
+	attributes-def?
+	
+}
+
+#
+# DEPRECATED - Do not use in new dictionaries. Use int-argument-def, 
+# unsigned-argument-def, or float-argument-def
+#
+# Defines a single numeric command argument.
+numeric-argument-def = element numeric_arg {
+
+    # The name of the argument. This name must be unique within a command. 
+    # It can be used for name=value argument replacement in the command 
+    # systems that allow such a construct.
+    attribute name { name-def },
+
+    # The data type of the argument. 
+    attribute type { numeric-arg-type-def },
+    
+    # The length of the argument in bits. Float must be either 32 or 64. 
+    # Integer types can be 8, 16, 32, or 64 bits.
+    attribute bit_length { numeric-arg-length-def },
+    
+    #
+    # The units of the command argument. Units are required on numeric 
+    # command arguments for spacecraft safety.
+    attribute units { xsd:token },
+    
+    # The default value, if the argument is not specified in the command.
+    attribute default_value { xsd:string }?,
+    
+    # The valid ranges of the argument value. For numeric arguments, 
+    # comparison to valid range is a numeric comparison.  
+    arg-range-def?,
+    
+    # The long description of the command argument
+    element description { xsd:string }?,
+    
+    # Any mission specific commentary for this command argument, specified 
+    # as keyword/value attributes.
+	attributes-def?
+}
+
+#
+# Defines a single signed integer command argument.
+int-argument-def = element integer_arg {
+
+    # The name of the argument. This name must be unique within a command. 
+    # It can be used for name=value argument replacement in the command 
+    # systems that allow such a construct.
+    attribute name { name-def },
+    
+    # The length of the argument in bits. 
+    attribute bit_length { integer-arg-length-def },
+    
+    #
+    # The units of the command argument. Units are required on numeric 
+    # command arguments for spacecraft safety.
+    attribute units { xsd:token },
+    
+    # M. Verdugo - 4/28/16. Allow to be specified in hex.
+    # The default value, if the argument is not specified in the command.
+    attribute default_value { xsd:integer | hex-int }?,
+    
+    # The valid ranges of the argument value. For numeric arguments, 
+    # comparison to valid range is a numeric comparison.  
+    int-arg-range-def?,
+    
+    # The long description of the command argument
+    element description { xsd:string }?,
+    
+    # Any mission specific commentary for this command argument, specified 
+    # as keyword/value attributes.
+	attributes-def?
+}
+
+#
+# Defines a single unsigned integer command argument.
+unsigned-argument-def = element unsigned_arg {
+
+    # The name of the argument. This name must be unique within a command. 
+    # It can be used for name=value argument replacement in the command 
+    # systems that allow such a construct.
+    attribute name { name-def },
+    
+    # The length of the argument in bits. 
+    attribute bit_length { integer-arg-length-def },
+    
+    #
+    # The units of the command argument. Units are required on numeric 
+    # command arguments for spacecraft safety.
+    attribute units { xsd:token },
+    
+    # M. Verdugo - 4/28/16. Allow to be specified in hex.
+    # The default value, if the argument is not specified in the command.
+    attribute default_value { hex-int }?,
+    
+    # The valid ranges of the argument value. For numeric arguments, 
+    # comparison to valid range is a numeric comparison.  
+    unsigned-arg-range-def?,
+    
+    # The long description of the command argument
+    element description { xsd:string }?,
+    
+    # Any mission specific commentary for this command argument, specified 
+    # as keyword/value attributes.
+	attributes-def?
+}
+
+#
+# Defines a single floating point command argument.
+float-argument-def = element float_arg {
+
+    # The name of the argument. This name must be unique within a command. 
+    # It can be used for name=value argument replacement in the command 
+    # systems that allow such a construct.
+    attribute name { name-def },
+    
+    # The length of the argument in bits. Float must be either 32 or 64. 
+    attribute bit_length { float-arg-length-def },
+    
+    #
+    # The units of the command argument. Units are required on numeric 
+    # command arguments for spacecraft safety.
+    attribute units { xsd:token },
+    
+    # The default value, if the argument is not specified in the command.
+    attribute default_value { xsd:double }?,
+    
+    # The valid ranges of the argument value. For numeric arguments, 
+    # comparison to valid range is a numeric comparison.  
+    float-arg-range-def?,
+    
+    # The long description of the command argument
+    element description { xsd:string }?,
+    
+    # Any mission specific commentary for this command argument, specified 
+    # as keyword/value attributes.
+	attributes-def?
+}
+
+# Defines a single enumerated command argument. Enumerated arguments have 
+# both an ordinal representation, and a symbolic representation, where the 
+# ordinal maps to the symbol.
+enum-argument-def = element enum_arg {
+
+    # The name of the argument. This name must be unique within a command. 
+    # It can be used for name=value argument replacement in the command 
+    # systems that allow such a construct.
+    attribute name { name-def },
+    
+    #
+    # The length of the numeric/ordinal argument in bits. Does not define 
+    # or effect the length of the symbols defined by the enumeration.
+    attribute bit_length { enum-arg-length-def },
+    
+
+    # This is the name of the enumeration table for argument values. Required.
+    attribute enum_name { name-def },
+    
+    # The default value, if the argument is not specified in the command.
+    attribute default_value { xsd:string }?,
+    
+    # The valid ranges of the argument value.  For enum arguments, comparison 
+    # to valid range is based upon the ordinal (numeric value) of the 
+    # corresponding enum symbolic values, but the range is specified using
+	# symbolic values.
+    arg-range-def?,
+    
+    # The long description of the command argument
+    element description { xsd:string }?,
+    
+    # Any mission specific commentary for this command argument, 
+    # specified as keyword/value attributes.
+	attributes-def?
+}
+
+# Defines a single fixed length string command argument.
+fixed-string-argument-def = element fixed_string_arg {
+
+    # The name of the argument. This name must be unique within a command. 
+    # It can be used for name=value argument replacement in the command systems 
+    # that allow such a construct.
+    attribute name { name-def },
+    
+    #
+    # String bit_length can be up to 8152 (1019 bytes) in length. Shorter
+    # strings will be padded to this stated length.  Note that since 
+    # telecommand frames generally contain opcodes, the 1019 maximum may not
+    # apply to the current mission. The actual character limit is 1019 
+    # less the opcode byte length.
+    attribute bit_length { string-arg-length-def },
+    
+
+    # The default value, if the argument is not specified in the command.
+    attribute default_value { xsd:string }?,
+    
+    # Valid regular expression for string arguments. If this expression 
+    # is present, the argument string will be validated against the given 
+    # Posix regular expression. If it matches, it is a valid argument.
+    element valid_regex { xsd:normalizedString}?,
+    
+    # The long description of the command argument
+    element description { xsd:string }?,
+    
+    # Any mission specific commentary for this command argument, specified as 
+    # keyword/value attributes.
+	attributes-def?
+}
+
+# Defines a single variable length string command argument.
+var-string-argument-def = element var_string_arg {
+
+    # The name of the argument. This name must be unique within a command. 
+    # It can be used for name=value argument replacement in the command systems 
+    # that allow such a construct.
+    attribute name { name-def },
+    
+    # This is the length of the prefix that precedes the string,
+    # where the value of this prefix states the actual length of the 
+    # string at runtime. 
+    attribute prefix_bit_length { prefix-length-def },
+    
+    #
+    # This is the maximum allowed bit length of the string, which
+    # defaults to 8152 (1019 bytes). Note that since 
+    # telecommand frames generally contain opcodes, the 1019 maximum may not
+    # apply to the current mission. The actual character limit is 1019 
+    # less the opcode byte length.
+    attribute max_bit_length { string-arg-length-def }?,
+        
+
+    # The default value, if the argument is not specified in the command.
+    attribute default_value { xsd:string }?,
+    
+    # Valid regular expression for string arguments. If this expression 
+    # is present, the argument string will be validated against the given 
+    # Posix regular expression. If it matches, it is a valid argument.
+    element valid_regex { xsd:normalizedString}?,
+    
+    # The long description of the command argument
+    element description { xsd:string }?,
+    
+    # Any mission specific commentary for this command argument, specified as 
+    # keyword/value attributes.
+	attributes-def?
+}
+
+# Defines a single command time argument. Times are encoded as unsigned integers,
+# which are assumed to correspond to SCLK.
+time-argument-def = element time_arg {
+
+    # The name of the argument. This name must be unique within a command. 
+    # It can be used for name=value argument replacement in the command systems 
+    # that allow such a construct.
+    attribute name { name-def },
+    
+    # The length of the time argument in bits. 
+    # the length must match either the mission coarse SCLK length, 
+    # or the mission coarse + fine SCLK length.
+    attribute bit_length { time-arg-length-def },
+    
+    #
+    # The units of the command argument FOR DISPLAY ONLY. This does not
+    # affect the way the argument is encoded or transmitted. The value
+    # transmitted is always SCLK.
+    attribute units { time-arg-unit-def }?,
+    
+    # The default value, if the argument is not specified in the command.
+    attribute default_value { xsd:string | xsd:integer }?,
+    
+
+    # The long description of the command argument
+    element description { xsd:string }?,
+    
+    # Any mission specific commentary for this command argument, specified 
+    # as keyword/value attributes.
+	attributes-def?
+}
+
+# Defines a single command boolean argument. When encoded, the value for TRUE
+# boolean arguments will have all bits set to 1s, and the value for FALSE
+# boolean arguments will have all bits set to 0s.
+boolean-argument-def = element boolean_arg {
+
+    # The name of the argument. This name must be unique within a command. 
+    # It can be used for name=value argument replacement in the command systems 
+    # that allow such a construct.
+    attribute name { name-def },
+    
+    #
+    # The length of the argument in bits.
+    attribute bit_length { boolean-arg-length-def },
+    
+    # The default value, if the argument is not specified in the command.
+    attribute default_value { xsd:string }?,
+    
+    # Format information for this argument, for display in AMPCS command tools.
+    boolean-format-def?,
+    
+    # The long description of the command argument
+    element description { xsd:string }?,
+    
+    # Any mission specific commentary for this command argument, specified as 
+    # keyword/value attributes.
+	attributes-def?
+}
+
+# Defines a command argument that is a repeating block of other arguments. A
+# prefix in the resulting encoded data indicates how many times the arguments
+# in the block are repeated in the following data block.
+repeat-argument-def = element repeat_arg {
+
+    # The name of the argument. This name must be unique within a command. 
+    # It can be used for name=value argument replacement in the command systems 
+    # that allow such a construct.
+    attribute name { name-def },
+    
+    # The length of the prefix argument in bits. The prefix is assumed to be
+    # an unsigned integer.
+    attribute prefix_bit_length { prefix-length-def },
+    
+    # The long description of the command argument
+    element description { xsd:string }?,
+    
+    # The definition of which arguments are to be repeated in the
+    # repeat block and how many times.
+    element repeat {
+    
+         # The minimum number of times the argument block MUST repeat
+         attribute min { xsd:nonNegativeInteger },
+    
+         # The maximum number of times the argument block CAN repeat.
+         # Must be greater than or equal to min.
+         attribute max { xsd:nonNegativeInteger },
+
+         # The sub-arguments in the repeat block. Can be any argument type
+         # other than another repeat argument.
+         #     
+         element arguments {
+                (numeric-argument-def | enum-argument-def | var-string-argument-def | 
+                 fixed-string-argument-def | time-argument-def | boolean-argument-def | 
+                 fill-argument-def | float-argument-def | int-argument-def | 
+                 unsigned-argument-def )+ 
+         }
+    },
+    
+    # Any mission specific commentary for this command argument, specified as 
+    # keyword/value attributes.
+	attributes-def?
+}
+
+# Defines a single command fill argument. Fill arguments are supplied
+# by the command system and not by the user.
+fill-argument-def = element fill_arg {
+
+    # The name of the argument. This name must be unique within a command. 
+    # It can be used for name=value argument replacement in the command systems 
+    # that allow such a construct.
+    attribute name { name-def },
+    
+    # The length of the argument in bits.
+    attribute bit_length { numeric-arg-length-def },
+    
+    # The fill value, specified as binary fill bits. The bit_length above 
+    # must be evenly divisible by the number of bits in the fill_value. 
+    # The fill value will be repeated to fill the argument space
+    # up to the bit length. Will default to "0b0" if not specified.
+    attribute fill_value { bin-int }?,
+    
+    # The long description of the command argument
+    element description { xsd:string }?,
+    
+    # Any mission specific commentary for this command argument, specified as 
+    # keyword/value attributes.
+	attributes-def?
+}
+
+# Numeric argument data types
+numeric-arg-type-def = ( "unsigned" | "integer" | "float" )
+
+#
+# DEPRECATED - Do not use in new dictionaries.
+#
+# Numeric arguments valid bit lengths
+numeric-arg-length-def = ( "8" | "16" | "32" | "64" )
+
+#
+# Valid range for bit length of an integer or unsigned argument.
+integer-arg-length-def = xsd:positiveInteger { minInclusive = "1" maxInclusive = "64"}
+
+#
+# Valid range for bit length of a floating point argument.
+float-arg-length-def = "32" | "64"
+
+# Time arguments valid bit lengths
+time-arg-length-def = xsd:nonNegativeInteger { minInclusive = "8" maxInclusive = "64"}
+
+#
+# Valid range for a boolean argument bit length
+boolean-arg-length-def = xsd:nonNegativeInteger { minInclusive = "8" maxInclusive = "32"}
+
+#
+# Valid range for an enum argument bit length
+enum-arg-length-def = xsd:nonNegativeInteger { minInclusive = "8" maxInclusive = "32"}
+
+#
+# Valid bit length range for fixed string arguments and 
+# maximum length for variable string arguments. Note that since 
+# telecommand frames generally contain opcodes, the 1019 maximum may not
+# apply to the current mission. The actual character limit is 1019 
+# less the opcode byte length.
+string-arg-length-def = xsd:nonNegativeInteger { maxInclusive = "8152"}
+
+# Valid bit lengths for repeat argument and variable string prefixes 
+prefix-length-def = ( "8" | "16" )
+
+#
+# Valid display units for time arguments. This is the unit in 
+# which the system will display the time argument value in command
+# interfaces. It does not reflect upon the encoding of the argument.
+# Time arguments are always converted to SCLK and encoded as SCLK.
+time-arg-unit-def = ( "SCLK" | "SCET" | "LST" )
+
+# Element used to define valid argument ranges. Note that multiple
+# ranges can be specified.
+arg-range-def =  element range_of_values {
+    # The value is valid if it is within this range. 
+    element include { 
+         attribute min { xsd:normalizedString }, 
+         attribute max { xsd:normalizedString }
+    }+
+}
+
+#
+# Element used to define valid argument ranges for signed integers. 
+# Note that multiple ranges can be specified.
+int-arg-range-def =  element range_of_values {
+    # The value is valid if it is within this range. 
+    element include { 
+         attribute min { xsd:integer }, 
+         attribute max { xsd:integer }
+    }+
+}
+
+#
+# Element used to define valid argument ranges for signed integers. 
+# Note that multiple ranges can be specified.
+unsigned-arg-range-def =  element range_of_values {
+    # The value is valid if it is within this range. 
+    element include { 
+         attribute min { xsd:nonNegativeInteger }, 
+         attribute max { xsd:nonNegativeInteger }
+    }+
+}
+
+#
+# Element used to define valid argument ranges for floating point
+# numbers. Note that multiple ranges can be specified.
+float-arg-range-def =  element range_of_values {
+    # The value is valid if it is within this range. 
+    element include { 
+         attribute min { xsd:double }, 
+         attribute max { xsd:double }
+    }+
+}
+
+# Format specifier for display of a boolean telemetry value on the ground.
+# Default in the ground system is to display TRUE for non-zero values,
+# and FALSE for zero values.  This element allows different
+# values, such as ON and OFF, to be displayed instead. 
+boolean-format-def = element boolean_format { 
+ 
+   # Value to display as status for TRUE boolean values.
+   attribute true_str { symbol-def }, 
+    
+   # Value to display as status for FALSE boolean values.
+   attribute false_str { symbol-def }
+}
+
+# Binary integer pattern
+bin-int = xsd:token { pattern = "0b[01]+" }
+
+#
+# Different command classes may be encoded using different
+# virtual channels, or have other encoding differences.
+#
+# FSW - A standard flight software command
+# SEQ - A sequence directive/command. used for managing execution of
+#       commands in sequence files
+fsw-command-class-def = ("FSW" | "SEQ")

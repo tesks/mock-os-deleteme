@@ -1,0 +1,5 @@
+<LogMessage eventTime="$eventTime">
+  <severity>$severity</severity>
+  <type>$type</type>
+  <message><![CDATA[$message]]></message>
+</LogMessage>

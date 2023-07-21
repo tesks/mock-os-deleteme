@@ -1,0 +1,18 @@
+#
+# GDS Configuration file RelaxNG Compact format XML specification
+#
+# Author: M. DeMore
+# Version: 1.0
+#
+namespace rng = "http://relaxng.org/ns/structure/1.0"
+datatypes xsd = "http://www.w3.org/2001/XMLSchema-datatypes"
+default namespace = "http://dsms.jpl.nasa.gov/mpcs"
+
+start = gds-config-def
+
+include "GdsHierarchyConfig.rnc"
+
+# Root element.
+gds-config-def = element GdsConfiguration {
+  gds-hierarchy-config-def
+}

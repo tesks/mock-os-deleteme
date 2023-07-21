@@ -1,0 +1,11 @@
+#macro( escape $field)
+#if($field.toString())#set($field=$field.toString().replace('\', '\\').replace('"', '\"'))
+#else#set($field="")
+#{end}
+$field#end
+#if ($header)
+record_type,session_id,session_host,type,ert,rct,relay_spacecraft_id,vcid,vcfc,dss_id,bit_rate,is_bad,bad_reason,length
+#{end}
+#if ($body)
+"frame","#escape($sessionId)","#escape($sessionHost)","#escape($frameType)","#escape($ert)","#escape($rct)","#escape($relayScftId)","#escape($vcid)","#escape($vcfc)","#if($dssId >= 0)$dssId#end","#escape($bitRate)","#escape($isBad)","#escape($badReason)","#escape($length)"
+#{end}

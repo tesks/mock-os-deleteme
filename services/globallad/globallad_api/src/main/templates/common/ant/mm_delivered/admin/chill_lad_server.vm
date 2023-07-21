@@ -1,0 +1,80 @@
+#set ( $shellName = "sh" )
+#shell( $shellName )
+
+## Do not launch app as WAR anymore
+
+#init()
+#Java()
+#set( $tpsLibraries   =   [ "jersey2","spring_boot_starter_log4j2","log4j_web","tomcat_embed_core","spring_boot_starter_tomcat", "hibernate", "gson", "commons_cli", "velocity", "commons_collections", "commons_lang", "jackson", "piccolo", "protobuf_java", "javax.json", "jaxrs", "shared", "jakarta.ws.rs_api", "commons_math3" ] )
+#constructClasspath( $tpsLibraries )
+
+#addSpringClasspath()
+#addSpringBootClasspath()
+#addSpringBootActuatorClasspath()
+#addSwagger2Classpath()
+#addSwagger2ClientClasspath()
+#addJmsClasspath()
+
+## Do not use #constructLog4j2Classpath() macro because it will setup
+## the log4j2-mysql configuration. GlobalLAD doesn't have db_api has a dependency,
+## so it cannot send log messages to the database. 
+LOG4J_COMPONENT_FILE="log4j2.component.properties"
+LOG4J_GLAD_CONFIG="log4j2.xml"
+
+#parseLog4jConfigFile($LOG4J_COMPONENT_FILE)
+LOG4J_COMPONENT_PATH=$LOG_DIRECTORIES
+## Reset property after parsing component file
+LOG4J_CONFIG_PROPERTY="" 
+
+## Now parse the log4j2 configuration
+#parseLog4jConfigFile($LOG4J_GLAD_CONFIG)
+
+# Exit if there was no Log4J config file
+if [ "X$LOG4J_CONFIG_PROPERTY" = "X" ]
+then
+    exit "Unable to load Log4j2 configuration file at $CHILL_GDS/config/${CHILL_MISSION}, $CHILL_GDS/config or $HOME/CHILL" 1
+else
+
+	#set ($log4jLibraries= ["slf4j_api", "jcl_over_slf4j", "jul_to_slf4j", "log4j_slf4j_impl", "log4j_core", "log4j_api", "log4j_1.2_api", "disruptor"])
+
+    for i in #foreach( $lib in $log4jLibraries ) $CHILL_GDS/tps/lib/$lib/*.jar$#end
+    
+    do
+        CLASSPATH=${CLASSPATH}:${i}
+    done
+
+    if [ "X$LOG4J_COMPONENT_PATH" != "X" ]
+    then
+        CLASSPATH=$CLASSPATH:$LOG4J_COMPONENT_PATH
+    fi
+
+    export CLASSPATH
+
+    export LOG4J_JAVA_OPTS="-Dlog4j.configurationFile=$LOG4J_CONFIG_PROPERTY -Dorg.jboss.logging.provider=slf4j -Dcom.mchange.v2.log.MLog=com.mchange.v2.log.slf4j.Slf4jMLog"
+fi
+
+#set ( $appName = "chill_lad_server" )
+#set ( $appClass = "jpl.gds.globallad.spring.main.SpringBootMain" )
+#set ( $appArgs = "" )
+#set ( $headless = "false" )
+#set ( $doExec = "true" )
+#set ( $doLog = "true" )
+#set ( $useG1GC = "true" )
+#set ( $minMem = "512m" )
+#set ( $maxMem = "4096m" )
+#set ( $isBig = "false" )
+#set ( $responderHelper = ""  )
+#set ( $sysProperties = "" )
+#set ( $includePassThruArgs = "true" )
+
+# Check the min memory override
+if [ "X$CHILL_MIN_MEMORY_MB" != "X" ]; then
+	export minMem="$CHILL_MIN_MEMORY_MB"
+fi
+
+# Check the max memory override
+if [ "X$CHILL_MAX_MEMORY_MB" != "X" ]; then
+	export maxMem="$CHILL_MAX_MEMORY_MB"
+fi
+
+#execJavaSimpleMemory ( $appName $appClass $appArgs $headless $doExec $doLog $useG1GC $minMem $maxMem $responderHelper $sysProperties $includePassThruArgs ) 

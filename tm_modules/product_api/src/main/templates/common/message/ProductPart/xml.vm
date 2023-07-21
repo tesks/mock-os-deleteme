@@ -1,0 +1,27 @@
+<PartReceivedMessage eventTime="$eventTime">
+  <ProductPart class="$class"> 
+    <Vcid>$vcid</Vcid>
+    <Apid>$apid</Apid>
+    <ProductName>$productType</ProductName>
+    <Scid>$scid</Scid>
+    <Sclk>$sclk</Sclk>
+    <Ert>$ert</Ert>
+    <Scet>$scet</Scet>
+#if($lst)
+    <Lst>$lst</Lst>
+#end
+    <SourcePacketSequenceCount>$seq</SourcePacketSequenceCount>
+    <RelayScid>$relay</RelayScid>
+    <TransactionId>$transId</TransactionId>
+    <DvtCoarse>$dvtCoarse</DvtCoarse>
+    <DvtFine>$dvtFine</DvtFine>
+    <PartLength>$partLength</PartLength>
+    <PartNumber>$partNumber</PartNumber>
+    <PartOffset>$partOffset</PartOffset>
+    <CommandNumber>$commandNumber</CommandNumber>
+    <SequenceId>$seqId</SequenceId>
+    <SequenceVersion>$seqVersion</SequenceVersion>
+    <TotalParts>$totalParts</TotalParts>
+    <CfdpTransactionId>$transactionId</CfdpTransactionId>
+  </ProductPart>
+</PartReceivedMessage>

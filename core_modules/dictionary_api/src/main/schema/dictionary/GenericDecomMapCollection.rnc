@@ -1,0 +1,24 @@
+# Defines a set of generic decom maps which are not invoked
+# on their own, but may be referenced from other XML files.
+# Copyright (c) 2016 California Institute of Technology, 
+# All Rights Reserved
+# JPL Proprietary Information
+#
+# Change Log:
+#   V4.0  07/29/16       R. Puncel - Created with version matching
+#                                    generic decom map schema.
+
+datatypes xsd = "http://www.w3.org/2001/XMLSchema-datatypes"
+include "GenericDecom.rnc"
+
+# Collection of decom maps.
+start = element decom_maps {
+    header-def,
+    attributes-def?,
+    # Name of the map collection.
+    attribute name { name-def }?,
+    # Text description of the packet.
+    element description { xsd:string }?,
+    decom-map-tables-def?,
+    decom-map-def*
+}

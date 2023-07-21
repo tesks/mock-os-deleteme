@@ -1,0 +1,35 @@
+#if ($header)
+<?xml version="1.0"?>
+<ContextConfigurations>
+#end
+#if ($body)
+    <ContextConfiguration version="0">
+        <ContextId>$contextId<ContextId>
+    #if($contextName)
+        <Name>$contextName</Name>
+    #end
+    #if($contextType)
+        <Type>$contextType</Type>
+    #end
+    #if($user)
+        <User>$user</User>
+    #end
+    #if($contextHost)
+        <Host>$contextHost</Host>
+    #end
+    #if($mpcsVersion)
+        <AmpcsVersion>$mpcsVersion</AmpcsVersion>
+    #end
+    #if($sessionId)
+        <SessionId>$sessionId</SessionId>
+    #end
+        <Metadata>
+        #foreach ($mapEntry in $metadata.entrySet())
+            <$mapEntry.key>$mapEntry.value</$mapEntry.key>
+        #end
+        </Metadata>
+    </ContextConfiguration>
+#end
+#if ($trailer)
+</ContextConfigurations>
+#end

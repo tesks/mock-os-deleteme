@@ -1,0 +1,11 @@
+#if($header)
+#if($hasPacket)
+ERT,SCET,SCLK,SOURCE,TYPE,ID,DATA,REALTIME,SESSION,APID,ApidName,SPSC,PacketRCT,SourceVCFC
+#else
+ERT,SCET,SCLK,SOURCE,TYPE,ID,DATA,REALTIME,SESSION
+#{end}
+#elseif($trailer)
+#else
+#if($ert)$ert#end,#if($scet)$scet#end,#if($sclk)$sclk#end,#{if}($fromSse)SSE#{else}FSW#{end},EHA_UPDATE,#if($name)$name#{end}#if($channelId) (${channelId})#end,"DN=$dataNumber#{if}($status) STATUS=$status#{else} EU=#{if}($eu)$eu#{end}#{end}","($isRealTime)",$sessionId#if($hasPacket),#if($apid)$apid#{end},#if($apidName)$apidName#{end},#if($spsc)$spsc#{end},#if($packetRct)$packetRct#{end},#if($vcfc)$vcfc#{end}#{end}
+
+#{end}

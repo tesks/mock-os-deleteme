@@ -1,0 +1,29 @@
+<PartialProductMessage eventTime="$eventTime"> 
+    <TransactionId>$transId</TransactionId>
+    <TransactionLog>$transLog</TransactionLog>
+    <Reason>$reason</Reason>
+    <GenericProductMetadata class="$class">
+        <GroundCreationTime>$creationTime</GroundCreationTime>
+        <Scid>$scid</Scid>
+        <Apid>$apid</Apid>
+        <ProductName>$productType</ProductName>
+        <Vcid>$vcid</Vcid>
+        <GroundStatus>$groundStatus</GroundStatus>
+        <DataFileName>$fullPath</DataFileName>
+        <SequenceId>$seqId</SequenceId>
+        <SequenceVersion>$seqVersion</SequenceVersion>
+        <CommandNumber>$commandNumber</CommandNumber>
+        <DvtCoarse>$dvtCoarse</DvtCoarse>
+        <DvtFine>$dvtFine</DvtFine>
+        <Sclk>$sclk</Sclk>
+        <Scet>$scet</Scet>
+#if($lst)
+        <Lst>$lst</Lst>
+#end
+        <LastPartErt>$lastPartErt</LastPartErt>
+        <TotalParts>$totalParts</TotalParts>
+        <CfdpTransactionId>$transactionId</CfdpTransactionId>
+        <ProductChecksum>$checksum</ProductChecksum>
+        <ProductFileSize>$fileSize</ProductFileSize>
+    </GenericProductMetadata>
+</PartialProductMessage>

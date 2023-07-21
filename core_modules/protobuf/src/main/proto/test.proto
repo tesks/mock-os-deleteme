@@ -1,0 +1,14 @@
+syntax = "proto3";
+
+package test;
+
+import "abstract_message.proto";
+
+option java_multiple_files = true;
+option java_package = "jpl.gds.serialization.test";
+option java_outer_classname = "ProtoBufTestMessageSerialization";
+
+message Proto3TestMessage {
+    messages.Proto3AbstractMessage super = 1;
+    oneof has_member {string member = 2; }
+}

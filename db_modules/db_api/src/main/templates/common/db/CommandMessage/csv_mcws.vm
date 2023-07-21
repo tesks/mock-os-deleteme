@@ -1,0 +1,11 @@
+#macro( escape $field)
+#if($field.toString())#set($field=$field.toString().replace('\', '\\').replace('"', '\"'))
+#else#set($field="")
+#{end}
+$field#end
+#if ($header)
+record_type,session_id,session_host,event_time,request_id,command_type,status,command_string,scmf_file,original_file,fail_reason,checksum,total_cltus,dss_id,bit1_rad_time,last_bit_rad_time,final,finalized,vcid,commanded_side
+#{end}
+#if ($body)
+"command_event","#escape($sessionId)","#escape($sessionHost)","#escape($eventTime)","#escape($requestId)","#escape($commandType)","#escape($status)","#escape($commandString)","#escape($scmfFile)","#escape($originalFile)","#escape($failReason)","#escape($checksum)","#escape($totalCltus)","#escape($dssId)","#escape($bit1RadTime)","#escape($lastBitRadTime)","#escape($final)","#escape($finalized)","#if($stringId)#escape($stringId)#else#escape($vcid)#end","#escape($commandedSide)"
+#{end}

@@ -1,0 +1,43 @@
+/**
+* Copyright 2006-2020. California Institute of Technology.
+* ALL RIGHTS RESERVED.
+* U.S. Government sponsorship acknowledged.
+*
+* This software is subject to U. S. export control laws and
+* regulations (22 C.F.R. 120-130 and 15 C.F.R. 730-774). To the
+* extent that the software is subject to U.S. export control laws
+* and regulations, the recipient has the responsibility to obtain
+* export licenses or other export authority as may be required
+* before exporting such information to foreign countries or
+* providing access to foreign nationals.
+*/
+/**
+* AMPCS common protobuf schema for Alarm messages.
+*
+* Version: 1.0
+ * ChangeLog:
+ * V1.0 - New for R8
+*/
+syntax = "proto3";
+
+package eha;
+import "abstract_message.proto";
+import "alarmed_channel_value.proto";
+
+option optimize_for = SPEED;
+option java_multiple_files = true;
+option java_package = "jpl.gds.eha.api.channel.serialization";
+option java_outer_classname = "ProtoBufAlarmChangeSerialization";
+
+message Proto3AlarmChangeMessage {
+    enum AlarmChangeState {
+        ENTERED = 0;
+        EXITED = 1;
+        STILL_IN = 2;
+        NOT_IN = 3;
+    }
+
+    messages.Proto3AbstractMessage super = 1;
+    AlarmChangeState alarmChange = 2;
+    Proto3AlarmedChannelValueMessage message = 3;
+}

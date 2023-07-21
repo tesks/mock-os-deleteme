@@ -1,0 +1,41 @@
+#if ($body)
+-------
+Frame
+-------
+SessionId=$sessionId
+SessionHost=$sessionHost
+#if ($frameType)
+FrameType=$frameType
+#end
+#if ($ert)
+ERT=$ert
+#end
+#if ($rct)
+RCT=$rct
+#end
+#if ($relayScid)
+RelaySCID=$relayScid
+#end
+#if ($vcid)
+VCID=$vcid
+#end
+#if ($vcfc)
+VCFC=$vcfc
+#end
+#if ($dssId >= 0)
+DssId=$dssId
+#end
+#if ($bitRate)
+BitRate=$bitRate
+#end
+IsBad=$bad
+#if ($badReason)
+BadReason=$badReason
+#end
+#if ($length)
+Length=$length
+#end
+#if ($fileByteOffset)
+FileByteOffset=$fileByteOffset
+#end
+#end

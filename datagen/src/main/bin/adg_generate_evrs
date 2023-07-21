@@ -1,0 +1,24 @@
+#!/bin/sh
+
+# MPCS-9735 - 1/3/18 - Move common stuff to another script
+if [ "$ADG_HOME" = "" ] ; then
+    echo "Your ADG_HOME environment variable is not set."
+    exit 1
+fi
+
+source $ADG_HOME/bin/internal/adg_common_startup
+if [ $? != 0 ]; then
+   exit $?
+fi 
+
+#Execute the Java app
+exec $JAVA_CMD \
+     -DGdsApplicationRoot=$ADG_HOME \
+     -DGdsSystemConfigDir=$ADG_HOME/config \
+     $LOG4J_JAVA_OPTS \
+     -Djava.awt.headless=true \
+     -DGdsAppName=adg_generate_evrs \
+     -Dhost.name=`hostname -s` \
+     -Djavax.xml.parsers.SAXParserFactory=com.bluecast.xml.JAXPSAXParserFactory \
+     -Xms128m -Xmx512m \
+     ammos.datagen.evr.app.EvrGeneratorApp "$@"

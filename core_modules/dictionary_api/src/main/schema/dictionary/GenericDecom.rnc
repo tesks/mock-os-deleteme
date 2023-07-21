@@ -1,0 +1,445 @@
+#
+# Generic decommutation map schema.
+# 
+# Defines how some block of binary data can be processed.
+# Decom maps may contain data definitions, control flow statements,
+# invocations of custom algorithms, and any other operation necessary.
+# Maps may be used for publishing telemetry as channel values and for viewing
+# data in text format.
+#
+# Copyright (c) 2016 California Institute of Technology, 
+# All Rights Reserved
+# JPL Proprietary Information
+#
+# Change Log:
+#   V4.0  07/29/16       R. Puncel - Rewritten from v3.1.
+#   V4.1  05/2019        D. Yates - add EVR
+#
+# Decom maps appear as elements in other XML files whose schemas reference this
+# schema.
+#
+# The statements within a decom map are applied sequentially, in-order, at a
+# bit offset of zero. The statements in the map may implicitly or explicitly
+# manipulate the current bit cursor. Any data without an explicit "offset"
+# attribute moves the cursor forward by the number of bits that data consumes.
+# Any data with an explicit offset set does not affect the cursor's position
+# upon execution. The map may also explicitly provide statements
+# that move the cursor forward or backward.
+#
+# If data can be channelized, the element declaring the data may specify a
+# channel ID which will be cross-referenced with a channel dictionary during
+# processing. Channelization can be disabled on a per-element basis if a map's
+# author does not want channelization but wishes to keep the channel ID in
+# places.
+#
+# Some attributes on data elements may have a counterpart in the channel
+# dictionary.
+# In such a case, the following rules apply:
+# 1. If channelization is being performed, the only information used from the
+# map is the information necessary to extract the channel's DN, e.g. offset
+# and length.
+# 2. In the case of a reconcilable difference, such as a channel being defined
+# as having a greater length than the data field in the decom map, the decom
+# map processor will widen the data for its use in the channel value.
+# 3. If decommutation is being executed without publishing channels to external
+# sources, such as in a viewing application, the decom map's information will
+# override the channel definition information.
+# 4. If some information is present in the channel dictionary is not present in
+# the decom map definition, the channel definition information will be used to
+# fill in the decom map's information in a viewing app.
+datatypes xsd = "http://www.w3.org/2001/XMLSchema-datatypes"
+
+include "CommonDictionary.rnc"
+
+# Tables that should be defined in the decom map container for
+# lookup, but are not part of the decom map itself.
+decom-map-tables-def = (
+    # Optionally reference a variable configuration file
+    config-ref?,
+    # Locally define variables used in the decom map.
+    configurations-def?,
+    element enum_definitions { enum-table-def+ }?
+)
+
+# Defines a decom map that describes how to process an
+# arbitrary block of data. Decom maps may occur in various
+# larger telemetry objects, including data products, packets,
+# and more.
+decom-map-def = element decom_map {
+    attribute id { xsd:ID },
+    decom-statement-def*
+}
+
+# Event record definition allows invocation of the multimission EVR adapter
+# as defined by DOC-002250, "AMPCS Event Report (EVR) Binary Format Software
+# Interface Specification".
+event-record-def = element event_record {
+    field-common-attrs-def?
+}
+
+# Defines the entire set of allowable decom statements.
+# These include all decom fields plus control flow, algorithm invocations,
+# and other metadata.
+decom-statement-def = field-def
+    | break-def
+    | switch-def
+    | abort-def
+    | array-def
+    | repeat-block-def
+    | time-def
+    | decom-map-ref
+    | validate-def
+    | transform-def
+    | decom-def
+    | move-def
+    | define-endianness-def
+    | channel-mappings-def
+    | decom-map-ref
+    | event-record-def
+ 
+
+# Refer to another decom map. When this statement is hit, the next statement to
+# be executed is the first statement of the referenced map.
+#
+# A reference to another decom map is a token with the following pattern:
+# [namespace:]simple-name
+# where namespace consist of multiple colon delimited segments. The simple name
+# is used to match the ID of a decom map within a file, whereas the namespace
+# is used to find the file that contains it.
+# The namespace both serves to uniquify the simple name, and to identify how to
+# use the simple name to locate the intended decom map. For example, the name
+# "shared_maps:my_map:123" would be used to identify a map with id "123" in the
+# shared_maps/my_map.xml file, relative to the directory configured for the
+# generic decom dictionary.
+# Packets that are generically decommed belong to a special namespace
+# "packets". A blank namespace will look for another map in the current file.
+decom-map-ref = element decom_map_ref { attribute map_id { xsd:token },
+    # Optionally, define a channel mapping to use when channelizing fields
+    # in the referenced decom map.
+    channel-mappings-def?
+}
+    
+# Channel mappings is a list of mapping from names of decom fields
+# to desired channel IDs.  They provide a method of
+# defining a single common packet structure that may be reused
+# to populate multiple sets of channels.
+# For example, say struct foo occurs in packets that comes
+# from three instances of the same instrument.  Each field
+# from the struct should be channelized as a different channel
+# for each side.  With a channel mapping table, the structure
+# decom map is defined once, and referenced by three distinct channel
+# mapping tables.
+channel-mappings-def = element channel_mappings {
+    channel-mapping-def*
+}  
+
+channel-mapping-def = element channel_mapping {
+    # The name of the field being channelized
+    attribute from_name { xsd:token },
+    # The channel ID the field should be associated with
+    attribute to_channel_id { channel-id-def },
+    # Optional control to switch channel publishing on and off
+    attribute publish_channel { xsd:boolean }?
+}
+
+# By default, all data is assumed to be big endian - the first byte encountered
+# in a multi-byte piece of data is the most-significant byte. Data may also be
+# little endian - the first byte encountered in a multi-byte pieces of data is
+# the least significant byte. Use this element to specify the byte order of all
+# data following it, until another byte order is encountered.
+define-endianness-def = element define_byte_order {
+    attribute order { byte-order-vals-def } 
+}
+
+byte-order-vals-def = ("big_endian" | "little_endian")
+
+# These attributes can optionally be included on any
+# decom field. 
+field-common-attrs-def =
+    # Optional name of the field.
+    attribute name { token }?
+    # Optional system description of the field.
+    & attribute sysdesc { text }?
+    # Optional absolute offset, in bits
+    & attribute offset { xsd:integer }?
+    # Optional display format for the field.
+    & attribute format { xsd:string }?
+
+# String definition.  This is a string of characters or code points with a
+# known length.
+# The length is given in bytes used to express the string.
+str-def = element string {
+    field-common-attrs-def?
+    & attribute length { xsd:positiveInteger | xsd:token }
+    & attribute encoding { "ascii" | "utf-8" }?
+}
+
+# A c-string is variable length, and null terminated.  Must provide
+# a maximum length (in bytes, including the null terminator)
+# for safety reasons.  Not channelizable at this time.
+cstr-def = element cstring { 
+    field-common-attrs-def?
+    & attribute encoding { "ascii", "utf-8" }
+    & attribute max_length { xsd:integer { minInclusive = "1" } }
+}
+
+
+# Define raw measurement to engineering unit conversion for a field.
+raw-to-eng-definition-def = element raw_to_eng { (poly-def | table-lookup-def | 
+             parameterized-algorithm-def)
+             # Formatting string for the engineering unit value.
+             & attribute eng_format { xsd:normalizedString }?
+}                
+
+# Data elements in a decom map may have attributes or children that may also be
+# defined in a
+# channel dictionary.  if that is the case, conflicting definitions are
+# resolved as follows:
+# if there are any channels being published to an external source,
+# e.g. database or messaging service, only channel dictionary information will
+# be used. If channels are not being published, the decom map information will
+# be used.
+# For convenience, any field with a channel id will automatically inherit
+# information from the channel dictionary
+numeric-field-def =
+    raw-to-eng-definition-def?
+    & channelizable-data-def?
+    & element units_type { text }?
+    & element units { text }?
+    & field-common-attrs-def?
+    & storable-var-def?
+    
+# The two permitted encodings for float and double types.
+# The default is ieee754.
+float-encodings-def = attribute encoding { "mil1750a" | "ieee754" }
+
+# For floating point and double types, bit length will be ignored. size is only
+# in bytes and is determined based
+# on whether the field is a float or a double
+float-def = element float { numeric-field-def & float-encodings-def? }
+
+# Double precision floating point field.
+double-def = element double { numeric-field-def & float-encodings-def? }
+
+# Common definition for use by integral data fields.
+integer-field-def = numeric-field-def & attribute bit_length {
+    xsd:positiveInteger 
+}
+
+# Signed integer field.
+int-def = element int { integer-field-def }
+
+# Unsigned integer field.
+uint-def = element uint { integer-field-def }
+
+# Enum field. The data itself is assumed to be a signed integer, which then is
+# displayed using enum lookup information.
+enum-field-def = element enum { integer-field-def
+    & attribute enum_name { name-def }?
+    & attribute enum_symbol_format { xsd:normalizedString }?
+}
+
+# Boolean field. Booleans are integer data that are interpreted as true if not
+# equal to 0, and as false if they are equal to 0. In viewing applications,
+# text is displayed representing the value. By default, these are "true" and
+# "false", but custom text can be configured. For example, a boolean
+# representing a switch might specify the truth text as "on" and the
+# false text as "off.
+boolean-field-def = element bool { 
+    (attribute true_str { xsd:token } & attribute false_str { xsd:token })?
+    & integer-field-def
+ }
+
+# An opcode type indicates that the original data field should be translated
+# into a command stem using the command dictionary.  
+opcode-def = element opcode { integer-field-def }
+
+# The channel ID that for a field that should be looked up in a channel
+# dictionary.
+channel-id-attr-def = attribute channel_id { channel-id-def }
+
+# Channelizable data will be processed and published by AMPCS if
+# a valid channel ID is provided, publish_channel is set to "true",
+# and if the map is being iterated on by an application that 
+# has channelization enabled.  In other words, a viewer application
+# will not publish channels, even if the other conditions are met.
+# Because channelizable data may define DN-to-EU conversions,
+# display formats, and other elements that may disagree with 
+# the corresponding elements in the channel dictionary, information
+# from the channel dictionary will supercede any such information
+# in a decom map if channel publishing is enabled for a field.
+channelizable-data-def = 
+    channel-id-attr-def?
+    & attribute channelize { xsd:boolean }?
+
+# Some data can be stored as a variable and reference in other
+# places in the decom map by the data's name. A variable is only
+# stored if this attribute is set to "true" on an element, and
+# is false by default. 
+storable-var-def = attribute variable { xsd:boolean }
+
+# Fields are the set of elements that define data to extract.
+field-def = int-def
+    | uint-def
+    | float-def
+    | double-def
+    | enum-field-def
+    | boolean-field-def
+    | opcode-def
+    | time-def
+    | frequency-def
+    | period-def
+
+# Describes the name and length of an array of fields used in a data product. 
+# The array contains multiple values that are of a specific structure, such 
+# as a struct in the FSW.
+array-def =
+    element array {
+        # Name of the array of fields used in the data product
+        attribute name { xsd:token },
+        # The number of fields in the array. May either be a variable reference
+        # or a number.
+        attribute num_items { xsd:positiveInteger | xsd:token },
+        element sysdesc { text },
+        (array-def | field-def)+
+    }
+    
+# As opposed to an array, a repeat_block might not have homogenous elements.
+# Termination of the repeat block can be defined in terms of a maximum length
+# or an absolute length.
+# An absolute length implies that if a break is issue early (before reading all
+# possible bits), the rest of the block is assumed to be padding. 
+# Using maximum_length will resume decom immediately after the last bit
+# declared in the repeat_block and the decom map can declare a break from
+# inside the repeat_block to terminate early.
+repeat-block-def =
+    element repeat_block { (attribute max_length { xsd:positiveInteger }
+    | attribute abs_length { xsd:positiveInteger })? &
+        (decom-statement-def)+
+    }
+  
+# The arguments to pass to an algorithm invocation. For arguments that do not
+# change between invocations, use the algorithm config file.
+var-args-def = element args {
+    # These are key / value pairs where each key
+    # will be passed as a key to the runtime algorithm,
+    # and the value is a variable or a literal that
+    # will be associated with that key
+    element * { xsd:token } *
+}
+
+# Invoke a validation algorithm.  Decom halts if the validation fails.
+validate-def = element validate {
+    attribute validator { xsd:token },
+    var-args-def?
+}
+
+# Invoke a transformation algorithm. Decom treats the first bit
+# returned from the transform as if it occurs at the next bit to be decommed.
+transform-def = element transform {
+    attribute transformer { xsd:token },
+    var-args-def?
+}
+
+# Invoke a decommutation algorithm.  Decom skips over all bytes the
+# decommutation consumes.
+decom-def = element decom {
+    attribute decommutator { xsd:token },
+    var-args-def?
+}
+
+# Length will be returned by the appropriate extraction algorithm..
+time-def = element time_tag {
+    attribute timetag_id { xsd:token }
+    & field-common-attrs-def?
+    & attribute units { text } ?
+    & var-args-def*
+    & attribute is_delta { xsd:boolean }?
+}
+
+frequency-def = element frequency { xsd:positiveInteger } 
+
+period-def = element period { xsd:positiveInteger }
+
+# Move the decom cursor. "Forward" and "backward" are
+# relative to the current position.  "to_offset" is
+# an absolute offset from the beginning of the decom map.
+# The offset values may be specified in any units that can be
+# converted to a number of bits by a simple multiplication.
+# The multiplier attribute gives the value needed for conversion.
+# For example, specifying forward="8" and multiplier="8" will
+# result in a 64 bit move forward.
+move-def = element move {
+    (attribute forward { xsd:positiveInteger | token }
+    | attribute backward { xsd:positiveInteger | token }
+    # to_offset moves to an absolute offset in a binary block.
+    # Its use is discouraged, especially if any decom instructions
+    # that have dealt with variable length data have been invoked previously.
+    | attribute to_offset { xsd:positiveInteger  | token })
+    # Specify whether a multiplier to apply to the offset value.
+    # This allows a specifying the offset in terms of units other than bits.
+    # For example, if an offset is given in bytes, the multiplier should
+    # have value 8.
+    & attribute multiplier { xsd:positiveInteger } ?
+}
+
+# Configurable variable block.  Each element is a key,
+# and its text is a value.  Currently only allows integers.
+configurations-def = element configurations {
+    element * { xsd:integer }*
+}
+
+# Reference an external file with ground-configured variables to use in the
+# decom map.
+config-ref = element configuration_ref {
+    element configuration_id { xsd:token {
+        pattern = "[A-Za-z0-9]*:[A-Za-z0-9_\-]" }
+    }
+}
+
+
+# The switch element allows the conditional execution of statements, based upon
+# a variable's value during decommutation. The switch can optionally apply a
+# modulus to the variable and use the result to select a case. For example, a
+# variable with a value of 5, used on a switch with modulus = 4, which selects
+# the case with value "1".
+switch-def = element switch {
+    attribute variable { xsd:token },
+    attribute modulus { xsd:positiveInteger}?,
+    case-def*,
+    # Default case. It's statements are executed when no other cases are
+    # selected.
+    element default {
+        decom-statement-def*
+    }
+}
+
+# Defines a case element within a switch element. The case's statements are
+# executed if and only if the enclosing switch's variable has a value equal to
+# the case's value. A case's value must be unique amongst the values of all
+# other cases in the switch.
+case-def = element case {
+    attribute value { hex-int },
+    decom-statement-def+
+}
+
+# Reference a previously extracted and stored field in-place.
+var-ref = element variable_ref {
+    attribute field_name { xsd:token }
+}
+
+# Define an event record. Provide an event ID to reference with
+# an EVR dictionary and a set of arguments to the EVR.
+evr-def = element event_record {
+    attribute eventId { xsd:token }
+    & (field-def | var-ref)*
+}
+
+# The break statement halts the execution of a containing element, such
+# as a repeat block or the decom map itself. Useful in the case that
+# some data delimiter indicates a termination condition.
+break-def = element break { empty }
+
+# Halt decommutation of current data.  Provide an error message
+# that will be logged by AMPCS.
+abort-def = element abort { attribute message { text } }

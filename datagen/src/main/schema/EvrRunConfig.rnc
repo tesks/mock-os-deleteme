@@ -1,0 +1,186 @@
+# AMPCS EVR Data Generator Run Configuration Schema
+#
+# This schema defines the XML used to configure each run of the 
+# AMPCS EVR generator.
+#
+# Version 1.0 - M. DeMore.
+# Version 1.1 - M. DeMore add optional DesiredFillPercent element
+#                         and made EvrSeedData element optional
+# Version 1.2 - M. DeMore import common schema and use common
+#               definitions. No actual schema changes. 
+#               (MPCS-6854 - 11/21/14)
+
+include "CommonConfig.rnc"
+
+# Root element. Start XML document here.
+start =
+  element EvrGeneratorRunConfig {
+  
+    # See the common schema for definition of these elements
+    desired-size-def, 
+    desired-fill-def?,
+    desired-report-def?,
+    integer-seed-def?,
+    unsigned-seed-def?,
+    float-seed-def?,
+    sclk-seed-def,
+    
+    # Seed data for opcode argument generation. If this element is 
+    # omitted and there are opcode arguments in the generated EVRs, an
+    # error will result.
+    element OpcodeSeedData {
+    
+         # Flag that indicates whether to include invalid opcodes among
+         # those used to populate EVR arguments.
+         element IncludeInvalidOpcodes {xsd:boolean},
+         
+         # Approximate percentage of invalid opcode values to generate.
+         # Default is 0.0. If IncludeInvalidOpcodes is true, at least 
+         # one invalid opcode value is guaranteed, even if this number
+         # is 0.0.
+         element InvalidOpcodePercent {xsd:float { minInclusive="0.0" maxInclusive="100.0" }}?,
+         
+         # Indicates whether to traverse opcode seed values randomly
+         # or sequentially when generating string values. The
+         # default is RANDOM.
+         element OpcodeTraversalType { traversal-type-def }?,
+      
+         # Opcode definitions. One or more valid or invalid opcodes
+         (valid-opcode-def | invalid-opcode-def)+
+    }?,
+    
+    # Seed data for sequence ID argument generation. If this element is 
+    # omitted and there are SEQID arguments in the generated EVRs, an
+    # error will result.
+    element SeqIdSeedData {
+    
+         # Flag that indicates whether to include invalid opcodes among
+         # those used to populate EVR arguments.
+         element IncludeInvalidSeqIds {xsd:boolean},
+         
+         # Approximate percentage of invalid opcode values to generate.
+         # Default is 0.0. If IncludeInvalidOpcodes is true, at least 
+         # one invalid opcode value is guaranteed, even if this number
+         # is 0.0.
+         element InvalidSeqIdPercent {xsd:float { minInclusive="0.0" maxInclusive="100.0" }}?,
+         
+         # Indicates whether to traverse opcode seed values randomly
+         # or sequentially when generating string values. The
+         # default is RANDOM.
+         element SeqIdTraversalType { traversal-type-def }?,
+      
+         # Opcode definitions. One or more valid or invalid opcodes
+         (valid-seqid-def | invalid-seqid-def)+
+    }?,
+    
+    # See the common schema for definition of these elements
+    string-seed-def?,
+    enum-seed-def?,
+    
+    # Seed data EVR body generation. If omitted, all values will default.
+    element EvrSeedData {
+    
+       # EVR level selector. Value should be a posix regular expression and
+       # should be enclosed in a CDATA block if it includes characters that
+       # interfere with XML parsing.  EVRs with levels matching this pattern
+       # will be selected from the dictionary for inclusion in the result file.
+       # Defaults to ".*" (all levels).
+       element LevelPattern { text }?,
+       
+       # EVR name selector. Value should be a posix regular expression and
+       # should be enclosed in a CDATA block if it includes characters that
+       # interfere with XML parsing.  EVRs with names matching this pattern
+       # will be selected from the dictionary for inclusion in the result file.
+       # Defaults to "*" (all names).
+       element NamePattern { text }?,
+       
+       # EVR ops category selector. Value should be a posix regular expression and
+       # should be enclosed in a CDATA block if it includes characters that
+       # interfere with XML parsing.  EVRs with operational categories matching 
+       # this pattern will be selected from the dictionary for inclusion in the 
+       # result file. Defaults to ".*" (all categories).
+       element OpsCatPattern { text }?,
+       
+       # EVR module selector. Value should be a posix regular expression and
+       # should be enclosed in a CDATA block if it includes characters that
+       # interfere with XML parsing.  EVRs with modules matching 
+       # this pattern will be selected from the dictionary for inclusion in the 
+       # result file. Defaults to ".*" (all modules).
+       element ModulePattern { text }?,
+       
+       # EVR subsystem selector. Value should be a posix regular expression and
+       # should be enclosed in a CDATA block if it includes characters that
+       # interfere with XML parsing.  EVRs with subsystems matching 
+       # this pattern will be selected from the dictionary for inclusion in the 
+       # result file. Defaults to ".*" (all subsystems).
+       element SubsystemPattern { text }?,
+       
+       # Indicates whether to include random EVRs with event IDs that are
+       # not in the dictionary. Defaults to false.
+       element IncludeInvalidIds { xsd:boolean }?,
+                
+       # Approximate percentage of invalid ID packets to generate.
+       # Default is 0.0. If IncludeInvalidIds is true, at least 
+       # one invalid ID packet is guaranteed, even if this number
+       # is 0.0.
+       element InvalidIdPercent { xsd:float { minInclusive="0.0" maxInclusive="100.0" }}?,
+       
+       # Invalid EVR IDs. Needed if IncludeInvalidIds is true. Include as many
+       # values as desired.
+       invalid-id-def*, 
+       
+       # Indicates whether to include random EVRs with corrupted binary bodies.
+       # Defaults to false. Currently UNSUPPORTED.
+       element IncludeInvalidEvrs {xsd:boolean}?,
+       
+       # Indicates whether to traverse EVR definitions in the dictionary
+       # sequentially or randomly. Default is SEQUENTIAL.
+       element EvrTraversalType { traversal-type-def }?,
+       
+       # Task name to include in EVR packets. Will be blank padded to 6
+       # characters. Defaults to "TASK  ".
+       element EvrTaskName {xsd:string { maxLength="6" }}?,       
+       
+       # Stack Trace depth for EVRs. If not specified, will be randomized
+       # to a value between 1 and 6.
+       element EvrStackDepth { xsd:positiveInteger { maxInclusive = "6" }}?
+    }?
+}
+
+# Invalid EVR ID element
+invalid-id-def = element InvalidId {
+
+    # EVR ID. May be hex or decimal.
+    attribute id { hex-int-32 }
+}
+ 
+# Valid opcode element
+valid-opcode-def = element ValidOpcode {
+    
+    # Opcode number. May be hex or decimal.
+    attribute number { hex-int-16 },
+    
+    # Command stem associated with this opcode
+    attribute stem { xsd:NCName }
+}
+       
+# Invalid opcode element
+invalid-opcode-def = element InvalidOpcode {
+
+    # Opcode number. May be hex or decimal.
+    attribute number { hex-int-16 }
+}
+
+# Valid SEQID element
+valid-seqid-def = element ValidSeqId {
+    
+    # Sequence number. May be hex or decimal.
+    attribute id { hex-int-16 }
+}
+       
+# Invalid SEQID element
+invalid-seqid-def = element InvalidSeqId {
+
+    # Sequence number. May be hex or decimal.
+    attribute id { hex-int-16 }
+}

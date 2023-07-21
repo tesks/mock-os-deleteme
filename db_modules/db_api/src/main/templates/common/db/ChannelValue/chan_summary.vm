@@ -1,0 +1,11 @@
+##
+##  MPCS-11872: chill_get_chan_summary --count throws java.lang.OutOfMemoryError
+##  when dealing with a large data set.
+##
+##  This template has been added for the use of data transfer between chill_get_chanvals and chill_get_chan_summary.
+##  When chill_get_chan_summary is executed with the --count option, chill_get_chan_summary launches chill_get_chanvals
+##  with the option '--outputFormat chan_summary'.
+##
+#if ($body)
+$channelId,$name
+#end

@@ -1,0 +1,48 @@
+#if ($body)
+<Packet>
+   <SessionId>$sessionId</SessionId>
+   <SessionHost>$sessionHost</SessionHost>
+#if ($rct)
+   <RCT>$rct</RCT>
+#end
+#if ($scet)
+   <SCET>$scet</SCET>
+#end
+#if ($lst)
+   <LST>$lst</LST>
+#end
+#if ($ert)
+   <ERT>$ert</ERT>
+#end
+#if ($sclk)
+   <SCLK>$sclk</SCLK>
+#end
+#if ($vcid)
+   <VCID>$vcid</VCID>
+#end
+#if ($apid)
+   <APID>$apid</APID>
+#end
+#if ($apidName)
+   <APIDName>$apidName</APIDName>
+#end
+#if ($nullTool.isNotNull($fromSse))
+   <FromSSE>$fromSse</FromSSE>
+#end
+#if ($spsc)
+   <SourcePacketSequenceCount>$spsc</SourcePacketSequenceCount>
+#end
+#if ($length)
+   <Length>$length</Length>
+#end
+#if ($sourceVcfcs) 
+   <SourceVCFCs>$sourceVcfcs</SourceVCFCs>
+#end
+#if ($fileByteOffset)
+   <FileByteOffset>$fileByteOffset</FileByteOffset>
+#end
+#if ($dssId >= 0)
+   <DssId>$dssId</DssId>
+#end
+</Packet>
+#end

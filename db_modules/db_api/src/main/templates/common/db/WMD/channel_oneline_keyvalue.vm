@@ -1,0 +1,3 @@
+#if ($body)
+Eha SessionId=$sessionId SessionHost=$sessionHost ChannelId=$channelId Name=$name ERT=$ert SCET=$scet SCLK=$sclk DataNumber=$dataNumber EU=#if($eu)$eu#else NaN#end Realtime=$isRealTime
+#end

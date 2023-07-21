@@ -1,0 +1,266 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--  
+	MPCS Multi-Mission Product Earth Metadata (EMD) XML schema specification
+
+	Version=1.1
+	Author=Marti DeMore
+	Date=07/11/2011
+-->
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified"
+	targetNamespace="http://dsms.jpl.nasa.gov/mpcs_mm-core_emd"
+	xmlns:mpcs="http://dsms.jpl.nasa.gov/mpcs"
+	xmlns:mm-emd="http://dsms.jpl.nasa.gov/mpcs_mm-core_emd">
+
+	<xs:import namespace="http://dsms.jpl.nasa.gov/mpcs" schemaLocation="MM_Core_Session.xsd"/>
+
+	<!-- This is the root element. It consists of the MPCS session information followed by the 
+         product metadata. 
+         
+         In addition, the EmdVersion attribute to the root element gives the version of this schema
+         associated with the XML EMD instance.
+    -->
+	<xs:element name="EarthProductMetadata">
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element ref="mm-emd:SessionInformation"/>
+				<xs:element ref="mm-emd:ProductMetadata"/>
+			</xs:sequence>
+			<xs:attribute name="EmdSchemaVersion" type="xs:unsignedShort" use="required"/>
+		</xs:complexType>
+	</xs:element>
+
+	<!-- Session information consists of the MPCS session and venue identification
+		 for the MPCS session that generated this product, and the session output 
+		 directory name.  The SessionId includes the MPCS database key for the 
+		 session that produced the data product.
+	-->
+	<xs:element name="SessionInformation">
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element ref="mpcs:SessionId"/>
+				<xs:element ref="mpcs:Venue"/>
+				<xs:element ref="mpcs:OutputDirectory"/>
+			</xs:sequence>
+		</xs:complexType>
+	</xs:element>
+
+	<!-- Information about an MPCS generated data product. This information
+		 is constructed from the primary and secondary packet headers, 
+		 PDU headers, MPDU content, dictionary files, and the metadata gathered 
+		 by the MPCS product builder. 
+    -->
+	<xs:element name="ProductMetadata">
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element ref="mm-emd:GroundCreationTime"/>
+				<xs:element ref="mm-emd:Scid"/>
+				<xs:element ref="mm-emd:Apid"/>
+				<xs:element ref="mm-emd:ProductType"/>
+				<xs:element ref="mm-emd:Vcid"/>
+				<xs:element ref="mm-emd:GroundStatus"/>
+				<xs:element ref="mm-emd:DataFilePath"/>
+				<xs:element ref="mm-emd:SequenceId" minOccurs="0"/>
+				<xs:element ref="mm-emd:SequenceVersion" minOccurs="0"/>
+				<xs:element ref="mm-emd:CommandNumber" minOccurs="0"/>
+				<xs:element ref="mm-emd:DvtCoarse"/>
+				<xs:element ref="mm-emd:DvtFine"/>
+				<xs:element ref="mm-emd:FirstPartSclk"/>
+				<xs:element ref="mm-emd:FirstPartScet"/>
+				<xs:element ref="mm-emd:FirstPartLst" minOccurs="0"/>
+				<xs:element ref="mm-emd:FirstPartErt"/>
+				<xs:element ref="mm-emd:TotalDataParts"/>
+				<xs:element ref="mm-emd:ExpectedProductChecksum"/>
+				<xs:element ref="mm-emd:ActualProductChecksum"/>
+				<xs:element ref="mm-emd:ExpectedProductFileSize"/>
+				<xs:element ref="mm-emd:ActualProductFileSize"/>
+				<xs:element ref="mm-emd:CfdpTransactionSequenceNumber"/>
+				<xs:element ref="mm-emd:PartList"/>
+			</xs:sequence>
+		</xs:complexType>
+	</xs:element>
+
+	<!-- Set by MPCS when the product is written -->
+	<xs:element name="GroundCreationTime" type="mm-emd:UtcTime"/>
+
+	<!-- Numeric spacecraft ID -->
+	<xs:element name="Scid" type="xs:unsignedShort"/>
+
+	<!-- Product APID from the primary packet header - determines the product type -->
+	<xs:element name="Apid" type="xs:unsignedShort"/>
+
+	<!-- Product type name from the APID dictionary. This is the readable name 
+		for the product APID -->
+	<xs:element name="ProductType" type="xs:normalizedString"/>
+
+	<!-- Product VCID from the primary frame header -->
+	<xs:element name="Vcid" type="xs:unsignedShort"/>
+
+	<!-- Status of the product at the time that MPCS wrote this file -->
+	<xs:element name="GroundStatus" type="mm-emd:GroundStatusType"/>
+
+	<!-- Absolute path to the product data file this EMD corresponds to -->
+	<xs:element name="DataFilePath" type="xs:token"/>
+
+	<!-- ID of the onboard sequence that generated the product, from the 
+		secondary packet header. -->
+	<xs:element name="SequenceId" type="xs:nonNegativeInteger"/>
+
+	<!-- Version of the onboard sequence that generated the product, from 
+		the secondary packet header. -->
+	<xs:element name="SequenceVersion" type="xs:unsignedShort"/>
+
+	<!-- Number of the command that generated the product, from the 
+		secondary packet header. -->
+	<xs:element name="CommandNumber" type="xs:unsignedShort"/>
+
+	<!-- Coarse portion of the data validity time, from the secondary 
+		packet header -->
+	<xs:element name="DvtCoarse" type="xs:nonNegativeInteger"/>
+
+	<!-- Coarse portion of the data validity time, from the secondary 
+		packet header -->
+	<xs:element name="DvtFine" type="xs:nonNegativeInteger"/>
+
+	<!-- Total number of data PDUs (parts) needed to construct the product 
+		data file. Note that neither the MPDU packet nor the EPDU packet 
+		will be included here, so this number may not be the same
+		as the part count in the MPDU. Also note that this value may be 
+		0 if the total number of parts is unknown at the time the product 
+		is written. -->
+	<xs:element name="TotalDataParts" type="xs:unsignedShort"/>
+
+	<!-- The Earth Receive Time of the first product data part (DPDU) 
+		received by MPCS -->
+	<xs:element name="FirstPartErt" type="mm-emd:UtcTime"/>
+
+	<!-- The product spacecraft clock, from the secondary packet header 
+		of the first product data part (DPDU) received by MPCS -->
+	<xs:element name="FirstPartSclk" type="mm-emd:SclkTime"/>
+
+	<!-- The first part spacecraft event time, converted from FirstPartSclk 
+		using latest SCLK/SCET conversion file-->
+	<xs:element name="FirstPartScet" type="mm-emd:UtcTime"/>
+
+	<!-- The first part local solar time, converted from FirstPartSclk  -->
+	<xs:element name="FirstPartLst" type="mm-emd:LstTime"/>
+
+	<!-- Checksum for the entire product data file, from the MPDU or EPDU. 
+		0 if it cannot (yet) be obtained from the received PDUs. -->
+	<xs:element name="ExpectedProductChecksum" type="xs:nonNegativeInteger"/>
+
+	<!-- Checksum for the entire product data file, calculated for the 
+		ground produced product file. Wil be 0 if the file is partial.-->
+	<xs:element name="ActualProductChecksum" type="xs:nonNegativeInteger"/>
+
+	<!-- Expected size in bytes of the entire product data file, from the MPDU 
+		or EPDU. 0 if it cannot (yet) be obtained from the received PDUs. -->
+	<xs:element name="ExpectedProductFileSize" type="xs:nonNegativeInteger"/>
+
+	<!-- Actual size in bytes of the entire product data file, at the time 
+		the gound system writes it.  -->
+	<xs:element name="ActualProductFileSize" type="xs:nonNegativeInteger"/>
+
+	<!-- CFDP transaction sequence number, form the PDU headers -->
+	<xs:element name="CfdpTransactionSequenceNumber" type="xs:nonNegativeInteger"/>
+
+	<!-- The PartList documents received and missing DPDUs (data parts 
+		or packets) for this product.-->
+	<xs:element name="PartList">
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element ref="mm-emd:MissingPart" minOccurs="0" maxOccurs="unbounded"/>
+				<xs:element ref="mm-emd:Part" minOccurs="0" maxOccurs="unbounded"/>
+			</xs:sequence>
+			<!-- Total expected data parts. Should be the same as TotalDataParts above. May be 0 if 
+				 total parts unknown (no MPDU received). -->
+			<xs:attribute name="TotalExpected" type="xs:unsignedShort" use="required"/>
+			<!-- Total received data parts at the time this product was written. -->
+			<xs:attribute name="TotalReceived" type="xs:unsignedShort" use="required"/>
+		</xs:complexType>
+	</xs:element>
+
+	<!-- Indicates a known missing part. These elements can only be supplied if 
+		there are gaps in the parts recieved and/or the total number of parts 
+		is known. -->
+	<xs:element name="MissingPart" type="xs:unsignedShort"/>
+
+	<!-- Part documents the information for a single data packet (DPDU).-->
+	<xs:element name="Part">
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element ref="mm-emd:Sclk"/>
+				<xs:element ref="mm-emd:Scet"/>
+				<xs:element ref="mm-emd:Lst" minOccurs="0"/>
+				<xs:element ref="mm-emd:Ert"/>
+				<xs:element ref="mm-emd:SourcePacketSeqCount"/>
+			</xs:sequence>
+			<!-- Part number. Data part numbers start at 1 -->
+			<xs:attribute name="Number" type="xs:unsignedShort" use="required"/>
+			<!-- Offset of the part (DPDU) data in the product data file. -->
+			<xs:attribute name="Offset" type="xs:unsignedShort" use="required"/>
+			<!-- Length of the part (DPDU) data. -->
+			<xs:attribute name="Length" type="xs:unsignedShort" use="required"/>
+		</xs:complexType>
+	</xs:element>
+
+	<!-- The part ERT, from the source frames, or applied by MPCS -->
+	<xs:element name="Ert" type="mm-emd:UtcTime"/>
+
+	<!-- Packet sequence counter, from the primary packet header. -->
+	<xs:element name="SourcePacketSeqCount" type="xs:unsignedShort"/>
+
+	<!-- The part SCLK, from the secondary packet header -->
+	<xs:element name="Sclk" type="mm-emd:SclkTime"/>
+
+	<!-- The part LST, from the secondary packet header -->
+	<xs:element name="Lst" type="mm-emd:LstTime"/>
+
+	<!-- The part SCET, as correlated by MPCS from the part SCLK. -->
+	<xs:element name="Scet" type="mm-emd:UtcTime"/>
+
+	<!-- MPCS time format, DOY version -->
+	<xs:simpleType name="UtcTime">
+		<xs:restriction base="xs:string">
+			<xs:pattern
+				value="[0123456789]{4}-[0123456789]{3}T[0123456789]{2}:[0123456789]{2}:[0123456789]{2}.[0123456789]{3,7}"
+			/>
+		</xs:restriction>
+	</xs:simpleType>
+
+	<!-- MPCS LST format -->
+	<xs:simpleType name="LstTime">
+		<xs:restriction base="xs:string">
+			<xs:pattern
+				value="SOL-[0123456789]{4}M[0123456789]{2}:[0123456789]{2}:[0123456789]{2}.[0123456789]{3,7}"
+			/>
+		</xs:restriction>
+	</xs:simpleType>
+
+	<!-- MPCS SCLK format, subtick version -->
+	<xs:simpleType name="SclkTime">
+		<xs:restriction base="xs:string">
+			<xs:pattern value="[0123456789]{1,10}-[0123456789]{1,5}"/>
+		</xs:restriction>
+	</xs:simpleType>
+
+	<!-- Overall product status values -->
+	<xs:simpleType name="GroundStatusType">
+		<xs:restriction base="xs:string">
+			<!-- All product packets have NOT been received.-->
+			<xs:enumeration value="PARTIAL"/>
+			<!-- All product packets have been received; project does not support 
+				product checksums.-->
+			<xs:enumeration value="COMPLETE"/>
+			<!-- All product packets have been received; product checksum 
+				from flight is 0.-->
+			<xs:enumeration value="COMPLETE_NO_CHECKSUM"/>
+			<!-- All product packets have been received; product checksum matches 
+				the flight value.-->
+			<xs:enumeration value="COMPLETE_CHECKSUM_PASS"/>
+			<!-- All product packets have been received; product checksum does 
+				not match the flight value.-->
+			<xs:enumeration value="PARTIAL_CHECKSUM_FAIL"/>
+		</xs:restriction>
+	</xs:simpleType>
+
+</xs:schema>

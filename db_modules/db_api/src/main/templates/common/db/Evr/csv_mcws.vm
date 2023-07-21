@@ -1,0 +1,11 @@
+#macro( escape $field)
+#if($field.toString())#set($field=$field.toString().replace('\', '\\').replace('"', '\"'))
+#else#set($field="")
+#{end}
+$field#end
+#if ($header)
+record_type,session_id,session_host,name,module,level,event_id,vcid,dss_id,from_sse,realtime,sclk,scet,lst,ert,rct,message,metadata_keywords,metadata_values
+#{end}
+#if ($body)
+"evr","#escape($sessionId)","#escape($sessionHost)","#escape($name)","#escape($module)","#escape($level)","#escape($event)","#escape($vcid)","#if($dssId >= 0)$dssId#{end}","#escape($fromSse)","#escape($realTime)","#escape($sclk)","#escape($scet)","#escape($lst)","#escape($ert)","#escape($rct)","#escape($message)","#escape($mdKeysList)","#escape($mdValsList)"
+#{end}

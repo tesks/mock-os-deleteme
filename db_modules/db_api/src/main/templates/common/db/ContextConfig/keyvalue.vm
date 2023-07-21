@@ -1,0 +1,24 @@
+#if ($body)
+-------
+Context
+-------
+ContextId=$contextId
+#if ($contextName)
+Name=$contextName
+#end
+#if ($contextType)
+Type=$contextType
+#end
+User=$user
+Host=$contextHost
+AmpcsVersion=$mpcsVersion
+#if ($sessionId)
+SessionId=$sessionId
+#end
+## metadata
+Metadata:
+#foreach ($mapEntry in $metadata.entrySet())
+    $mapEntry.key=$mapEntry.value
+#end
+
+#end

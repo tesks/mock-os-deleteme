@@ -1,0 +1,27 @@
+#set ( $shellName = "sh" )
+#shell( $shellName )
+
+#init()
+
+#Java()
+
+#set ( $headless = "true" )
+
+#set( $tpsLibraries = ["commons_io", "commons_cli", "commons_configuration2",
+    "commons_lang3", "piccolo", "shared", "velocity_engine_core"])
+#constructClasspath( $tpsLibraries )
+#addSpringClasspath()
+#constructLog4j2Classpath()
+
+#set ( $appName = "chill_compile_command_dict" )
+#set ( $appClass = "jpl.gds.tc.mps.impl.app.CompileCommandDictionaryApp" )
+#set ( $appArgs = "" )
+#set ( $headless = "true" )
+#set ( $doExec = "true" )
+#set ( $doLog = "true" )
+#set ( $minMem = "512m" )
+#set ( $maxMem = "4g" )
+#set ( $responderHelper = "" )
+#set ( $sysProperties = "-DGdsApplicationIsSse=$applicationIsSse" )
+#set ( $includePassThruArgs = "true" )
+#execJavaSimple ( $appName $appClass $appArgs $headless $doExec $doLog $minMem $maxMem $responderHelper $sysProperties $includePassThruArgs )

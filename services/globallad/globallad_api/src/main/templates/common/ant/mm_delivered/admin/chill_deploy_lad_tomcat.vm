@@ -1,0 +1,145 @@
+#set ( $shellName = "sh" )                                                                                                                                   
+#shell( $shellName )
+
+#init()
+
+#Java()
+
+#set ( $appName = "chill_lad_server_tomcat" )
+#set ( $headless = "false" )
+#set ( $useG1GC = "true" )
+#set ( $minMem = "512m" )
+#set ( $maxMem = "4096m" )
+#set ( $responderHelper = ""  )
+#set ( $sysProperties = "" )
+#setJavaOptsTomcat ( $appName $headless $useG1GC $minMem $maxMem $responderHelper $sysProperties )
+
+function usage() {
+	echo "This script is used to deploy the global lad war file to the tomcat server.  It also has a number"
+	echo "of convenience functions to help manage the Tomcat server instance.  An additional argument, serverPort can be "
+	echo "supplied as the last argument for any step that starts the server.  This argumement is used to override "
+	echo "the socket server port.  The argument must be formated properly or the script will fail."
+	echo ""
+	echo "USAGE: $0 [start|stop|restart|deploy|deploy-start|tail|start-tail|deploy-tail] [OPTIONS] [serverPort=NNNN]"
+	echo ""
+	echo "$(basename $0) [start|stop|restart] Starts, stops or restarts the Tomcat server"
+	echo "$(basename $0) [deploy] <war file> [war file alias] - Deploys war file to Tomcat.  If an alias is given the war file will be deployed as that name."
+	echo "$(basename $0) [tail|start-tail|restart-tail] - Tail the log file of the current Tomcat instance.  If using tail-start will start the server and then run the tail."
+	echo "$(basename $0) [deploy-start, deploy-tail] <war file> [war file alias] - Stops the Tomcat server before deploying the new jar file and will then restart it."
+	echo "If using deploy-tail will tail once started."
+	exit 1
+}
+
+function extract_port() {
+	# This will check the input to see if it is a valid port override, extract the 
+	# value and update the JAVA_OPTS variable if everything checks out.
+	# Because OSX uses different switches for sed must check the uname and run the command differently.
+	case "`uname`" in
+	Darwin*) 
+		# OSX must use the -E switch.
+		export SOCKET_SERVER_PORT=`echo $1 | sed -E 's/^serverPort=([0-9]+)$/\1/'`
+	;;
+	*)
+		# All other linux will use the -e switch.
+		export SOCKET_SERVER_PORT=`echo $1 | sed -r 's/^serverPort=([0-9]+)$/\1/'`
+	;;
+	esac
+
+	if [ "X$SOCKET_SERVER_PORT" != "X" ]; then
+		echo "Socket server port override will be set to $SOCKET_SERVER_PORT"
+		export JAVA_OPTS="$JAVA_OPTS -Dserver.socket.port=$SOCKET_SERVER_PORT"
+	fi
+}
+
+function start_() { 
+	extract_port $1
+	$CATALINA_HOME/bin/catalina.sh start 
+}
+
+function stop_() {
+	$CATALINA_HOME/bin/catalina.sh stop 
+}
+
+function restart_() {
+	stop_ && start_
+}
+
+function deploy_() {
+	export WEBAPP_DIR="$CATALINA_HOME/webapps"
+
+	# First argument is the war file, the second is the destination name.
+	if ! [[ -f $1 ]]; then
+		echo "FATAL:  war file to be deployed does not exits:  file=$1"
+		exit 1	
+	elif ! [[ -d $WEBAPP_DIR ]]; then
+		echo "FATAL: Destination webapp dir in catalina home does not exist: $WEBAPP_DIR"
+		exit 1
+	fi
+	
+	# Build the destination file name. Use the original if there is no alias, or the 
+	# alias matches the socket server override.
+	if [ "X$2" = "X" ] | [[ $2 == serverPort* ]] | [[ $2 != *.war ]]; then
+		# No alias for the war was given.
+		echo "INFO: No valid war alias was provided."
+		export DEST_FILE="$WEBAPP_DIR/$(basename $1)"
+	else
+		# An alias for the war was given.
+		export DEST_FILE="$WEBAPP_DIR/$2"
+	fi
+	
+	# Copy the war file to the webapp directory.
+	cp $1 $DEST_FILE
+	
+	echo "INFO: $1 was copied to the following path: $DEST_FILE"
+}
+
+function tail_() {
+	# This will tail the catalino.out file from the CATALINA_HOME/logs file.
+	tail -f $CATALINA_HOME/logs/catalina.out
+}
+
+if [ "X$CATALINA_HOME" = "X" ]; then
+	echo "FATAL: CATALINA_HOME must be set"
+	usage
+fi
+
+# The last argument is the socket server port and this can get a little tricky.
+# Args for script executions that only start the process and do not deploy
+# would only expect a single argument, so that would be $2.  If there is a deploy
+# step it is expected to be $4.  Since the server port is expected to be serverPort=8898, 
+# the deploy step and the start step can check the format so there will not be any mix up.
+case $1 in
+	start) 
+		start_ $2
+	;;
+	stop) 
+		stop_
+	;;
+	restart) 
+		restart_ $2
+	;;	
+	restart-tail) 
+		restart_ $2
+		tail_
+	;;	
+	deploy) 
+		deploy_ $2 $3 
+	;;
+	deploy-start) 
+		stop_ 
+		deploy_ $2 $3 && start_ $4
+	;;
+	tail) 
+		tail_
+	;;
+	start-tail) 
+		start_ $2 && tail_
+	;;
+	deploy-tail) 
+		stop_
+		deploy_ $2 $3 && start_ $4 && tail_
+	;;
+	*) usage
+	;;
+esac
+

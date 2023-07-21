@@ -1,0 +1,29 @@
+#set ( $shellName = "sh" )
+#shell( $shellName )
+
+#init()
+
+#Java()
+
+#SWT( $headless )
+#set( $tpsLibraries = ["gson","xml_commons","piccolo","commons_cli","commons_lang", "commons_lang3","commons_collections","commons_logging","commons_http", "commons_codec","woodstox","mysql","velocity_engine_core","restlet","javamail", "shared", "hibernate", "jta", "jdom2", "disruptor", "guava", "commons_io"] )
+
+#constructClasspath( $tpsLibraries )
+#addSpringClasspath()
+#addJmsClasspath()
+
+#set ( $LOG4J_PDPP_CONFIG_FILE = "log4j2-pdpp.xml" )
+#constructLog4j2Classpath($LOG4J_PDPP_CONFIG_FILE)
+
+#set ( $appName = "chill_pdpp_automation" )
+#set ( $appClass = "jpl.gds.product.automation.ReferenceAutomationProcessorApp" )
+#set ( $appArgs = "" )
+#set ( $headless = "true" )
+#set ( $doExec = "true" )
+#set ( $doLog = "true" )
+#set ( $minMem = "128m" )
+#set ( $maxMem = "512m" )
+#set ( $responderHelper = "" )
+#set ( $sysProperties = "-DGdsApplicationIsSse=$applicationIsSse" )
+#set ( $includePassThruArgs = "true" )
+#execJavaSimple ( $appName $appClass $appArgs $headless $doExec $doLog $minMem $maxMem $responderHelper $sysProperties $includePassThruArgs)

@@ -1,0 +1,139 @@
+#if ($header) 
+<?xml version="1.0"?>
+<Sessions>
+#end
+#if ($body)
+    <Session version="3">
+      <SessionId>
+          <BasicSessionInfo>
+#if($sessionId)
+              <Number>$sessionId</Number>
+#end
+#if($spacecraftId)
+             <SpacecraftId>$spacecraftId</SpacecraftId>
+#end
+#if($sessionName)
+              <Name>$sessionName</Name>
+#end
+#if($sessionType)
+              <Type><![CDATA[$sessionType]]></Type>
+#end
+#if($sessionDescription)
+              <Description><![CDATA[$sessionDescription]]></Description>
+#end
+          </BasicSessionInfo>
+          <Venue>
+#if($user)
+              <User>$user</User>
+#end
+#if($sessionHost)
+              <Host>$sessionHost</Host>
+#end
+#if($sessionFragment)
+              <Fragment>$sessionFragment</Fragment>
+#end
+#if($hostId)
+              <HostId>$hostId</HostId>
+#end
+          </Venue>
+#if($startTime)
+          <StartTime>$startTime</StartTime>
+#end
+#if($endTime)
+          <EndTime>$endTime</EndTime>
+#end
+      </SessionId>  
+#if($mpcsVersion)
+      <AmpcsVersion>$mpcsVersion</AmpcsVersion>
+#end
+#if($fullName) 
+      <FullName>$fullName</FullName>
+#end      
+#if($fswVersion)
+      <FswVersion>$fswVersion</FswVersion>
+#end
+#if($sseVersion && $hasSse)
+      <SseVersion>$sseVersion</SseVersion>
+#end
+      <RunFswDownlink>$fswDownlinkFlag</RunFswDownlink>
+      <RunSseDownlink>$sseDownlinkFlag</RunSseDownlink>
+      <RunUplink>$uplinkFlag</RunUplink>
+#if($fswDictionaryDir)
+      <FswDictionaryDirectory><![CDATA[$fswDictionaryDir]]></FswDictionaryDirectory>
+#end
+#if($sseDictionaryDir && $hasSse)
+      <SseDictionaryDirectory><![CDATA[$sseDictionaryDir]]></SseDictionaryDirectory>
+#end
+#if($outputDir)
+      <OutputDirectory><![CDATA[$outputDir]]></OutputDirectory>
+#end
+      <OutputDirOverridden>$outputDirOverride</OutputDirOverridden>
+      <VenueInformation>
+#if($venueType)
+          <VenueType>$venueType</VenueType>
+#end
+#if($inputFormat)
+          <InputFormat>$inputFormat</InputFormat>
+#end
+#if($downlinkConnectionType)
+          <DownlinkConnectionType>$downlinkConnectionType</DownlinkConnectionType>
+#end
+#if($uplinkConnectionType)
+          <UplinkConnectionType>$uplinkConnectionType</UplinkConnectionType>
+#end
+#if($testbedName && ($venueType == "TESTBED" || $venueType == "ATLO"))
+          <TestbedName>$testbedName</TestbedName>
+#end
+#if($downlinkStreamId && ($venueType == "TESTBED" || $venueType == "ATLO"))
+          <DownlinkStreamId>$downlinkStreamId</DownlinkStreamId>
+#end
+#if($dssId && $dssId != 0)
+          <SessionDssId>$dssId</SessionDssId>
+#end
+#if($vcid)
+          <SessionVcid>$vcid</SessionVcid>
+#end
+#if($inputFile)
+          <InputFile>$inputFile</InputFile>
+#end
+#if($databaseSessionId)
+          <DatabaseSessionKey>$databaseSessionId</DatabaseSessionKey>
+#end
+#if($databaseHost)
+          <DatabaseSessionHost>$databaseHost</DatabaseSessionHost>
+#end
+#if($subtopic)
+          <JmsSubtopic>$subtopic</JmsSubtopic>
+#end
+#if($topic)
+          <Topic>$topic</Topic>
+#end
+      </VenueInformation>
+      <HostInformation>
+#if($fswDownlinkHost)
+          <FswDownlinkHost>$fswDownlinkHost</FswDownlinkHost>
+#end
+#if($fswUplinkHost)
+          <FswUplinkHost>$fswUplinkHost</FswUplinkHost>
+#end
+#if($sseHost && $hasSse)
+          <SseHost>$sseHost</SseHost>
+#end
+#if($fswUplinkPort)
+          <FswUplinkPort>$fswUplinkPort</FswUplinkPort>
+#end
+#if($sseUplinkPort && $hasSse)
+          <SseUplinkPort>$sseUplinkPort</SseUplinkPort>
+#end
+#if($fswDownlinkPort)
+          <FswDownlinkPort>$fswDownlinkPort</FswDownlinkPort>
+#end
+#if($sseDownlinkPort && $hasSse)
+          <SseDownlinkPort>$sseDownlinkPort</SseDownlinkPort>
+#end
+      </HostInformation>
+    </Session>
+#end
+#if ($trailer) 
+</Sessions>
+#end

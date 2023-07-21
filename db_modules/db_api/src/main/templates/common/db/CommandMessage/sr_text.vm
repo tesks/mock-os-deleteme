@@ -1,0 +1,19 @@
+##DEFAULT_WIDTH(30),DEFAULT_WIDTH(30),DEFAULT_WIDTH(30),SMALL_WIDTH(10),DEFAULT_WIDTH(30),DEFAULT_WIDTH(30)
+#if ($header)
+#set($eventTime="EVENT_TIME                    ")
+#set($scet="SCET                          ")
+#set($sclk="SCLK                          ")
+#set($cmd="CMD       ")
+#set($type="CMD_TYPE                      ")
+#set($cd="COMMAND                       ")
+${eventTime}	${scet}	${sclk}	${cmd}	${type}	${cd}	SESSION	
+#elseif ($trailer)
+#else
+#if($eventTime)#{set}($eventTime= $formatter.anCsprintf("%-30s", $eventTime))#{end}
+#set($ndScet="-----------------------")#{set}($ndScet= $formatter.anCsprintf("%-30s", $ndScet))
+#set($ndSclk="----------------")#{set}($ndSclk= $formatter.anCsprintf("%-30s", $ndSclk))
+#{set}($cmd="CMD")#{set}($cmd = $formatter.anCsprintf("%-10s", $cmd))
+#if($commandType)#{if}($commandType=="SseCommand")#set($cmdType="SSE CMD")#{else}#set($cmdType="FSW CMD")#{end}#{else}#set($cmdType="")#{end}#{set}($cmdType=$formatter.anCsprintf("%-30s", $cmdType))
+#if($commandString)#{set}($commandString=$formatter.anCsprintf("%-30s",$commandString))#{else}#{set}($commandString="")#{set}($commandString=$formatter.anCsprintf("%-30s",$commandString))#{end}
+${eventTime}	${ndScet}	${ndSclk}	${cmd}	${cmdType}	${commandString}	$sessionId
+#end

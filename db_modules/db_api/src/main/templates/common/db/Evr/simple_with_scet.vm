@@ -1,0 +1,18 @@
+#if($body)
+#if ($name)
+#set ($theName=$name)
+#else
+#set ($theName="")
+#end
+#if ($module)
+#set ($theModule=$module)
+#else
+#set ($theModule="")
+#end
+#if ($level)
+#set ($theLevel=$level)
+#else
+#set ($theLevel="")
+#end
+$formatter.anCsprintf("%-25s",$sclk.toString())$formatter.anCsprintf("%-40s",$scet.toString())$formatter.anCsprintf("%-40s",$ert.toString())$formatter.anCsprintf("%-60s",$theName)$formatter.anCsprintf("%-10s",$theModule)$formatter.anCsprintf("%-25s",$theLevel)$message
+#end

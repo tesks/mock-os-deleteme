@@ -1,0 +1,60 @@
+#
+# AMPCS SessionHeartbeatMessage RelaxNG Compact format XML specification
+#
+# SessionHeartbeatMessage is issued upon instigation of an MPCS session.
+# and periodically during the life of the session until the
+# session is complete (as signified by an EndOfSessionMessage)
+# It contains all relevant identifying information regarding
+# the MPCS session.
+#
+# Version: 6.1
+#
+# ChangeLog:
+# V3.0 Updated to import new common session schema
+# V4.0 Updated to include service configuration
+# V5.0 Updated the global lad host and port information.
+# V6.0 Major updates for AMPCS R8
+# V6.1 Refactored ServiceConfiguration element definition to its own schema
+#
+namespace rng = "http://relaxng.org/ns/structure/1.0"
+datatypes xsd = "http://www.w3.org/2001/XMLSchema-datatypes"
+default namespace = "http://dsms.jpl.nasa.gov/mpcs"
+
+include "SessionCommon.rnc"
+include "ContextCommon.rnc"
+include "Times.rnc"
+include "ServiceConfiguration.rnc"
+
+start = MPCSSessionHeartbeatMessage-def
+
+MPCSSessionHeartbeatMessage-def = 
+## Root element.
+element MPCSSessionHeartbeatMessage {
+    context-def?,
+    heartbeatMessage-def    
+}
+
+heartbeatMessage-def = 
+## The MPCS specific body element.
+element SessionHeartbeatMessage {
+    ## The time this message was created, in the format YYYY-MM-DDTHH:MM:SS.ttt, GMT.
+    attribute eventTime { time-def },
+    
+    context-def?,
+    
+    ## Indicates if the message is from a standalone SSE application
+    element fromSSE {xsd:boolean},
+    
+    ## The start time of the session, which is the same as the start time in the SessionId. Format is YYYY-MM-DDTHH:MM:SS.ttt, GMT.
+    element startTime { time-def },
+    
+    ## The full definition  of the session
+    element Sessions {
+        session-def
+    },
+    ## Added service configuration
+    ## The service configuration associated with the session.
+    ## Adding boolean to indicate if the lad is enabled.
+    ## Refactor ServiceConfiguration out to a schema
+    ServiceConfiguration-def?
+}

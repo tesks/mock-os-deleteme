@@ -1,0 +1,267 @@
+#!/bin/bash
+
+# Dev only script that drops and re-creates all databases
+
+CLEARED_DATABASES="\
+ generic_ampcs_v5_0_3\
+ generic_unit_test_ampcs_v5_0_3\
+ none_unit_test_ampcs_v5_0_3\
+ pdpp_automation_v1_3_0\
+ pdpp_automation_unit_test_v1_3_0\
+ "
+
+UNUSED_DATABASES="\
+ global_lad_unit_test_v1_2_0\
+ global_lad_v1_2_0\
+ nonesse_unit_test_ampcs_v5_0_3\
+ "
+
+# MPCS-11857 - First grant permissions, then create database
+declare -a DATABASE_WORKFLOW_CMDS=()
+DATABASE_WORKFLOW_CMDS[0]="chill_grant_mission_permissions"
+DATABASE_WORKFLOW_CMDS[1]="chill_create_mission_database"
+DATABASE_WORKFLOW_CMDS[2]="chill_upgrade_extended_scet_mission_database"
+DATABASE_WORKFLOW_CMDS[3]="chill_grant_unit_test_permissions"
+DATABASE_WORKFLOW_CMDS[4]="chill_create_unit_test_database"
+DATABASE_WORKFLOW_CMDS[5]="chill_upgrade_extended_scet_unit_test_database"
+DATABASE_WORKFLOW_CMDS[6]="chill_grant_pdpp_permissions"
+DATABASE_WORKFLOW_CMDS[7]="chill_create_pdpp_database"
+DATABASE_WORKFLOW_CMDS[8]="chill_grant_pdpp_unit_test_permissions"
+DATABASE_WORKFLOW_CMDS[9]="chill_create_pdpp_unit_test_database"
+
+
+declare -a DATABASE_WORKFLOW_MESSAGES=()
+DATABASE_WORKFLOW_MESSAGES[0]="Granting Permissions for Mission Database"
+DATABASE_WORKFLOW_MESSAGES[1]="Creating Mission Database"
+DATABASE_WORKFLOW_MESSAGES[2]="Upgrading Mission Database to Extended SCET"
+DATABASE_WORKFLOW_MESSAGES[3]="Granting Permissions for Unit Test Database"
+DATABASE_WORKFLOW_MESSAGES[4]="Creating Unit Test Database"
+DATABASE_WORKFLOW_MESSAGES[5]="Upgrading Unit Test Database to Extended SCET"
+DATABASE_WORKFLOW_MESSAGES[6]="Granting Permissions for PDPP Mission Database"
+DATABASE_WORKFLOW_MESSAGES[7]="Creating PDPP Mission Database"
+DATABASE_WORKFLOW_MESSAGES[8]="Granting Permissions for PDPP Unit Test Database"
+DATABASE_WORKFLOW_MESSAGES[9]="Creating PDPP Unit Test Database"
+
+declare -a DATABASE_WORKFLOW_INPUTS=()
+DATABASE_WORKFLOW_INPUTS[0]=$'\ny\n'
+DATABASE_WORKFLOW_INPUTS[1]=$'\n0\nn\ny\nNONE\n'
+DATABASE_WORKFLOW_INPUTS[2]=$'\nn\ny\n'
+DATABASE_WORKFLOW_INPUTS[3]=$'\ny\n'
+DATABASE_WORKFLOW_INPUTS[4]=$'\n0\nn\ny\nNONE\n'
+DATABASE_WORKFLOW_INPUTS[5]=$'\nn\ny\n'
+DATABASE_WORKFLOW_INPUTS[6]=$'\ny\n'
+DATABASE_WORKFLOW_INPUTS[7]=$'\ny\n'
+DATABASE_WORKFLOW_INPUTS[8]=$'\ny\n'
+DATABASE_WORKFLOW_INPUTS[9]=$'\ny\n'
+
+#
+# Default values for MySQL Users
+#
+ROOT_USER="root"
+MPCS_USER="mpcs"
+ROOT_USER_PARM="-u $ROOT_USER"
+MPCS_USER_PARM="-u $MPCS_USER"
+
+#
+# Make sure that the AMPCS_WORKSPACE_ROOT is populated
+#
+if [ "X$AMPCS_WORKSPACE_ROOT" == "X" ]; then
+	AMPCS_WORKSPACE_ROOT=`pwd`
+fi
+
+#
+# Make sure that the ADAPTATIONS is populated
+#
+if [ "X$AMPCS_ADAPTATIONS" == "X" ]; then
+	AMPCS_ADAPTATIONS=/adaptations
+fi
+
+# Optionally, support setting root user
+#
+if [ "X$1" != "X" ]; then
+	ROOT_USER_PARM="-u $1"
+fi
+
+#
+# Skips safety warning if third parameter is 'YES!'
+#
+CONFIRMATION=$2
+
+#
+# Optionally, support setting root password
+# MPCS-10410: no space between -p and password
+#
+if [ "X$3" != "X" ]; then
+	ROOT_PWD="-p$3"
+fi
+
+echo "ROOT_USER            = '$ROOT_USER'"
+echo "MPCS_USER            = '$MPCS_USER'"
+echo "ROOT_USER_PARM       = '$ROOT_USER_PARM'"
+echo "MPCS_USER_PARM       = '$MPCS_USER_PARM'"
+echo "ROOT_PWD             = '$ROOT_PWD'"
+echo "CONFIRMATION         = '$CONFIRMATION'"
+echo "AMPCS_WORKSPACE_ROOT = '$AMPCS_WORKSPACE_ROOT'"
+
+#
+# Functions
+#
+function _path() {
+ arg=$1
+ if [ "X$arg" == "X" ]; then
+  arg=$path
+ fi
+ for f in {1..50}; do p=`echo $arg | cut -d\: -f$f`; if [ "${#p}" = "0" ] ; then break ; fi ; echo $p; done | sort
+}
+
+function remove_java_home_from_path() {
+ TEMP_PATH=$(_path $PATH | grep -v $JAVA_HOME)
+ TEMP_PATH=$(echo $TEMP_PATH | sed -e 's/ /:/g')
+ export PATH=$TEMP_PATH
+# echo "Removed $JAVA_HOME from path"
+}
+
+function add_java_home_to_path() {
+ export PATH=$JAVA_HOME/bin:$PATH
+# echo "Added $JAVA_HOME to path"
+}
+
+function remove_gds_from_path() {
+ if [ "X$AMPCS_WORKSPACE_ROOT" != "X" ]; then
+  if [ "X$CHILL_GDS" != "X" ]; then
+      TEMP_PATH=$(_path $PATH | grep -v "$CHILL_GDS" | grep -v ".*_scripts")
+  else 
+      TEMP_PATH=$(_path $PATH | grep -v ".*_scripts")
+  fi
+  TEMP_PATH=$(echo $TEMP_PATH | sed -e 's/ /:/g')
+  export PATH=$TEMP_PATH
+#  echo "Removed $AMPCS_WORKSPACE_ROOT from path"
+ fi
+}
+
+function add_gds_to_path() {
+ if [ "X${1}" != "X" ]; then
+  if [ "X${1}" != "Xmpcstools" ]; then
+   PATH=$CHILL_GDS/bin:$CHILL_GDS/bin/tools:$CHILL_GDS/bin/test:$CHILL_GDS/bin/internal:$CHILL_GDS/bin/admin:$PATH
+  fi
+#  echo "Added $AMPCS_WORKSPACE_ROOT to Path"
+ fi
+}
+
+function _go() {
+ if [ "X${AMPCS_WORKSPACE_ROOT}" == "X" ]; then
+  echo "\$AMPCS_WORKSPACE_ROOT is not set. Please select an AMPCS baseline first."
+ elif [ "X${1}" != "X" ]; then
+  ADAPTATION_DIR="${AMPCS_WORKSPACE_ROOT}${AMPCS_ADAPTATIONS}/${1}${WORKSPACE_SUFFIX}"
+  cd "$ADAPTATION_DIR"
+  if [ "X${1}" != "Xmpcstools" ]; then
+   remove_gds_from_path
+   export CHILL_GDS="${ADAPTATION_DIR}${WORKSPACE_SUFFIX}/dist/${1}"
+   add_gds_to_path ${1}
+  fi 
+ else
+  cd "${AMPCS_WORKSPACE_ROOT}"
+ fi
+}
+
+#
+# Establish Log Files
+#
+LOGFILE=$(pwd)/$0.log
+
+#
+# Create new log file with time-stamp
+#
+date > ${LOGFILE}
+echo "============================" >>${LOGFILE}
+echo >>${LOGFILE}
+
+#
+# Warn of impending doom...
+#
+if test "X${CONFIRMATION}" != "XYES!"; then
+	echo "-------------------------------------------------------------------"
+	echo "Usage:"
+	echo " > reset_database [<RootUserName> [<Confirmation> [RootPassword]]]"
+	echo "       <RootUserName> defaults to 'root'"
+	echo "       <RootPassword> defaults to ''"
+	echo
+	echo " CAUTION: If <confirmation> is 'YES!', then the script will be"
+	echo " executed with NO FURTHER PROMPTING."
+	echo "-------------------------------------------------------------------"
+	echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+	echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+	echo "!!!! THIS SCRIPT WILL IRREVOCABLY DELETE ALL AMPCS DATABASES.    !!!!"
+	echo "!!!! IT USES THE 'chill_create*' and 'chill_grant*' SCRIPTS IN   !!!!"
+	echo "!!!! EACH ADAPTATION, SO IT IS NECESSARY THAT ALL ADAPTATIONS    !!!!"
+	echo "!!!! HAVE BEEN SUCCESSFULLY BUILT BEFORE THIS SCRIPT CAN BE RUN. !!!!"
+	echo "!!!!                           .oOo.                             !!!!"
+	echo "!!!! IF THIS IS YOUR INTENTION, TYPE 'YES!' AT THE PROMPT        !!!!"
+	echo "!!!! THERE WILL BE NO FURTHER PROMPTING. YOU HAVE BEEN WARNED!   !!!!"
+	echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+	echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+	read CONFIRMATION
+fi
+
+if test "X${CONFIRMATION}" != "XYES!"; then
+	echo "*********************************************************************"
+	echo "************************** SCRIPT ABORTED ***************************"
+	echo "*********************************************************************"
+    echo
+    exit 255
+fi
+
+# MPCS-10527 - 04/25/19 : DevOnly reset_database script erases "mpcs" user from other db versions.
+# Removed dropping and re-creation of 'mpcs' user to resolve this issue.
+
+#
+# Remove all databases -- start from scratch
+#
+for f in ${CLEARED_DATABASES}
+do
+	echo "Dropping Database: $f..."
+	mysql $ROOT_USER_PARM -e "drop database if exists $f;" >>${LOGFILE} 2>&1
+done
+
+#
+# Create all mission, unit test and PDPP databases using the scripts
+# created for each adaptation.
+#
+for f in `cat ${AMPCS_WORKSPACE_ROOT}/mpcstools/devtools/database_support/MissionBuildSpec.txt`
+do
+	pushd . >/dev/null
+	_go $f >>${LOGFILE} 2>&1
+	echo
+	echo "Creating Databases for $f..."
+	echo "PWD       = $(pwd)"
+	echo "CHILL_GDS = $CHILL_GDS"
+
+	n=0
+    for i in {0..9}
+	do
+		TOOL=${DATABASE_WORKFLOW_CMDS[${i}]}
+		type ${TOOL} >/dev/null 2>&1
+		EXISTS=$?
+		if [ "X${EXISTS}" == "X0" ]; then
+			MESSAGE=${DATABASE_WORKFLOW_MESSAGES[${i}]}
+			INPUT=${DATABASE_WORKFLOW_INPUTS[${i}]}
+			CMD="${TOOL} ${ROOT_USER_PARM} ${ROOT_PWD}"
+			if [[ $CMD == *"_create_"* ]]; then
+			  CMD="${TOOL} ${MPCS_USER_PARM}"
+			fi
+			printf "  %-8.7s (%2d): %-45.45s %-52.52s" "${f}" "$((i+1))" "${MESSAGE}" "(${TOOL})..."
+			${CMD} >>${LOGFILE} 2>&1 <<< "${INPUT}"
+			STATUS=$?
+			if [ "X${STATUS}" != "X0" ]; then
+				echo "FAILED(${STATUS})"
+			else
+				echo "OK"
+			fi
+			read -t 1 -n 10000 discard
+		else
+			STATUS=0
+		fi
+	done
+
+	popd > /dev/null
+done

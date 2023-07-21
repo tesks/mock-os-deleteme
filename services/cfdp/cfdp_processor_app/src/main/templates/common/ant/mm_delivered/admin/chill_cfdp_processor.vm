@@ -1,0 +1,38 @@
+#set ( $shellName = "sh" )
+#shell( $shellName )
+
+#init()
+
+#Java()
+
+#set ( $headless = "true" )
+#SWT( $headless )
+
+#set( $tpsLibraries = ["snakeyaml", "spring_boot_starter_tomcat", "tomcat_embed_core", "tomcat_embed_el", "tomcat_embed_websocket", "hibernate", "validation_api", "woodstox", "jackson", "spring_web", "spring_webmvc", "spring_boot_starter_log4j2", "log4j_slf4j_impl", "slf4j_api", "log4j_api", "log4j_core", "jcl_over_slf4j", "jul_to_slf4j", "spring_boot_starter_actuator", "spring_boot_actuator", "cfdp", "javamail", "commons_cli", "commons_codec", "commons_collections", "commons_digester", "commons_http", "commons_io", "commons_lang", "commons_lang3", "log4j_jul", "piccolo", "jing", "opencsv", "poi", "velocity_engine_core", "annotations", "guava", "jsr305", "error_prone_annotations", "j2objc_annotations", "animal_sniffer_annotations", "commons_configuration2", "commons_beanutils", "protobuf_java", "mysql", "jaxrs", "jta"] )
+#constructClasspath( $tpsLibraries )
+#addSwagger2Classpath()
+#addSpringClasspath()
+#addSpringBootClasspath()
+#addJmsClasspath()
+#addDsneClasspath()
+#constructLog4j2Classpath()
+
+#* MPCS-9031 2017-11-01 *#
+#addSecurityManager()
+
+#verifyMessagingService()
+
+#set ( $appName = "chill_cfdp_processor" )
+#set ( $appClass = "jpl.gds.cfdp.processor.CfdpProcessorApp" )
+#set ( $appArgs = "" )
+#set ( $headless = "true" )
+#set ( $doExec = "true" )
+#set ( $doLog = "true" )
+#set ( $minMem = "512m" )
+#set ( $maxMem = "6144m" )
+#set ( $responderHelper = "" )
+#set ( $includePassThruArgs = "true" )
+
+GDS_JAVA_OPTS="${GDS_JAVA_OPTS} -Dbanner.location=file:$CHILL_GDS/config/cfdp_processor_banner.txt"
+
+#execJavaSimple ( $appName $appClass $appArgs $headless $doExec $doLog $minMem $maxMem $responderHelper $sysProperties $includePassThruArgs )

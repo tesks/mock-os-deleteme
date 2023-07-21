@@ -1,0 +1,117 @@
+#set ( $shellName = "sh" )
+#shell( $shellName )
+
+#init()
+
+#set ( $operation = "create" )
+
+NAME=${CHILL_MISSION}${dbName}
+NNAME=${noneDbName}
+
+printf "Enter database name suffix, if any:"
+read SUFFIX
+
+if test "X$SUFFIX" != "X"
+then
+    NAME="${NAME}$SUFFIX"
+    NNAME="${NNAME}$SUFFIX"
+fi
+
+echo "Database name will be ${NAME}"
+echo
+echo
+
+#SQLOperation( $operation )
+
+printf "Enter the offset for this DB host. Developers can enter 0:"
+read OFFSET
+
+MATCH=`expr "$OFFSET" : "[0-9][0-9]*"`
+
+if test $MATCH -eq 0
+then
+    echo "Offset must be an integer from 0..255"
+    exit 1
+fi
+
+if test $OFFSET -gt 255
+then
+    echo "Offset must be an integer from 0..255"
+    exit 1
+fi
+
+printf "Do you want to add the extra time indexes? (y/n)"
+read EXTRA
+
+if test "$EXTRA" = "y" -o "$EXTRA" = "Y"
+then
+    EXTRA=1
+    echo "Extra indexes will be added"
+else
+    EXTRA=0
+    echo "Extra indexes will NOT be added"
+fi
+
+COMMON=$CHILL_GDS/bin/internal/sql
+SQ="'"
+
+CMD=""
+
+#if ( $isUnitTest )
+    CMD="$CMD drop database if exists ${NNAME};"
+    CMD="$CMD create database ${NNAME};"
+    CMD="$CMD use ${NNAME};"
+    CMD="$CMD set @offset=$OFFSET;"
+    CMD="$CMD set @extra=$EXTRA;"
+    CMD="$CMD set @mission=${SQ}${CHILL_MISSION}${SQ};"
+    CMD="$CMD source $COMMON/stored_v5_0_3.sql;"
+    CMD="$CMD source $COMMON/master_create_v5_0_3.sql;"
+
+    # MPCS-10660 - This file may not exist when renaming the mission
+    if [-f "$COMMON/${CHILL_MISSION}_create_v5_0_3.sql" ]; then
+        CMD="$CMD source $COMMON/${CHILL_MISSION}_create_v5_0_3.sql;"
+    else
+        echo "${CHILL_MISSION}_create_v5_0_3.sql} was not found."
+    fi
+    CMD="$CMD source $COMMON/create_extended_scet.sql;"
+
+    # MPCS-10660 -  This file may not exist when renaming the mission
+    # MPCS-11031 - only use one view or the other
+    if [-f "$COMMON/${CHILL_MISSION}_views_v5_0_3.sql" ]; then
+        CMD="$CMD source $COMMON/${CHILL_MISSION}_views_v5_0_3.sql;"
+    else
+        CMD="$CMD source $COMMON/views_v5_0_3.sql;"
+    fi
+
+#end
+
+CMD="$CMD drop database if exists ${NAME};"
+CMD="$CMD create database ${NAME};"
+CMD="$CMD use ${NAME};"
+CMD="$CMD set @offset=$OFFSET;"
+CMD="$CMD set @extra=$EXTRA;"
+CMD="$CMD set @mission=${SQ}${CHILL_MISSION}${SQ};"
+CMD="$CMD source $COMMON/stored_v5_0_3.sql;"
+CMD="$CMD source $COMMON/master_create_v5_0_3.sql;"
+
+# MPCS-10660 - This file may not exist when renaming the mission
+if [-f "$COMMON/${CHILL_MISSION}_create_v5_0_3.sql" ]; then
+    CMD="$CMD source $COMMON/${CHILL_MISSION}_create_v5_0_3.sql;"
+else
+    echo "${CHILL_MISSION}_create_v5_0_3.sql} was not found."
+fi
+
+# MPCS-9105 - Handle extended SCET tables by default
+CMD="$CMD source $COMMON/create_extended_scet.sql;"
+CMD="$CMD source $COMMON/views_v5_0_3.sql;"
+
+# MPCS-10660 -  This file may not exist when renaming the mission
+if [-f "$COMMON/${CHILL_MISSION}_views_v5_0_3.sql" ]; then
+    CMD="$CMD source $COMMON/${CHILL_MISSION}_views_v5_0_3.sql;"
+else
+    echo "${CHILL_MISSION}_views_v5_0_3.sql was not found."
+fi
+
+echo "Executing $CMD"
+
+mysql $CHILL_MYSQL_OPTIONS $@ -e "$CMD"

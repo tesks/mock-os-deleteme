@@ -1,0 +1,97 @@
+#set ( $shellName = "sh" )
+#shell( $shellName )
+
+#init()
+
+#Java()
+
+#set ( $headless = "true" )
+#SWT( $headless )
+
+#* Added libraries for PDPP automation product adder *#
+#set( $tpsLibraries   =   ["piccolo","commons_cli","commons_lang", "commons_lang3","commons_collections","commons_logging","woodstox","mysql","velocity_engine_core","jface","icmd","jdom","jfreechart","jing","disruptor","guava","hibernate","shared"] )
+#constructClasspath( $tpsLibraries )
+#addJmsClasspath()
+#addSpringClasspath()
+#verifyMessagingService()
+#addCssClasspath()
+#constructLog4j2Classpath()
+#checkChillMission()
+
+#integrated()
+
+#set ( $appName = "chill" )
+#set ( $appClass = "jpl.gds.app.tools.config.SessionConfigurationApp" )
+#set ( $appArgs = "" )
+#set ( $headless = "false" )
+#set ( $doExec = "false" )
+#set ( $doLog = "false" )
+#set ( $minMem = "128m" )
+#set ( $maxMem = "512m" )
+#set ( $responderHelper = "" )
+#set ( $sysProperties = "" )
+#set ( $includePassThruArgs = "true" )
+#execJava ( $appName $appClass $appArgs $headless $doExec $doLog $minMem $maxMem $responderHelper $sysProperties $includePassThruArgs )
+
+if [ $? != 0 ] ; then
+    exit 1
+fi
+
+if [ $? == 0 ] ; then
+
+GDS_USER_CONFIG_DIR=$HOME/CHILL
+
+echo $GDS_JAVA_OPTS | grep -q -e "-DGdsUserConfigDir="
+
+if [ $? = 0 ]; then
+   GDS_USER_CONFIG_DIR=`echo $GDS_JAVA_OPTS | sed 's/.*-DGdsUserConfigDir=//' | sed 's/ *.-D.*//'`
+fi
+
+SESSION_CONFIG_FILE="`hostname -s`_TempTestConfig.xml"
+
+#perspective()
+
+#set ( $appName = "chill_test_config_insert" )
+#set ( $appClass = "jpl.gds.db.app.SessionConfigInsertApp" )
+#set ( $appArgs = "--testConfig $GDS_USER_CONFIG_DIR/$SESSION_CONFIG_FILE --updateConfig $databaseHost $databasePort" )
+#set ( $headless = "false" )
+#set ( $doExec = "false" )
+#set ( $doLog = "false" )
+#set ( $minMem = "128m" )
+#set ( $maxMem = "512m" )
+#set ( $responderHelper = "" )
+#set ( $sysProperties = "" )
+#set ( $includePassThruArgs = "false" )
+
+#*
+   Include master app name because we want Session fragment one to say "chill". This happens because
+   chill_test_config_insert creates the session and gets fragment one. But we want the type field to say "chill", which is
+   what is expected.
+*#
+
+#set ( $masterAppName = "chill" )
+#execJavaWithMaster ( $appName $appClass $appArgs $headless $doExec $doLog $minMem $maxMem $responderHelper $sysProperties $includePassThruArgs $masterAppName )
+
+if [ $? == 0 ]; then
+
+#set ( $appClass = "jpl.gds.app.tools.integrated.PerspectiveApp" )
+#set ( $appArgs = "--sessionConfig $GDS_USER_CONFIG_DIR/$SESSION_CONFIG_FILE $perspective $jmsHost $jmsPort $autoStart $databaseHost $databasePort $userRole $loginMethod $keytabFile $username $bufferedInput $gladServerHost $gladSocketPort $gladRestPort $bootstrapLad $bootstrapIds" )
+exec $JAVA_CMD \
+     -cp $CLASSPATH \
+     $GDS_JAVA_OPTS \
+     $LOG4J_JAVA_OPTS \
+     -DGdsAppName=$appName \
+     -Djava.library.path=$SWT_LIB \
+     -Dhost.name=`hostname -s` \
+     -DGdsMission=${CHILL_MISSION} \
+     -DGdsDirectory=$CHILL_GDS \
+     -DGdsPid=$$ \
+     -Dcom.sun.management.jmxremote \
+     -Djavax.xml.stream.XMLOutputFactory=com.ctc.wstx.stax.WstxOutputFactory \
+     -Djavax.xml.parsers.SAXParserFactory=com.bluecast.xml.JAXPSAXParserFactory \
+     -Xms128m -Xmx512m \
+     $appClass $appArgs
+
+fi
+
+fi

@@ -1,0 +1,113 @@
+#set ( $shellName = "sh" )
+#shell( $shellName )
+#init()
+#set ( $operation = "create" )
+
+# MPCS-7064 - Initial implementation for launcher script.
+# MPCS-8390  - expanded usage dialogue, added version, added help and version arg parsing
+
+usage() {
+  echo "Usage: `basename $0` {start|stop|restart|force-stop|force-restart|status} PIDFILE" >&2
+  echo "       start                - start the PDPP server" >&2
+  echo "       stop                 - stop the PDPP server" >&2
+  echo "       restart              - stop and start the PDPP server" >&2
+  echo "       force-stop           - forcibly stop the PDPP server. Data may be lost." >&2
+  echo "       force-restart        - forcibly stop and start the PDPP server. Data may be lost." >&2
+  echo "       status               - get the current running status of the PDPP server" >&2
+  echo "Where: PIDFILE is the file that contains (or will contain) the PID." >&2
+}
+
+version() {
+  echo "chill_pdpp_server v1.0.1" >&2
+}
+
+for var in "$@"
+do
+	case $var in
+		-h | --help )
+			usage;
+			exit;
+			;;
+		-v | --version )
+			version;
+			exit;
+			;;
+	esac
+done
+
+# At least two arguments are required.
+if [[ $# -lt 2 ]]; then
+  usage
+  exit 1
+fi
+
+PROGLONG=$CHILL_GDS/bin/admin/chill_automation_arbiter
+PROGSHORT=$(basename ${PROGLONG})
+PIDFILE=$2
+
+# Get the PID from PIDFILE if we don't have one yet.
+if [[ -e ${PIDFILE} ]]; then
+  PID=$(cat ${PIDFILE});
+fi
+
+start() {
+  if [[ -z "${PID}" ]]; then
+	  echo "Starting $PROGSHORT (PID written to $PIDFILE)."
+	  ${PROGLONG} & echo ${!} > ${PIDFILE}
+  else
+      echo "$PROGSHORT with pid $PID is already running."
+  fi
+}
+
+status() {
+  if [[ -z "${PID}" ]]; then
+    echo "${PROGSHORT} is not running (missing PID)."
+  elif ps -p $PID > /dev/null; then 
+    echo "${PROGSHORT} is running (PID: ${PID})."
+  else
+    echo "${PROGSHORT} is not running (tested PID: ${PID})."
+  fi
+}
+
+stop() {
+  if [[ -z "${PID}" ]]; then
+    echo "${PROGSHORT} is not running (missing PID). "
+  elif ps -p $PID > /dev/null; then 
+    kill $1 ${PID}
+  else
+    echo "${PROGSHORT} is not running (tested PID: ${PID})."
+  fi
+  
+  if [[ -e "${PIDFILE}" ]]; then
+  	rm $PIDFILE
+  fi
+  
+  unset PID
+}
+
+case "$1" in
+  start)
+        start;
+        ;;
+  restart)
+        stop; sleep 5; start;
+        ;;
+  stop)
+        stop
+        ;;
+  force-stop)
+        stop -9
+        ;;
+  force-restart)
+        stop -9; sleep 5; start;
+        ;;
+  status)
+        status
+        ;;
+  *)
+  		usage
+        exit 4
+        ;;
+esac
+
+exit 0

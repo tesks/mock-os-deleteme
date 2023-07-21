@@ -1,0 +1,386 @@
+# AMPCS Fixed Layout XML schema
+#
+#
+# Note that this schema does not define the entire AMPCS perspective 
+# - just the portions that must be defined to create fixed views.
+#
+
+# Start element is the fixed-view definition.
+start = FixedView-def
+
+# The definition of a fixed layout view in chill_monitor. Note that style 
+# settings here will be used for the fixed canvas itself. Style and font 
+# settings in the View container apply only to other things in the window 
+# container.
+FixedView-def = element View {
+    # Name of this fixed view. This will be displayed as the window title 
+    # if the view is in a standalone window 
+    attribute name {xsd:string},
+    # MPCS type of the view. Must be "Fixed Layout".
+    attribute type { "Fixed Layout" },
+    # MPCS view configuration version number
+    attribute version {xsd:string},
+    # Java class to be loaded in chill_monitor. The first is used for 
+    # standalone fixed views, and the second for fixed views in tabbed 
+    # windows
+    #
+    # Plain string. AMPCS class
+    # changes as AMPCS changes, and only AMPCS cares.
+    (element viewClass { xsd:token } &
+    # The coordinate system for this fixed view
+    element coordinateType { "PIXEL" | "CHARACTER"} &
+    # The default font for text displayed in the view, as 
+    # "face,point-size,style,[REVERSE]", e.g. "Courier,11,NORMAL,REVERSE"
+    element defaultFont {font-def}? &
+    # Default background color for all objects in the view, as R,G,B string, 
+    # where R,G, and B are between 0 and 255.
+    element defaultBackground {color-def}? &
+    # Default foreground color for all objects in the view, as R,G,B string, 
+    # where R,G, and B are between 0 and 255.
+    element defaultForeground {color-def}? & 
+    # Preferred size of the view. The ViewContainer size will be derived 
+    # from this size if a Fixed View is loaded without an enclosing view 
+    # container. Values should adhere to the layout coordinate system 
+    # (i.e., may be specified in pixels or characters)
+    element preferredWidth {xsd:nonNegativeInteger} &
+    element preferredHeight {xsd:nonNegativeInteger} &
+    # Comma-separated list of missions this view applies to
+    element missions {xsd:string}+ &
+    # FSW dictionary directory
+    element fswDictionaryDir {xsd:string}? &
+    # FSW version
+    # Optional
+    element fswVersion {xsd:string}? &
+    # SSE dictionary directory
+    element sseDictionaryDir {xsd:string}? &
+    # SSE version
+    element sseVersion {xsd:string}? &
+    # Enable title for this fixed view
+    element viewTitleEnabled {xsd:boolean}? &
+    # Default interval, in seconds, that must elapse with new data being 
+    # received before telemetry in this view is considered stale. The
+    # default is 600 seconds.
+    element stalenessInterval {xsd:nonNegativeInteger}? &
+
+
+    # Indicates whether this view displays recorded or realtime data. 
+    # The default is REALTIME.
+    element showRecorded { "REALTIME" | "RECORDED" | "BOTH" }? & 
+    # Station ID for filtering monitor data
+    element stationId {xsd:nonNegativeInteger}?
+    ),  
+    # Definitions of conditionals used to control whether certain fields
+    # are displayed.
+    #
+    ChannelCondition-def*, 
+    # A fixed view contains fields
+    #
+    Field-def* 
+}
+
+
+# Simple condition for IF-ELSEIF-ELSE rules
+ChannelCondition-def = element ChannelCondition {
+    # The unique condition identifier.
+    attribute conditionID { xsd:token }, 
+     # The channel whose value is used for the evaluation of the condition
+    attribute channelID {xsd:token},
+    # The source field in the channel to examine. This attribute is mandatory
+    # if the comparison operator is relational, i.e., LT, GT, LE, GE, EQ, NE.
+    # It is unused if the comparison operattor is SET, NOT SET, TYPE, STALE,
+    # or IS_NULL.
+    #
+    attribute sourceField { "DN" | "EU" | "STATUS" | "RAW" | "VALUE" | "SCLK" | 
+        "SCET" | "ERT" | "LST" | "RCT" }?,
+    # The type of comparison or check to perform
+    attribute comparison {"LT" | "GT" | "LE" | "GE" | "EQ" | "NE" | "SET" | 
+        "NOT_SET" | "STALE" | "TYPE" | "IS_NULL" },
+    # The value to compare against, for binary and alarm conditions. This  
+    # should be omitted for unary operations.
+    # 
+    # For SET/NOT SET alarm comparisons, value values are RED, YELLOW, or ANY
+    # For TYPE comparison, valid values are the same as those for the "type" 
+    # attribute in the "DataType" element above
+    #
+    attribute value {xsd:string}? 
+}
+
+# Compound condition for rules
+CompoundCondition-def = element CompoundCondition {
+     # type of combination to perform between the included conditions
+     attribute type {"AND" | "OR" | "XOR"},
+     # simple conditions to combine
+     ChannelCondition-def+
+}
+
+# A field can be a line, a text field, a channel field, etc.
+Field-def = ( Box-def | Line-def | Text-def | Button-def | ChannelField-def 
+    | TimeField-def | Image-def | Header-def )
+
+# For fixed view fields, style attributes are mostly optional. If not present, 
+# they will be defaulted to the definitions in the View, where appropriate.
+
+# A drawn box field
+Box-def = element Box {
+      # Starting X coordinate of the box within the fixed view. Coordinates 
+      # start at 0,0 in the upper left corner of the fixed view canvas
+      attribute xStart {xsd:nonNegativeInteger},
+      # Starting Y coordinate of the box
+      attribute yStart {xsd:nonNegativeInteger},
+      # Ending X coordinate of the box 
+      attribute xEnd {xsd:nonNegativeInteger},
+      # Ending Y coordinate of the box 
+      attribute yEnd {xsd:nonNegativeInteger},
+      # The font for the box title, as "face,point-size,style,[REVERSE]"
+      # i.e. "Courier,11,NORMAL,REVERSE"
+      attribute font {font-def}?,
+      # Foreground color of the box, as R,G,B string, where R,G, and B are 
+      # between 0 and 255.
+      attribute foreground {color-def}?,
+      # Fill color for the box and backgrounf for the title,  as R,G,B string, 
+      # where R,G, and B are between 0 and 255.
+      attribute background {color-def}?,
+      # Optional title for the box - will be displayed on the box border at 
+      # upper left
+      attribute title {xsd:string}?,
+      # Thickness of the line used to draw the box, in pixels
+      attribute lineThickness {xsd:nonNegativeInteger}?,
+      # Style of the line used to draw the box
+      line-style-def?,
+      # Indicates whether the box title should be drawn transparently
+      attribute transparent {xsd:boolean}?,
+      # Optional conditional for display of this element. Must match
+      # the condition ID on a condition defined above.
+      condition-def?
+}
+
+# A drawn line field
+Line-def = element Line {
+      # Starting X coordinate of the line within the fixed view. Coordinates 
+      # start at 0,0 in the upper left corner of the fixed view canvas
+      attribute xStart {xsd:nonNegativeInteger},
+      # Starting Y coordinate of the line 
+      attribute yStart {xsd:nonNegativeInteger},
+      # Ending X coordinate of the line 
+      attribute xEnd {xsd:nonNegativeInteger},
+      # Ending Y coordinate of the line
+      attribute yEnd {xsd:nonNegativeInteger},
+      # Foreground color of the line, as R,G,B string, where R,G, and B are 
+      # between 0 and 255. 
+      attribute foreground {color-def}?,
+      # Thickness of the line, in pixels
+      attribute lineThickness {xsd:nonNegativeInteger}?,
+      # Style of the line
+      line-style-def,
+      condition-def?
+}
+
+# A plain text field
+Text-def = element Text {
+      # Starting X coordinate of the text within the fixed view. Coordinates 
+      # start at 0,0 in the upper left corner of the fixed view canvas
+      attribute xStart {xsd:nonNegativeInteger},
+      # Starting Y coordinate of the text within the view
+      attribute yStart {xsd:nonNegativeInteger},
+      # Text value to display
+      attribute text {xsd:string},
+      # Foreground color of the text, as R,G,B string, where R,G, and B are 
+      # between 0 and 255. 
+      attribute foreground {color-def}?,
+      # Background color of the text, as R,G,B string, where R,G, and B are 
+      # between 0 and 255.
+      attribute background {color-def}?,
+      # The font for text display, as "face,point-size,style,[REVERSE]"
+      # i.e. "Courier,11,NORMAL,REVERSE"
+      attribute font {font-def}?,
+      # Indicates the text should be drawn with transparent background
+      attribute transparent {xsd:boolean}?,
+      # C-printf style formatter for the text (some variation on "%s")
+      attribute format {xsd:string}?,
+      condition-def?
+}
+
+# xStart,yStart are the starting x,y coordinates of image, where 0,0 
+# corresponds to the upper left hand corner.
+# xEnd,yEnd are the ending x,y coordinates of image (optional)
+# path is the path where the image is located, i.e. 
+# "/proj/gds/images/EditConfig1.gif"
+
+# An Image field (displays a graphical picture (JPG, PNG, or GIF))
+Image-def = element Image {
+      # Starting X coordinate of the image within the fixed view. Coordinates 
+      # start at 0,0 in the upper left corner of the fixed view canvas
+      attribute xStart {xsd:nonNegativeInteger},
+      # Starting Y coordinate of the image within the view
+      attribute yStart {xsd:nonNegativeInteger},
+      # Ending X coordinate of the image wihtin the view. If set, the image 
+      # will be scaled to fit this width. If omitted or -1, the image will 
+      # be displayed at its natural size and resolution
+      attribute xEnd {xsd:integer}?,
+      # Ending Y coordinate of the image wihtin the view. If set, the image 
+      # will be scaled to fit this height. If omitted or -1, the image will 
+      # be displayed at its natural size and resolution
+      attribute yEnd {xsd:integer}?,
+      # File path to the image file
+      attribute path {xsd:string},
+      condition-def?
+}
+
+# A Button field (responds to user click with an action)
+Button-def = element Button {
+      # Starting X coordinate of the button within the fixed view. Coordinates 
+      # start at 0,0 in the upper left corner of the fixed view canvas
+      attribute xStart {xsd:nonNegativeInteger},
+      # Starting Y coordinate of the button within the view
+      attribute yStart {xsd:nonNegativeInteger},
+      # Ending X coordinate of the button with the view. If omitted or -1, the 
+      # button wil be sized to accomodate the button title
+      attribute xEnd {xsd:integer}?,
+      # Ending Y coordinate of the button with the view. If omitted or -1, the 
+      # button wil be sized to accomodate the button title
+      attribute yEnd {xsd:integer}?,
+      # Foreground color of the button, as R,G,B string, where R,G, and B are 
+      # between 0 and 255. 
+      attribute foreground {color-def}?,
+      # Background color of the button, as R,G,B string, where R,G, and B are 
+      # between 0 and 255. 
+      attribute background {color-def}?,
+      # Text to display on the button
+      attribute title {xsd:string},
+      # Type of action to take when the button is "clicked"
+      attribute actionType {"LAUNCH_PAGE" | "LAUNCH_SCRIPT"},
+      # Action description: if action is to launch another fixed view, this 
+      # should be the name of the view to launch (if on the project search path) 
+      # or the complete file path to the fixed view XML file; if action is to run 
+      # a script, this should be the complete system command string
+      attribute actionString {xsd:string},
+      condition-def?
+}
+
+# A channel field: the source field within the channel definition or sample 
+# can be chosen.
+ChannelField-def = element Channel {
+      # Starting X coordinate of the channel field within the fixed view. 
+      # Coordinates start at 0,0 in the upper left corner of the fixed view 
+      # canvas
+      attribute xStart {xsd:nonNegativeInteger},
+      # Starting Y coordinate of the channel field within the fixed view.
+      attribute yStart {xsd:nonNegativeInteger},
+      # The dictionary ID of the channel this field is tied to
+      attribute channelId {xsd:string},
+      # Indicates which field of the channel sample or channel definition to 
+      # display
+      attribute sourceField {"ID" | "TITLE" | "FSW_NAME" | "DN" | "EU" | "RAW" 
+          | "STATUS" | "VALUE" | "DN_UNIT" | "EU_UNIT" | "MODULE" 
+          | "OPS_CAT" | "SUBSYSTEM" | "ALARM_STATE" | "ERT" | "SCLK" | "RCT" 
+          | "SCET" | "LST" | "MST" | "DSS_ID" | "RECORDED" },
+      # Foreground color of the field text, as R,G,B string, where R,G, and B 
+      # are between 0 and 255.
+      attribute foreground {color-def}?,
+      # Background color of the field text, as R,G,B string, where R,G, and B 
+      # are between 0 and 255.  
+      attribute background {color-def}?,
+      # The font for field text display, as "face,point-size,style,[REVERSE]"
+      # i.e. "Courier,11,NORMAL,REVERSE"
+      attribute font {font-def}?,
+      # Indicates whether the field text should be displayed with transparent 
+      # background
+      attribute transparent {xsd:boolean}?,
+      # The format for the field text.  For SCLK, this must be some variation 
+      # of the C-printf style "%s" format.  For the other time types, this must 
+      # be a java date/time format string, e.g., "HH:mm:ss.SSS". For all other 
+      # fields, a C-printf style formatter that matches the data type of the 
+      # data to be displayed must be used. For DN/EU values, if format is not 
+      # specified, the defaults from the telemetry dictionary will be used
+      attribute format {xsd:string}?,
+      # Enabled highlight of the field if the channel goes into alarm. This is 
+      # true by default for the DN, EU, RAW, VALUE, and ALARM_STATE fields. 
+      # It is false by default for the other channel source field types
+      attribute alarmHighlight {xsd:boolean}?,
+      condition-def?      
+}
+
+# A current time field: Can be UTC, ERT, SCLK, etc, and will display the times 
+# on the last data point seen by chill_monitor, except for UTC, which is 
+# always wall-clock time
+TimeField-def = element LatestTime {
+      # Starting X coordinate of the time field within the fixed view. 
+      # Coordinates start at 0,0 in the upper left corner of the fixed 
+      # view canvas
+      attribute xStart {xsd:nonNegativeInteger},
+      # Starting Y coordinate odf the time field within the fixed view
+      attribute yStart {xsd:nonNegativeInteger},
+      # Foreground color of the time, as R,G,B string, where R,G, and B 
+      # are between 0 and 255. 
+      attribute foreground {color-def}?,
+      # Background color of the time, as R,G,B string, where R,G, and B 
+      # are between 0 and 255. 
+      attribute background {color-def}?,
+      # The font for time display, as "face,point-size,style,[REVERSE]"
+      # i.e. "Courier,11,NORMAL,REVERSE"
+      attribute font {font-def}?,
+      # Indicates whether the time should be displayed with transparent 
+      # background
+      attribute transparent {xsd:boolean}?,
+      # The format for the time.  For SCLK, this must be some variation 
+      # of the C-printf style "%s" format.  For the other time types, 
+      # this must be a java date/time format string, e.g., "HH:mm:ss.SSS"
+      attribute format {xsd:string}?,
+      # The time source
+      attribute sourceTime {"ERT" | "SCLK" | "UTC" | "SCET" | "RCT" | "LST" 
+          | "MST" },
+      condition-def?
+}
+
+# A header field: a small-predefined block of information handy for 
+# display in all fixed views
+Header-def = element Header {
+      # Starting X coordinate of the header field within the fixed view. 
+      # Coordinates start at 0,0 in the upper left corner of the fixed view 
+      # canvas
+      attribute xStart {xsd:nonNegativeInteger},
+      # Starting Y coordinate of the header field within the fixed view
+      attribute yStart {xsd:nonNegativeInteger},
+      # The font for header fields, as "face,point-size,style,[REVERSE]"
+      # i.e. "Courier,11,NORMAL,REVERSE"
+      attribute font {font-def}?,
+      # Foreground color of the header text, as R,G,B string, where R,G, and B 
+      # are between 0 and 255. 
+      attribute foreground {color-def}?,
+      # Background color of the , as R,G,B string, where R,G, and B are 
+      # between 0 and 255. 
+      attribute background {color-def}?,
+      # Indicates whether the header should be displayed with transparent 
+      # background
+      attribute transparent {xsd:boolean}?,
+      # Type of the header. Mustr match the name of a fixed view XML file in
+      # the $CHILL_GDS/config or $CHILL_GDS/config/<mission> directories
+      #
+      attribute headerType { xsd:token },
+      condition-def?
+}
+
+# lineStyle specifies whether a line should be solid or dashed
+line-style-def = attribute lineStyle {"SOLID" | "DASHED" }
+
+# color-def is string consisting of three 3 digit numbers representing 
+# the TGB values of the color
+color-def =  xsd:string 
+    { pattern="[0123456789]{1,3}[,][0123456789]{1,3}[,][0123456789]{1,3}"}
+
+# font-def is the desired font of the text in the form "face type, point size,
+# style, reverse" string, e.g. Helvetica,11,NORMAL,REVERSE".
+# The reverse string should only be provided if it is desired to reverse the 
+# foreground/background colors when drawing the element.
+#
+font-def = xsd:string 
+    { pattern= 
+     "[A-Za-z ]+[,][0123456789]{1,2}[,](NORMAL|BOLD|ITALIC|UNDERLINE)(,REVERSE){0,1}"
+    }
+    
+# conditions-def defines the format of a conditional specification. Individual 
+# condition IDs may joined with AND, OR, and XOR keywords. Conditions may be 
+# inverted with the NOT keyword. 
+#
+condition-def = attribute conditions {xsd:string}
+ 

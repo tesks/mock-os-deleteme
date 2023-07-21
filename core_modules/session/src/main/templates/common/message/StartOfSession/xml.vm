@@ -1,0 +1,5 @@
+<StartOfSessionMessage eventTime="$eventTime">
+  <startTime>$startTime</startTime>
+  $sessionConfiguration
+  $serviceConfiguration
+</StartOfSessionMessage>

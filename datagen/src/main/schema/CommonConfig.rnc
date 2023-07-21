@@ -1,0 +1,310 @@
+# AMPCS Data Generator Common Mission Configuration Schema
+#
+# This schema defines common XML elements used to configure 
+# a mission for the AMPCS data generator.
+#
+# Version 1.0 - M. DeMore 
+# Version 2.0 - M. DeMore - Moved many more elements here from the run 
+#               configuration schemas. Changed file name. 
+#               (MPCS-6854 - 11/21/14)
+# Version 2.1 - M. DeMore change comments about defaults for SCLK
+#               elements, added packet header class element 
+#               (MPCS-7663 - 9/10/15)
+# Version 2.2 - M. Verdugo add common DesiredNumFiles element definition
+#               (MPCS-9375 - 01/02/18)
+#
+
+# Hex or decimal integer pattern for 16 bits
+hex-int-16 = xsd:token { pattern = "[0-9]{1,5}|0x[0-9a-fA-F]{1,4}|0X[0-9a-fA-f]{1,4}" }
+
+# Hex or decimal integer pattern for 32 bits
+hex-int-32 = xsd:token { pattern = "[0-9]{1,10}|0x[0-9a-fA-F]{1,8}|0X[0-9a-fA-f]{1,8}" }
+
+# Unsigned decimal 16-bit number definition
+uint-16-def = xsd:nonNegativeInteger { maxInclusive = "65535" }
+
+# Unsigned decimal 32-bit number definition
+uint-32-def = xsd:nonNegativeInteger { maxInclusive = "4294967296" }
+
+# Maximum packet data length for this mission. Does not
+# include header length. Defaults to 65535.
+max-packet-len-def = element MaxPacketLength { xsd:positiveInteger }
+    
+# MPCS-7663 - 9/10/15. Added statements about defaults to the SCLK
+# elements below. To decouple from the mission builds, we can no longer 
+# rely upon mission configuration.
+    
+# Length of the mission coarse SCLK, in bits. Default is 32.
+sclk-coarse-len-def = element SclkCoarseLengthBits { "8" | "16" | "24" | "32" }
+    
+# Length of the mission fine SCLK, in bits. Default is 16.
+sclk-fine-len-def = element SclkFineLengthBits { "8" | "16" | "24" | "32" }
+    
+# True if the mission generally uses fractional SCLK format for display,
+# false if it uses a subtick format. Does not affect SCLK generation for
+# packets, but does affect the output of statistical and truth data by the 
+# generator. Default is true.
+use-fraction-sclk-def = element UseFractionalSclk { xsd:boolean }
+    
+# The standard mission coarse/fine SCLK separator character. Does not affect 
+# SCLK generation for packets, but does affect the output of statistical 
+# and truth data by the generator. Default is ".".
+sclk-sep-char-def = element SclkSeparatorChar {  "." | "-" }
+
+# MPCS-7663 - 9/10/15. Add packet header class element.
+
+# Full java class name, with package, of the packet header class used
+# to read and write packet headers. Defaults to 
+# jpl.gds.packet.CcsdsPacketHeader.
+packet-header-class-def = element PacketHeaderClass { text }
+    
+# The APID for fill packets for this mission. Defaults to 2047.
+fill-apid-def = element FillPacketApid { xsd:positiveInteger  { maxInclusive = "4096"} }
+
+# Desired size of the packet output file. The generator will
+# write at least this many bytes of packet data, and will stop
+# on the next packet boundary after this limit is reached.
+desired-size-def = element DesiredFileSize {xsd:positiveInteger}
+
+# Desired number of files of the desired size. Defaults to 1.
+# If set to more than one, multiple files will be generated according
+# to the other specified criteria. Statistics will be accumulated 
+# across all files. Timestamps will be consecutively assigned across
+# files.  This is a means of generating very large datasets with 
+# ascending timestamps without creating monstrous files.
+desired-files-def = element DesiredNumFiles {xsd:positiveInteger}
+
+# Desired number of packets in the output file.
+desired-packets-def = element DesiredNumPackets {xsd:positiveInteger}
+    
+# Desired percentage of fill packets to generate. Defaults to 0.0
+# (no fill). If specified, the system will attempt to generate
+# fill packets as this percentage of total packets.
+desired-fill-def = element DesiredFillPercent {xsd:float { minInclusive="0.0" maxInclusive="100.0" }}
+
+# Desired progress report interval. Regardless, the generator will
+# report progress at intervals of 10% completion. If supplied with
+# this configuration value, it will report progress at this interval
+# (specified in minutes) no matter what its current % complete.
+# Defaults to 5 minutes.
+desired-report-def = element DesiredReportInterval {xsd:positiveInteger}
+
+# Seed data for integer DN value generation. If this element
+# is omitted, default tables will be used to seed the integer
+# generator that populates integer channel DNs..
+integer-seed-def = element IntegerSeedData {
+
+     # File from which to take 8 bit integer DN values.
+     # If omitted, defaults to "default", which will load the
+     # default seed table for 1 byte signed integer values.
+     element Integer8SeedTable { "default" | text }?,
+     
+     # File from which to take 16 bit integer DN values.
+     # If omitted, defaults to "default", which will load the
+     # default seed table for 2 byte signed integer values.
+     element Integer16SeedTable { "default" | text }?,
+     
+     # File from which to take 32 bit integer DN values.
+     # If omitted, defaults to "default", which will load the
+     # default seed table for 4 byte signed integer values.
+     element Integer32SeedTable { "default" | text }?,
+     
+     # File from which to take 64 bit integer DN values.
+     # If omitted, defaults to "default", which will load the
+     # default seed table for 8 byte signed integer values.        
+     element Integer64SeedTable { "default" | text }?,
+     
+     # Indicates whether to traverse integer seed values randomly
+     # or sequentially when generating integer values. The
+     # default is RANDOM.
+     element IntegerTraversalType { traversal-type-def }?
+ }
+    
+# Seed data for unsigned DN generation. If this element
+# is omitted, default tables will be used to seed the unsigned
+# generator that populates unsigned channel DNs.
+unsigned-seed-def =  element UnsignedSeedData {
+
+     # File from which to take 8 bit unsigned DN values.
+     # If omitted, defaults to "default", which will load the
+     # default seed table for 1 byte unsigned values.
+     element Unsigned8SeedTable { "default" | text }?,
+     
+     # File from which to take 16 bit unsigned DN values.
+     # If omitted, defaults to "default", which will load the
+     # default seed table for 2 byte unsigned values.
+     element Unsigned16SeedTable { "default" | text }?,
+     
+     # File from which to take 32 bit unsigned DN values.
+     # If omitted, defaults to "default", which will load the
+     # default seed table for 4 byte unsigned values.
+     element Unsigned32SeedTable { "default" | text }?,
+     
+     # File from which to take 64 bit unsigned DN values.
+     # If omitted, defaults to "default", which will load the
+     # default seed table for 8 byte unsigned values.        
+     element Unsigned64SeedTable { "default" | text }?,
+     
+     # Indicates whether to traverse unsigned seed values randomly
+     # or sequentially when generating unsigned values. The
+     # default is RANDOM.
+     element UnsignedTraversalType { traversal-type-def }?
+}
+
+# Seed data for float DN generation. If this element
+# is omitted, default tables will be used to seed the float
+# generator that populates unsigned Channel DNs.
+float-seed-def = element FloatSeedData {
+         
+     # File from which to take 32 bit floating-point DN values.
+     # If omitted, defaults to "default", which will load the
+     # default seed table for 4 byte float values.
+     element Float32SeedTable { "default" | text }?,
+     
+     # File from which to take 64 bit floating-point DN values.
+     # If omitted, defaults to "default", which will load the
+     # default seed table for 8 byte float values.        
+     element Float64SeedTable { "default" | text }?,
+     
+     # Indicates whether to traverse floating point seed values randomly
+     # or sequentially when generating float values. The
+     # default is RANDOM.
+     element FloatTraversalType { traversal-type-def }?,
+     
+     # Indicates whether to augment the float seed table with NaN and
+     # Infinite values. Default is false.
+     element IncludeNaNInfiniteFloats { xsd:boolean }?
+} 
+
+# Seed data for packet SCLK generation.  
+sclk-seed-def = element SclkSeedData {  
+     
+     # Can use SCLKs from a file, or SCLKs based upon
+     # initial and delta values
+     file-based-sclk-def | delta-based-sclk-def       
+}
+  
+# Seed data for string channel DN generation. If this element is
+# omitted, all values will default.
+ string-seed-def = element StringSeedData {
+ 
+    # Maximum length of generated strings. Used only for
+    # variable length string fields.
+    element StringMaxLength { xsd:positiveInteger }?,    
+    
+    # Character set from which to generate strings. If omitted or
+    # set to "default", the default character set will be used 
+    # (ranging from 0x20 thru 0x7E). It is advisable to enclose the
+    # value of this element in a CDATA block if it is not set to
+    # "default". 
+    element StringCharacterSet { xsd:string { minLength="1"}}?,
+    
+    # Flag indicating whether to include empty string DNs. Defaults 
+    # to false.
+    element IncludeEmptyStrings { xsd:boolean }?,
+    
+    # Flag indicating whether to include the null (0x0) character in
+    # the character set. Defaults to false.
+    element IncludeNullCharacter { xsd:boolean }?,
+    
+     # Indicates whether to traverse string seed values randomly
+     # or sequentially when generating string values. The
+     # default is RANDOM.
+     element StringTraversalType { traversal-type-def }?
+}
+
+# Seed data for enumerated channel DN generation. If this element
+# is omitted, all values will default.
+enum-seed-def = element EnumSeedData {
+
+    # Flag indicating whether to generate invalid enumerated DN
+    # values, i.e., numeric values that have no mapping to a symbol
+    # in the enumeration table. Defaults to false;
+    element IncludeInvalidEnums {xsd:boolean},
+    
+    # Approximate percentage of invalid enumeration values to generate.
+    # Default is 0.0. If IncludeInvalidEnums is true, at least one 
+    # invalid enumeration value is guaranteed, even if this number is 
+    # 0.0.
+    element InvalidEnumPercent {xsd:float { minInclusive = "0.0"
+        maxInclusive="100.0" }}?,
+                
+    # Indicates whether to traverse enumeration seed values randomly
+    # or sequentially when generating enumerated values. The
+    # default is RANDOM.
+    element EnumTraversalType { traversal-type-def }?
+}
+    
+# Seed data for boolean channel DN generation. If omitted, all values will
+# default. 
+boolean-seed-def = element BooleanSeedData {
+
+    # Flag indicating whether to include any non 0 or 1 value
+    # in the boolean DN values generated.  Defaults to false. If
+    # set to true, one random, unsigned 16 bit integer value other
+    # than 0 or 1 will be selected by the generator, and it will 
+    # be included in the boolean DN values generated with a 33%
+    # probability.
+    element IncludeNonZeroOrOne { xsd:boolean }?,
+    
+    # Indicates whether to traverse boolean seed values randomly
+    # or sequentially when generating boolean values. The
+    # default is RANDOM.
+    element BooleanTraversalType { traversal-type-def }?
+}
+    
+# Valid range for a packet APID number
+apid-def = xsd:positiveInteger { maxInclusive = "4096"}
+
+# Valid values for traversal type elements 
+traversal-type-def = ( "SEQUENTIAL" | "RANDOM" )
+
+# Use this element to use SCLKs read from a file
+file-based-sclk-def =  element FileBasedSclk {
+         
+   # Path to the file containing SCLK seed values.
+   # There is no default.
+   element SclkSeedTable { xsd:string },
+             
+   # Indicates whether the generator should stop
+   # generating packets when all the SCLK values
+   # in the seed file have been used once, regardless
+   # of whether the desired file size has been reached. 
+   # Defaults to true.
+   element StopWhenExhausted { xsd:boolean }?
+}
+
+# Use this element to use monotonically increasing or
+# decreasing SCLK values.
+delta-based-sclk-def = element DeltaSclk {
+         
+   # Initial coarse SCLK value. This will be the coarse SCLK
+   # assigned to the first packet generated. Value must fit
+   # within the mission coarse SCLK size as defined in the
+   # mission configuration file.
+   element InitialSclkCoarse { xsd:nonNegativeInteger },
+           
+   # Initial fine SCLK value. This will be the fine SCLK
+   # assigned to the first packet generated. Value must fit
+   # within the mission fine SCLK size as defined in the
+   # mission configuration file.
+   element InitialSclkFine { xsd:integer },
+           
+   # Delta coarse SCLK value. The coarse packet SCLK will 
+   # increment by this tick value for each packet generated, plus whatever
+   # fraction is indicated by the fine SCLK delta. Absolute 
+   # value must fit within the mission coarse SCLK size as defined 
+   # in the mission configuration file. A negative value will result 
+   # in packets being generated in reverse SCLK order, but no
+   # protections are in place to prevent negative roll.
+   element SclkCoarseDelta { xsd:integer },
+           
+   # Delta fine SCLK value. The fine packet SCLK will 
+   # increment by this subtick value for each packet generated. Absolute 
+   # value must fit within the mission fine SCLK size as defined 
+   # in the mission configuration file. A negative value will result 
+   # in packets being generated in reverse SCLK order, but no
+   # protections are in place to prevent negative roll if the
+   # initial SCLK is not large enough.
+   element SclkFineDelta { xsd:nonNegativeInteger }
+}

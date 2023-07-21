@@ -1,0 +1,25 @@
+#set ( $shellName = "sh" )
+#shell( $shellName )
+
+#init()
+
+#Java()
+       
+#set( $tpsLibraries   =   ["piccolo", "commons_collections", "commons_lang", "commons_lang3", "commons_cli", "mysql", "velocity_engine_core", "disruptor", "jersey2", "jackson", "jaxrs", "guava", "persistence", "shared" ] )
+#addSpringClasspath()
+#constructClasspath( $tpsLibraries )
+#constructLog4j2Classpath()
+
+#set ( $appName = "chill_return_lad" )
+#set ( $appClass = "jpl.gds.globallad.query.app.ReturnLadApp" )
+#set ( $appArgs = "" )
+#set ( $headless = "false" )
+#set ( $doExec = "true" )
+#set ( $doLog = "false" )
+#set ( $minMem = "128m" )
+#set ( $maxMem = "512m" )
+#set ( $responderHelper = ""  )
+#set ( $sysProperties = "-DQueryType=eha" )
+#set ( $includePassThruArgs = "true" )
+#execJava ( $appName $appClass $appArgs $headless $doExec $doLog $minMem $maxMem $responderHelper $sysProperties $includePassThruArgs )
+

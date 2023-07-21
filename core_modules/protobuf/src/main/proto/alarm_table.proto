@@ -1,0 +1,87 @@
+ /**
+ * Copyright 2006-2018. California Institute of Technology.
+ * ALL RIGHTS RESERVED.
+ * U.S. Government sponsorship acknowledged.
+ *
+ * This software is subject to U. S. export control laws and
+ * regulations (22 C.F.R. 120-130 and 15 C.F.R. 730-774). To the
+ * extent that the software is subject to U.S. export control laws
+ * and regulations, the recipient has the responsibility to obtain
+ * export licenses or other export authority as may be required
+ * before exporting such information to foreign countries or
+ * providing access to foreign nationals.
+ */
+ /**
+ * AMPCS common protobuf schema for an alarm table.
+ *
+ * Version: 1.0
+ * ChangeLog:
+ * V1.0 - New for R8
+ */
+ syntax = "proto3";
+
+import "alarm_value.proto";
+import "alarm_statistics.proto";
+import "alarmed_channel_value.proto";
+
+option optimize_for = SPEED;
+option java_multiple_files = true;
+option java_package = "jpl.gds.alarm.serialization";
+
+
+message Proto3AlarmHistory {
+	// Realtime
+	Proto3ChannelValueTable rtChanValTable = 1;
+	Proto3AlarmStatisticsMap rtStatsTable = 2;
+	Proto3LastValueTable rtLastValueTable = 3;
+
+	// Recorded
+	Proto3ChannelValueTable recChanValTable = 4;
+	Proto3AlarmStatisticsMap recStatsTable = 5;
+	Proto3LastValueTable recLastValueTable = 6;
+
+	// Monitor
+	Proto3MonitorChannelValueTable monChanValTable = 7;
+	Proto3MonitorAlarmStatisticsMap monStatsTable = 8;
+	Proto3MonitorLastValueTable monLastValueTable = 9;
+}
+
+/**
+ * The last value table and the channel list table.
+ */
+message Proto3LastValueTable {
+	map<string, eha.Proto3ChannelValue> lastValues = 1;
+}
+
+message Proto3ChannelValueTable {
+	map<string, eha.Proto3ServiceCollection> values = 1;
+}
+
+
+/**
+ * The inner map for the monitor last value, Map<stationId, value>
+ */
+message Proto3MonitorLastValueTableMap {
+	map<int32, eha.Proto3ChannelValue> lastValues = 1;
+}
+
+/**
+ * The inner map for the monitor channel value table, Map<stationId, channellist>
+ */
+message Proto3MonitorValueTableMap {
+	map<int32, eha.Proto3ServiceCollection> values = 1;
+}
+
+/**
+ * The monitor last value table, Map<string, Map<int, value>>
+ */
+message Proto3MonitorLastValueTable {
+	map<string, Proto3MonitorLastValueTableMap> lastValues = 1;
+}
+
+/**
+ * The monitor last value table, Map<string, Map<int, channellist>>
+ */
+message Proto3MonitorChannelValueTable {
+	map<string, Proto3MonitorValueTableMap> values = 1;
+}

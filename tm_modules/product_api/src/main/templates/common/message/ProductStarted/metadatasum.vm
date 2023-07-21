@@ -1,0 +1,6 @@
+EventTime=$eventTime
+TransactionId=$transId
+Vcid=$vcid
+Apid=$apid
+ProductName=$type
+TotalParts=$totalParts

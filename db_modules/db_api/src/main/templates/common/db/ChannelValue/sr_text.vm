@@ -1,0 +1,67 @@
+##DEFAULT_WIDTH(30),DEFAULT_WIDTH(30),DEFAULT_WIDTH(30),SMALL_WIDTH(10),LARGE_WIDTH(50),DEFAULT_WIDTH(30),DEFAULT_WIDTH(30),DEFAULT_WIDTH(30)
+#if ($header)
+#set($ert="ERT                           ")
+#set($scet="SCET                          ")
+#set($sclk="SCLK                          ")
+#set($eha="EHA       ")
+#set($Ch="ChId:ChName                                       ")
+#set($dn="DN                            ")
+#set($del="DELTA                         ")
+#set($eust="EU                            ")
+#set($apid="APID      ")
+#set($apidName="ApidName                                                        ")
+#set($spsc="SPSC      ")
+#set($packetRct="PacketRCT            ")
+#set($vcfc="SourceVCFC          ")
+#if($hasPacket)
+${ert}	${scet}	${sclk}	${eha}	${Ch}	${dn}	${del}	${eust}	SOURCE	SESSION  $apid $apidName $spsc $packetRct $vcfc
+#else
+${ert}	${scet}	${sclk}	${eha}	${Ch}	${dn}	${del}	${eust}	SOURCE	SESSION
+#end
+#elseif ($trailer)
+#else
+#if($ert)#{set}($ert= $formatter.anCsprintf("%-30s", $ert))#{end}
+#{if}($scet)#{set}($scet= $formatter.anCsprintf("%-30s", $scet))#else#set($scet= $formatter.anCsprintf("%-30s", "SCET="))#{end}
+#if($sclk)#{set}($sclk= $formatter.anCsprintf("%-30s", $sclk.toString()))#else#set($sclk= $formatter.anCsprintf("%-30s", "SCLK="))#{end}
+#{set}($eha="EHA")#{set}($eha = $formatter.anCsprintf("%-10s", $eha))#if($channelId)#{set}($Ch=$channelId)#{end}
+#{set}($Ch=$Ch+":")#if($fromSse)#{set}($Ch=$Ch+"S:")#{end}#{set}($Ch=$Ch+${name})#{set}($Ch= $formatter.anCsprintf("%-50s", $Ch))
+#{set}($dn="DN=")#if(${dataNumber})#{set}($dn=$dn+$dataNumber.toString())#{end}#{set}($dn= $formatter.anCsprintf("%-30s", $dn))
+#{set}($del="DELTA=")#{set}($del= $formatter.anCsprintf("%-30s", $del))#if($status)
+#{set}($eust = "STATUS=" + $status)#{else}#{set}($eust = "EU=")#{if}($eu)#{set}($eust=$eust+$eu)#{end}#{end}#{set}($eust = $formatter.anCsprintf("%-30s",$eust))
+#{set}($realtime = $isRealTime)
+#if($apid)
+#set($apids=$apid.toString())
+#else
+#set ($apids="")
+#end
+#set($apids=$formatter.anCsprintf("%-10s", $apids))
+#if($apidName)
+#set($apidNames=$apidName.toString())
+#else
+#set ($apidNames="")
+#end
+#set($apidNames=$formatter.anCsprintf("%-64s", $apidNames))
+#if($spsc)
+#set($spscs=$spsc.toString())
+#else
+#set ($spscs="")
+#end
+#set($spscs=$formatter.anCsprintf("%-10s", $spscs))
+#if($packetRct)
+#else
+#set ($packetRct="")
+#end
+#set($packetRct=$formatter.anCsprintf("%-23s", $packetRct))
+#if($vcfc)
+#set($vcfcs=$vcfc.toString())
+#else
+#set ($vcfcs="")
+#end
+#set($vcfcs=$formatter.anCsprintf("%-20s", $vcfcs))
+#set($session=$formatter.anCsprintf("%-8d", $sessionId))
+#if($hasPacket)
+${ert}	${scet}	${sclk}	${eha}	${Ch}	${dn}	${del}	${eust}	${realtime}	$session $apids $apidNames $spscs $packetRct $vcfcs
+#else
+${ert}	${scet}	${sclk}	${eha}	${Ch}	${dn}	${del}	${eust}	${realtime}	$session
+#end
+#end

@@ -1,0 +1,16 @@
+$sys_time_str #slurp
+$rti_number #slurp
+$sclk_microseconds #slurp
+Bus=$bus #slurp
+C=0x#echo '%04x' % ($command_word)# #slurp
+S=#echo$status_word if $is_broadcast or $is_no_response else '0x%04x'%($status_word)# #slurp
+RT=#echo'%02d'%($rt_value)# #slurp
+SA=#echo'%02d'%($sa_value)# #slurp
+TR=$transmit_receive_status #slurp
+WC=#echo'%02d'%($mode_code if $is_broadcast else $word_count)# #slurp
+Err=#echo'0x%04x'%($error_status) if $error_status != '' else ''# #slurp
+dt=#echo'%05d'%($message_gap) if $message_gap != '' else ''# #slurp
+Data=#slurp
+#for $item in $data
+#echo ' %04x'%($item)##slurp 
+#end for

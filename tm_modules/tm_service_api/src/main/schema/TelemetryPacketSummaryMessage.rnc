@@ -1,0 +1,73 @@
+#
+# AMPCS TelemetryPacketSummaryMessage RelaxNG Compact format XML specification.
+#
+# TelemetryPacketSummaryMessage is issued periodically by the packet extraction 
+# in the downlink processor to provide a summary of packet extraction statistics 
+# accumulated during the current session. It is possible that these numbers will
+# suffer rollover if a session runs long enough.
+#
+# Version: 6.0
+#
+# ChangeLog: V5.0 3/14/2013 Updated to import new common session schema.
+# ChangeLog: V5.1 3/14/2013 Updated to add station packet count
+# ChangeLog: V6.0 5/18/17 Major updates for AMPCS R8
+#
+namespace rng = "http://relaxng.org/ns/structure/1.0"
+datatypes xsd = "http://www.w3.org/2001/XMLSchema-datatypes"
+default namespace = "http://dsms.jpl.nasa.gov/mpcs"
+
+include "ContextCommon.rnc"
+include "Times.rnc"
+
+start = MPCSTelemetryPacketSummaryMessage-def
+
+MPCSTelemetryPacketSummaryMessage-def = 
+
+element MPCSTelemetryPacketSummaryMessage {
+    context-def?,
+    Message-def+
+}
+
+Message-def = 
+## MPCS-specific body element.
+element TelemetryPacketSummaryMessage {
+    attribute eventTime { time-def },
+    
+    context-def?,
+    
+    ## Indicates whether the summary is for FSW or SSE processing
+    element fromSSE { xsd:boolean },
+    ## The total number of frame gaps (skips in VCFC between consecutively-received frames) encountered by packet extraction
+    element numFrameGaps { xsd:nonNegativeInteger },
+    ## The total number of frame regressions (reductions in VCFC between consecutively-received frames) encountered by packet extraction
+    element numFrameRegressions { xsd:nonNegativeInteger },
+    ## The total number of repeated frames (duplicates in VCFC between consecutively-received frames) encountered by packet extraction 
+    element numFrameRepeats { xsd:nonNegativeInteger },
+    ## The total number of bad frames encountered by packet extraction; includes frames with bad headers, uncorrectable reed-soloman errors, turbo decoding errors, and checksum errors
+    element numValidPackets { xsd:nonNegativeInteger },
+    ## The total number of idle packets discarded by packet extraction
+    element numIdlePackets { xsd:nonNegativeInteger },
+    ## The total number of bad packets discarded by packet extraction; includes bad packets headers and insufficent packet data
+    element numInvalidPackets { xsd:nonNegativeInteger },
+    ## The total number of station monitor packets received
+    element numStationPackets { xsd:nonNegativeInteger },
+    ## The total number of cfdp packets received
+    element numCfdpPackets { xsd:nonNegativeInteger },
+    ## Summaries of different types of packets received
+    element packetSummaries {
+        packetSummary-def*
+    }?
+}
+
+packetSummary-def = element packetSummary {
+    attribute instanceCount { xsd:nonNegativeInteger },
+    attribute vcid { xsd:nonNegativeInteger },
+    attribute apid { xsd:nonNegativeInteger },
+    attribute apidName { token },
+    attribute lastScetTime { time-def },
+    attribute lastLstTime {lst-time-def}?,
+    attribute lastSclkTime { sclk-time-def },
+    attribute lastErtTime { ert-time-def },
+    attribute lastSequenceNum { xsd:nonNegativeInteger }
+    
+}

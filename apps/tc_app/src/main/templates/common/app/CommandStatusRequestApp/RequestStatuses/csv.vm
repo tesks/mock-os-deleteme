@@ -1,0 +1,4 @@
+#if($header)
+recordType,submitTime,requestId,userId,roleId,status,statusUpdateTime,includedInExeList,filename,bitrates#else
+"RequestStatus","$submitTime","$requestId",#if($userId)"$userId",#else"",#end#if($roleId)"$roleId",#else"",#end"$status","$statusUpdateTime",#if($nullTool.isNotNull($includedInExeList))"$includedInExeList",#else"",#end#if($filename)"$filename",#else"",#end#if($bitrates)#set($delim = '')"#foreach($val in $bitrates)$delim$val#set($delim = ',')#end"#end
+#end

@@ -1,0 +1,13 @@
+#set ( $shellName = "sh" )
+#shell( $shellName )
+
+#init()
+
+#Python()
+
+#set( $tpsLibraries = [] )
+#constructPythonpath ( $tpsLibraries )
+
+#set ( $scriptName = "lib/python/mpcsutil/chill_ps.py" )
+#set ( $excludeSite = "false" )
+#execPython ( $scriptName $excludeSite )

@@ -1,0 +1,5 @@
+<SseCommandMessage eventTime="$eventTime">
+	<SseCommand>
+		<CommandString>$commandString</CommandString>
+	</SseCommand>
+</SseCommandMessage>

@@ -1,0 +1,82 @@
+#set ( $shellName = "sh" )
+#shell( $shellName )
+
+#init()
+
+#Java()
+
+#set ( $headless = "true" )
+#SWT( $headless )
+
+#set( $tpsLibraries   =   ["piccolo","commons_cli","commons_lang", "commons_lang3","commons_collections","commons_logging","woodstox","mysql","velocity_engine_core","jface", "jersey2", "javax.json", "jaxrs", "jackson","icmd","jdom","jfreechart","jing","disruptor","guava","hibernate","shared", "widgets.nattable.core", "widgets.nattable.extension.glazedlists", "glazedlists_java15", "persistence"] )
+#constructClasspath( $tpsLibraries )
+#addJmsClasspath()
+#addSpringClasspath()
+#verifyMessagingService()
+#addCssClasspath()
+#constructLog4j2Classpath()
+#addDsneClasspath()
+#checkChillMission()
+
+## Needed so all apps use the same session key
+#integrated()
+
+#set ( $appName = "chill_down_web" )
+#set ( $appClass = "jpl.gds.app.tools.config.SessionConfigurationApp" )
+#set ( $appArgs = "" )
+#set ( $headless = "false" )
+#set ( $doExec = "false" )
+#set ( $doLog = "false" )
+#set ( $minMem = "128m" )
+#set ( $maxMem = "512m" )
+#set ( $responderHelper = "" )
+#set ( $sysProperties = "" )
+#set ( $includePassThruArgs = "true" )
+#execJava ( $appName $appClass $appArgs $headless $doExec $doLog $minMem $maxMem $responderHelper $sysProperties $includePassThruArgs )
+
+if [ $? != 0 ] ; then
+exit 1
+fi
+
+if [ $? == 0 ] ; then
+
+GDS_USER_CONFIG_DIR=$HOME/CHILL
+
+echo $GDS_JAVA_OPTS | grep -q -e "-DGdsUserConfigDir="
+
+if [ $? = 0 ]; then
+GDS_USER_CONFIG_DIR=`echo $GDS_JAVA_OPTS | sed 's/.*-DGdsUserConfigDir=//' | sed 's/ *.-D.*//'`
+fi
+
+SESSION_CONFIG_FILE="`hostname -s`_TempTestConfig.xml"
+
+#perspective()
+#set ( $masterAppName = "chill_down_web" )
+#set ( $appName = "chill_test_config_insert" )
+#set ( $appClass = "jpl.gds.db.app.SessionConfigInsertApp" )
+#set ( $appArgs = "--testConfig $GDS_USER_CONFIG_DIR/$SESSION_CONFIG_FILE --updateConfig $databaseHost $databasePort" )
+#set ( $headless = "false" )
+#set ( $doExec = "false" )
+#set ( $doLog = "false" )
+#set ( $minMem = "128m" )
+#set ( $maxMem = "512m" )
+#set ( $responderHelper = "" )
+#set ( $sysProperties = "" )
+#set ( $includePassThruArgs = "false" )
+#execJavaWithMaster ( $appName $appClass $appArgs $headless $doExec $doLog $minMem $maxMem $responderHelper $sysProperties $includePassThruArgs $masterAppName )
+
+
+
+if [ $? == 0 ]; then
+
+#Python()
+#constructPythonpath ( $tpsLibraries )
+#set ( $appName = "chill_down_web" )
+#set ( $scriptName = "lib/python/mpcsutil/chill_down_web.py" )
+pythoncmd="$PYTHON_CMD $CHILL_GDS/$scriptName $autoStart $noGUI --sessionConfig $GDS_USER_CONFIG_DIR/$SESSION_CONFIG_FILE"
+
+exec $pythoncmd && fg
+
+fi
+
+fi

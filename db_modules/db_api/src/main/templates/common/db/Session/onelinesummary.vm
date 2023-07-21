@@ -1,0 +1,3 @@
+#if ($body)
+Session $sessionId Name=$sessionName #if($sessionType)Type=$sessionType#end Host=$sessionHost Fragment=$sessionFragment User=$user StartTime=$startTime OutputDir=$outputDir
+#end

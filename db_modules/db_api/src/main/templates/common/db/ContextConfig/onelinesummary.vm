@@ -1,0 +1,4 @@
+#if ($body)
+Context $contextId Name=$contextName #if($contextType)Type=$contextType#end Host=$contextHost User=$user Session=$sessionId Metadata: #foreach ($mapEntry in $metadata.entrySet()) $mapEntry.key=$mapEntry.value #end
+##
+#end

@@ -1,0 +1,42 @@
+/*
+ * Copyright 2006-2018. California Institute of Technology.
+ * ALL RIGHTS RESERVED.
+ * U.S. Government sponsorship acknowledged.
+ *
+ * This software is subject to U. S. export control laws and
+ * regulations (22 C.F.R. 120-130 and 15 C.F.R. 730-774). To the
+ * extent that the software is subject to U.S. export control laws
+ * and regulations, the recipient has the responsibility to obtain
+ * export licenses or other export authority as may be required
+ * before exporting such information to foreign countries or
+ * providing access to foreign nationals.
+ */
+
+package jpl.gds.db.api.types;
+
+import jpl.gds.context.api.ISimpleContextConfiguration;
+
+/**
+ * Factory for IDbContextInfoProvider / IDbContextInfoUpdater objects
+ */
+public interface IDbContextInfoFactory extends IDbQueryableFactory<IDbContextInfoProvider, IDbContextInfoUpdater> {
+    /**
+     * @return a new IDbContextInfoProvider object
+     */
+    @Override
+    IDbContextInfoProvider createQueryableProvider();
+
+    /**
+     * @param contextConfig
+     *            the Context Configuration to install in the returned IDbContextInfoProvider
+     * @return a new IDbSessionProvider object
+     */
+    IDbContextInfoProvider createQueryableProvider(ISimpleContextConfiguration contextConfig);
+
+    /**
+     * @param contextConfig
+     *            the Context Configuration to install in the returned IDbContextInfoUpdater
+     * @return a new IDbSessionUpdater object
+     */
+    IDbContextInfoUpdater createQueryableUpdater(ISimpleContextConfiguration contextConfig);
+}

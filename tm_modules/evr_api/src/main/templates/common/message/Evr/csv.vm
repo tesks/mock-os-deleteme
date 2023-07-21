@@ -1,0 +1,2 @@
+#if($body)
+"EVR",#if($sessionId)"$sessionId.toString()"#else""#end,"$eventTime","$name","$module","$level","$message","$event","$fromSse","$sclk","$scet",#if($lst)"$lst"#else""#end,"$ert","$rct","$realTime"#end

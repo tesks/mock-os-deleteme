@@ -1,0 +1,3 @@
+#if($body)
+PACKET SUMMARY Frame Gaps/Regressions=$numFrameGaps/$numFrameRegressions Packets=$numValidPackets Idle Packets=$numIdlePackets Invalid Packets=$numInvalidPackets Station Packets=$numStationPackets CFDP Packets=$numCfdpPackets
+#end

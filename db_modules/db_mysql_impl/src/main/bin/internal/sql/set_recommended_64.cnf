@@ -1,0 +1,52 @@
+# For 64-bit hosts
+
+[mysqld]
+
+slow_query_log=ON
+# slow_query_log_file=ON
+
+bulk_insert_buffer_size=128M
+concurrent_insert=2
+
+# MPCS-5386: Changed to support Global LAD
+innodb_log_file_size=512M
+
+innodb_flush_log_at_trx_commit=0
+
+# MPCS-5995: Changed innodb_flush_method from O_DIRECT to O_DSYNC. Testing shows that O_DSYNC results in better Global LAD performance.
+# MPCS-6038: Reverted changes made on behalf of MPCS-5995 after further performance testing showed original assessment to be incorrect
+innodb_flush_method=O_DIRECT
+
+# MPCS-7820: Updated as per Carl Potts' performance analyses.
+innodb_buffer_pool_size=1073741824
+key_buffer_size=10737418240
+
+# MPCS-11789 - increased to 1000
+max_connections=1000
+
+innodb_locks_unsafe_for_binlog=1
+join_buffer_size=16K
+key_cache_division_limit=70
+log_queries_not_using_indexes=1
+log_warnings=2
+long_query_time=1.0
+
+max_heap_table_size=1G
+max_tmp_tables=32
+myisam_sort_buffer_size=64M
+preload_buffer_size=128M
+
+# MPCS-11943: Updated defaults for query cache
+query_cache_size=1M
+query_cache_type=ON
+
+read_buffer_size=128M
+read_rnd_buffer_size=64M
+sort_buffer_size=512M
+table_open_cache=1024
+thread_cache_size=100
+tmp_table_size=512M
+transaction-isolation=REPEATABLE-READ
+
+# MPCS-11490 - Use large timeout value (1 year)
+wait_timeout=31536000

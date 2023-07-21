@@ -1,0 +1,132 @@
+#if ($body)
+<Session>
+	<TestId>
+		<Test>
+#if($sessionId)
+			<Number>$sessionId</Number>
+#end
+#if($sessionName)
+			<Name>$sessionName</Name>
+#end
+#if($sessionType)
+			<Type><![CDATA[$sessionType]]></Type>
+#end
+#if($sessionDescription)
+			<Description><![CDATA[$sessionDescription]]></Description>
+#end
+		</Test>
+		<Venue>
+#if($user)
+			<User>$user</User>
+#end
+#if($sessionHost)
+			<Host>$sessionHost</Host>
+#end
+		</Venue>
+#if($connectionType)
+		<ConnectionType>$connectionType</ConnectionType>
+#end
+#if($startTime)
+		<StartTime>$startTime</StartTime>
+#end
+#if($endTime)
+		<EndTime>$endTime</EndTime>
+#end
+	</TestId>
+#if($TRAC_AR)
+	<TRAC_AR>$TRAC_AR</TRAC_AR>
+#end
+#if($dataFileLinks)
+	<DataFileLinks>
+		#if($mpcsProductsLink)
+			<MPCSProducts>$mpcsProductsLink</MPCSProducts>
+		#end
+		#if($sseLink)
+			<SSE>$sseLink</SSE>
+		#end
+		#if($sessionReportsLink)
+			<SessionReports>$sessionReportsLink</SessionReports>
+		#end
+		#if($customReportsLink)
+			<CustomReports>$customReportsLink</CustomReports>
+		#end
+		#if($busLogsLink)
+			<BusLogs>$busLogsLink</BusLogs>
+		#end
+	</DataFileLinks>
+#end
+#if($fswVersion)
+	<FswVersion>$fswVersion</FswVersion>
+#end
+#if($fswBuildId)
+	<FswBuildId>$fswBuildId</FswBuildId>
+#end
+#if($sseVersion)
+	<SseVersion>$sseVersion</SseVersion>
+#end
+#if($runFswDownlink)
+	<RunFswDownlink>$runFswDownlink</RunFswDownlink>
+#end
+#if($runSseDownlink)
+	<RunSseDownlink>$runSseDownlink</RunSseDownlink>
+#end
+#if($fswDictionaryDir)
+	<DictionaryDirectory>$fswDictionaryDir</DictionaryDirectory>
+#end
+#if($sseDictionaryDir)
+	<SseDictionaryDirectory>$sseDictionaryDir</SseDictionaryDirectory>
+#end
+#if($outputDir)
+	<OutputDirectory>$outputDir</OutputDirectory>
+#end
+#if($downlinkSpacecraftSide)
+	<DownlinkSpacecraftSide>$downlinkSpacecraftSide</DownlinkSpacecraftSide>
+#end
+#if($spacecraftId)
+	<SpacecraftId>$spacecraftId</SpacecraftId>
+#end
+	<VenueInformation>
+#if($venueType)
+		<Type>$venueType</Type>
+#end
+#if($inputFormat)
+		<InputFormat>$inputFormat</InputFormat>
+#end
+#if($testbedName)
+#if($testbedName != "")
+		<TestbedName>$testbedName</TestbedName>
+#end
+#end
+#if($downlinkStreamId)
+#if($downlinkStreamId != "")
+		<DownlinkStreamId>$downlinkStreamId</DownlinkStreamId>
+#end
+#end
+#if($inputFile)
+#if($inputFile != "")
+		<InputFile>$inputFile</InputFile>
+#end
+#end
+	</VenueInformation>	
+ <HostInformation>
+#if($fswHost)
+  <FswHost>$fswHost</FswHost>
+#end
+#if($sseHost)
+  <SseHost>$sseHost</SseHost>
+#end
+#if($fswUplinkPort)
+  <FswUplinkPort>$fswUplinkPort</FswUplinkPort>
+#end
+#if($sseUplinkPort)
+  <SseUplinkPort>$sseUplinkPort</SseUplinkPort>
+#end
+#if($fswDownlinkPort)
+  <FswDownlinkPort>$fswDownlinkPort</FswDownlinkPort>
+#end
+#if($sseDownlinkPort)
+  <SseDownlinkPort>$sseDownlinkPort</SseDownlinkPort>
+#end
+ </HostInformation>    
+</Session>
+#end

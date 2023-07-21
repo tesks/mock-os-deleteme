@@ -1,0 +1,56 @@
+#if ($body)
+<Evr>
+   <SessionId>$sessionId</SessionId>
+   <SessionHost>$sessionHost</SessionHost>
+#if ($name)
+   <Name>$name</Name>
+#end
+#if ($module)
+   <Module>$module</Module>
+#end
+#if ($level)
+   <Level>$level</Level>
+#end
+#if ($event)
+   <EventID>$event</EventID>
+#end
+   <FromSSE>$fromSse</FromSSE>
+#if ($nullTool.isNotNull($realTime))
+   <Realtime>$realTime</Realtime>
+#end
+#if ($sclk)
+   <SCLK>$sclk</SCLK>
+#end
+#if ($scet)
+   <SCET>$scet</SCET>
+#end
+#if ($lst)
+   <LST>$lst</LST>
+#end
+#if ($ert)
+   <ERT>$ert</ERT>
+#end
+#if ($rct)
+   <RCT>$rct</RCT>
+#end
+#if ($message)
+   <Message><![CDATA[$message]]></Message>
+#end
+#if ($metadataKeys)
+   <Metadata>
+#set ($index = 0)    
+#foreach ($key in $metadataKeys)
+#set ($val = $metadataVals.get($index))      
+      <Value name="$key"><![CDATA[$val]]></Value>
+#set ($index = $index + 1)
+#end
+   </Metadata>
+#end
+#if ($vcid)
+   <VCID>$vcid</VCID>
+#end
+#if ($dssId >= 0)
+   <DssId>$dssId</DssId>
+#end   
+</Evr>
+#end

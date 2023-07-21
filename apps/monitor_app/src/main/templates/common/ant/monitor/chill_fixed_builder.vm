@@ -1,0 +1,27 @@
+#set ( $shellName = "sh" )
+#shell( $shellName )
+
+#init()
+
+#Java()
+
+#set ( $headless = "true" )
+#SWT( $headless )
+
+#set( $tpsLibraries   =   ["piccolo","commons_cli","commons_lang", "commons_lang3","commons_collections","commons_logging","velocity_engine_core","shared" ] )
+#constructClasspath( $tpsLibraries )
+#addSpringClasspath()
+#constructLog4j2Classpath()
+
+#set ( $appName = "chill_fixed_builder" )
+#set ( $appClass = "jpl.gds.monitor.fixedbuilder.app.FixedLayoutBuilderApp"  )
+#set ( $appArgs = "" )
+#set ( $headless = "false" )
+#set ( $doExec = "true" )
+#set ( $doLog = "false" )
+#set ( $minMem = "128m" )
+#set ( $maxMem = "512m" )
+#set ( $responderHelper = "" )
+#set ( $sysProperties = "" )
+#set ( $includePassThruArgs = "true" )
+#execJava ( $appName $appClass $appArgs $headless $doExec $doLog $minMem $maxMem $responderHelper $sysProperties $includePassThruArgs )

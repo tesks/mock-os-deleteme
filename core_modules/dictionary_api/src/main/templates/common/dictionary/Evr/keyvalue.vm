@@ -1,0 +1,20 @@
+---------------------------------------------------
+#if($evrDef.getName())
+EVR Definition: $evrDef.getName()
+#else
+EVR Definition: $evrDef.getId()
+#end
+----------------------------------------------------
+#if($evrDef.getName())
+Name = $evrDef.getName()
+#end
+Event ID = $evrDef.getId()
+#if ($evrDef.getCategory("module"))
+FSW Module = $evrDef.getCategory("module")
+#end
+#if($evrDef.getLevel())
+Level = $evrDef.getLevel()
+#end
+#if($evrDef.getFormatString())
+formatString = $evrDef.getFormatString()
+#end

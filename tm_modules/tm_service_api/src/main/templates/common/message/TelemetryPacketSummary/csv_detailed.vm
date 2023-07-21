@@ -1,0 +1,7 @@
+#if($csvHeader)
+"PACKET TYPE","VCID","APID","APID NAME","COUNT","LAST SCET","LAST LST","LAST SCLK","LAST ERT","LAST SEQ COUNT"
+#elseif ($summaryList)
+#foreach($sum in $summaryList)  
+"#if($sum.getPacketType())$sum.getPacketType()#end","$sum.getVcid()","$sum.getApid()","#if($sum.getApidName())$sum.getApidName()#end","$sum.getCount()","#if($sum.getLastScetStr())$sum.getLastScetStr()#end","#if($sum.getLastSolStr())$sum.getLastSolStr()#end","#if($sum.getLastSclkStr())$sum.getLastSclkStr()#end","#if($sum.getLastErtStr())$sum.getLastErtStr()#end","$sum.getSeqCount()"
+#end
+#end

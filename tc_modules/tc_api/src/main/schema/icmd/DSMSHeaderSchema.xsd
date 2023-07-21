@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema targetNamespace="http://dsms.jpl.nasa.gov/globalschema"      
+  xmlns:dsms="http://dsms.jpl.nasa.gov/globalschema" 
+  xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified">
+  <!--Define the XML type for the DSMS header-->
+  <xs:element name="DSMSHeader" type="dsms:DSMSHeaderType"/>
+  <xs:complexType name="DSMSHeaderType">
+    <xs:sequence>
+      <xs:element name="DSMS_CREATION_TIME" type="dsms:UTCDateTime" minOccurs="0" />
+      <xs:element name="DSMS_MESSAGE_TYPE" type="xs:string" minOccurs="0" />
+      <xs:element name="DSMS_MESSAGE_PURPOSE" type="xs:string" minOccurs="0"/>
+      <xs:element name="DSMS_SCHEMA_NAME" type="xs:anyURI" minOccurs="0" />
+      <xs:element name="DSMS_SCHEMA_VERSION" type="xs:string" minOccurs="0" />
+      <xs:element name="DSMS_SOURCE_NAME" type="xs:string" minOccurs="0" />
+      <xs:element name="DSMS_MISSION_ID" type="xs:string" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="DSMS_MISSION_NAME" type="xs:string" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="DSMS_SPACECRAFT_ID" type="xs:string" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="DSMS_SPACECRAFT_NAME" type="xs:string" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="DSMS_INSTRUMENT_ID" type="xs:string" minOccurs="0"/>
+      <xs:element name="DSMS_INSTRUMENT_NAME" type="xs:string" minOccurs="0"/>
+      <xs:element name="DSMS_PRODUCT_ID" type="xs:string" minOccurs="0"/>
+      <xs:element name="DSMS_FILE_ID" type="xs:string" minOccurs="0"/>
+      <xs:element name="DSMS_OBSERVATION_TYPE" type="xs:string" minOccurs="0"/>
+      <xs:element name="DSMS_OBSERVATION_TIME" type="dsms:UTCDateTime" minOccurs="0"/>
+      <xs:element name="DSMS_TARGET_ID" type="xs:string" minOccurs="0"/>
+      <xs:element name="DSMS_TRANSACTION_ID" type="xs:string" minOccurs="0"/>
+      <xs:element name="DSMS_RECEIVE_TIME" type="dsms:UTCDateTime" minOccurs = "0"/>
+      <xs:element name="DSMS_APPLICATION_ID" type="xs:int" minOccurs = "0"/>
+      <xs:element name="DSMS_PRODUCT_TYPE" type="xs:string" minOccurs = "0"/>
+      <xs:element name="DSMS_SPACECRAFT_NUMBER" type="xs:int" minOccurs = "0"/>
+      <xs:any namespace="##other" processContents="skip" minOccurs="0"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <!-- define types used within the header-->
+  <xs:simpleType name="UTCDateTime">
+    <xs:restriction base="xs:string">
+      <xs:pattern value="[0123456789]{4}-[0123456789]{3}T[0123456789]{2}:[0123456789]{2}:[0123456789]{2}.[0123456789]{3}"/>
+    </xs:restriction>
+  </xs:simpleType>
+</xs:schema>

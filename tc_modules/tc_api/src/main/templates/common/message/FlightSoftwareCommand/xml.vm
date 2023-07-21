@@ -1,0 +1,11 @@
+<FlightSoftwareCommandMessage eventTime="$eventTime">
+	<FlightSoftwareCommand>
+		<ICmdRequestId>$iCmdRequestId</ICmdRequestId>
+		<ICmdRequestStatus>$iCmdRequestStatus</ICmdRequestStatus>
+#if($iCmdRequestFailureReason)
+		<ICmdRequestFailureReason>$iCmdRequestFailureReason</ICmdRequestFailureReason>
+#end
+		<CommandString>$commandString</CommandString>
+		<ScmfFile>$scmfFile</ScmfFile>
+	</FlightSoftwareCommand>
+</FlightSoftwareCommandMessage>

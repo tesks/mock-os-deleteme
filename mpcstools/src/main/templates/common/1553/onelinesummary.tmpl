@@ -1,0 +1,32 @@
+$sys_time #slurp
+#if $verbose
+$rti_number #slurp
+#end if
+#echo '%.5f' % ($sclk)# #slurp
+$bus #slurp
+#if $verbose
+C=0x#echo '%04x' % ($command_word)# #slurp
+#end if
+#if $verbose
+S=#echo$status_word if $is_broadcast or $is_no_response else '0x%04x'%($status_word)# #slurp
+#end if
+RT="$remote_terminal.name" #slurp
+SA="#echo$sub_address.transmit_name if $is_transmit else $sub_address.receive_name#" #slurp
+TR=$transmit_receive_status #slurp
+#if $verbose
+WC=#echo'%02d'%($mode_code if $is_broadcast else $word_count)# #slurp
+#end if
+#if $verbose
+Err=#echo'0x%04x'%($error_status) if $error_status != '' else ''# #slurp
+#end if
+#if $verbose
+dt=#echo'%05d'%($message_gap) if $message_gap != '' else ''# #slurp
+#end if
+Data="#slurp
+#if $decode_data
+#echo '%s'%($decode_data[0])##slurp
+#end if
+#for $i in $range(1,len($decode_data))
+ #echo '%s'%($decode_data[$i])##slurp
+#end for
+"#slurp

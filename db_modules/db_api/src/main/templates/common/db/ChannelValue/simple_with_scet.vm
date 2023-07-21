@@ -1,0 +1,33 @@
+#if ($body)
+#if ($dataNumber)
+#if ($channelType.toString() == "FLOAT" || $channelType.toString() == "DOUBLE")
+#set ($dataNumber = $formatter.anCsprintf("%.12e",$dataNumber))
+#end
+#end
+#if($eu)
+#set ($eus = $formatter.anCsprintf("%12.12f",$eu))
+#elseif($status)
+#set ($eus = $status.toString())
+#else
+#set ($eus = "N/A")
+#end
+#set ($eus = $formatter.anCsprintf("%-60s",$eus))
+#if($hasPacket)
+#set ($apids = $formatter.anCsprintf("%10d",$apid.getValue()))
+#if($apidName)
+#set ($apidNames = $formatter.anCsprintf("%-64s",$apidName.toString()))
+#else
+#set ($apidNames = $formatter.anCsprintf("%-64s",""))
+#end
+#set ($spscs = $formatter.anCsprintf("%10d",$spsc.getValue()))
+#if($vcfc)
+#set ($vcfcs = $formatter.anCsprintf("%20s",$vcfc.toString()))
+#else
+#set ($vcfcs = "")
+#end
+#{end}
+#if($sclk)$formatter.anCsprintf("%-30s",$sclk.toString())#else
+N/A                           #end#if($scet)$formatter.anCsprintf("%-30s",$scet.toString())#else
+N/A                           #end$formatter.anCsprintf("%-30s",$ert.toString())$formatter.anCsprintf("%-15s",$channelId.toString())$formatter.anCsprintf("%-40s",$name)$formatter.anCsprintf("%-25s",$channelType.toString())$formatter.anCsprintf("%-20s",$dataNumber.toString())$eus#if($hasPacket) $apids $apidNames $spscs $packetRct $vcfcs#{end}
+
+#end

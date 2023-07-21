@@ -1,0 +1,30 @@
+# 
+# AMPCS OutOfSyncDataMessage RelaxNG Compact format XML specification.
+#
+# This message is published by the downlink processor when it encounters
+# non-frame bytes when in an out-of-lock state on the incoming telemetry stream.
+#
+# Version: 3.0
+#
+# ChangeLog: V2.0 3/14/2013 Updated to import new common session schema.
+# ChangeLog: V3.0 5/18/17 Major updates for AMPCS R8
+#
+default namespace = "http://dsms.jpl.nasa.gov/mpcs"
+namespace rng = "http://relaxng.org/ns/structure/1.0"
+
+include "ContextCommon.rnc"
+include "StationCommon.rnc"
+
+start = MPCSOutOfSyncDataMessage-def
+MPCSOutOfSyncDataMessage-def =
+    element MPCSOutOfSyncDataMessage {
+        context-def?, 
+        OutOfSyncMessage-def 
+    }
+OutOfSyncMessage-def =
+    element OutOfSyncDataMessage {
+        attribute eventTime { time-def },
+        context-def?,
+        element outOfSyncBytesLength { xsd:nonNegativeInteger },
+        stationInfo-def
+    }

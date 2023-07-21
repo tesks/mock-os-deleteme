@@ -1,0 +1,48 @@
+#macro (justify $width $str)
+#set ($length = $str.length())
+#if ($width == $length || $width < $length)$str#else
+#set ($counter = $width - $length)
+#set ($space = " ")
+#set ($outstr = $str)
+#foreach ($foo in [1..$counter])#set($outstr = "${space}${outstr}")#end$outstr#end
+#end
+#if ($header)
+#if($hasPacket)
+|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+<---------ERT---------> <-----SCLK-----> <---------SCET--------> <---------LST---------> XXXX-NNNN C <-------------------------channel name-------------------------> <---current raw----> / <---previous raw---> <--current value---> (<-raw delta->) <Realtime> <--apid--> <---------------------------apidName---------------------------> <--spsc--> <-------packetRCT-----> <--------vcfc------>
+#else
+|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+<---------ERT---------> <-----SCLK-----> <---------SCET--------> <---------LST---------> XXXX-NNNN C <-------------------------channel name-------------------------> <---current raw----> / <---previous raw---> <--current value---> (<-raw delta->) <Realtime>
+#end
+#elseif ($body)
+#if ($eu)
+#set ($eu = $formatter.anCsprintf("%10.4g", $eu))
+#end
+#if($hasPacket)
+#set ($apids = $formatter.anCsprintf("%10d",$apid.getValue()))
+#if($apidName)
+#set ($apidNames = $apidName.toString())
+#else
+#set ($apidNames = "")
+#end
+#set ($apidNames = $formatter.anCsprintf("%-64s",$apidNames))
+#set ($spscs = $formatter.anCsprintf("%10d",$spsc.getValue()))
+#if($vcfc)
+#set ($vcfcs = $vcfc.toString())
+#else
+#set ($vcfcs = "")
+#end
+#set ($vcfcs = $formatter.anCsprintf("%20s",$vcfcs))
+#{end}
+#if ($channelType.toString() == "FLOAT" || $channelType.toString() == "DOUBLE")
+#if ($delta)
+#set ($delta = $formatter.anCsprintf("%10.4g", $delta))
+#end
+#set ($dataNumber = $formatter.anCsprintf("%10.4g", $dataNumber))
+#if ($previous)
+#set ($previous = $formatter.anCsprintf("%10.4g", $previous))
+#end
+#end
+#justify(23 $ert) #if($sclk)#justify(16 $sclk.toDecimalString())#else#justify(16 "N/A")#end #if($scet)#justify(23 $scet)#else#justify(23 "N/A")#end #if($lst)#justify(23 $lst)#else#justify(23 "N/A")#end #justify(9 $channelId.toString()) $channelType.getBriefChannelType() #if($name)#justify(64 $name)#else#justify(64 " ")#end #justify(20 $dataNumber.toString()) / #if($previous)#justify(20 $previous.toString())#else#justify(20 "N/A")#end #if($eu)#justify(20 $eu.toString())#elseif($status)#justify(20 $status)#else#justify(20 " ")#end #if($delta)(#justify(13 $delta.toString()))#else(#justify(13 " "))#end #if($nullTool.isNotNull($isRealTime))#justify(10 $isRealTime.toString())#else#justify(10 "null")#end#if($hasPacket) $apids $apidNames $spscs #justify(23 $packetRct) $vcfcs#{end}
+
+#end

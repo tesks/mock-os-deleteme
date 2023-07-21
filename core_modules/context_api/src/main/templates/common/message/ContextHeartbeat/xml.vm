@@ -1,0 +1,5 @@
+<ContextHeartbeatMessage eventTime="$eventTime">
+  <startTime>$startTime</startTime>
+  $contextConfiguration
+  $serviceConfiguration
+</ContextHeartbeatMessage>

@@ -1,0 +1,3 @@
+#if($header)
+id,name,level,module,nargs,ops_cat,format#else
+$id,#if($nullTool.isNotNull($title))$title,#else,#end$level,$module,$nargs,#if($nullTool.isNotNull($opsCat))$opsCat,#else,#end$format#end

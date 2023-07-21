@@ -1,0 +1,11 @@
+#macro( escape $field)
+#if($field.toString())#set($field=$field.toString().replace('\', '\\').replace('"', '\"'))
+#else#set($field="")
+#{end}
+$field#end
+#if ($header)
+record_type,session_id,session_host,vcid,apid,product_type,creation_time,scet,lst,ert,sclk,command_number,dvt_coarse,dvt_fine,total_parts,seq_id,seq_version,transaction_id,file_size,checksum,ground_status,version,unique_name
+#{end}
+#if ($body)
+"product","#escape($sessionId)","#escape($sessionHost)","#escape($productMetadata.getVcid())","#escape($productMetadata.getApid())","#if($productMetadata.getProductType())#escape($productMetadata.getProductType())#{else}Unknown#end","#escape($productMetadata.getProductCreationTimeStr())","#escape($productMetadata.getScetStr())","#escape($productMetadata.getSolStr())","#escape($productMetadata.getErtStr())","#escape($productMetadata.getSclkStr())","#escape($productMetadata.getCommandNumber())","#escape($productMetadata.getDvtCoarse())","#escape($productMetadata.getDvtFine())","#escape($productMetadata.getTotalParts())","#escape($productMetadata.getSequenceId())","#escape($productMetadata.getSequenceVersion())","#escape($productMetadata.getCfdpTransactionId())","#escape($productMetadata.getFileSize())","#escape($productMetadata.getChecksum())","#escape($productMetadata.getGroundStatus())","#escape($productMetadata.getProductVersion())","#escape($absoluteDataFile)"
+#{end}

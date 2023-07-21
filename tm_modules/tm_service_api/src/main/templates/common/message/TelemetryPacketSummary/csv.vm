@@ -1,0 +1,5 @@
+#if($header && $csvHeader)
+"TYPE","SESSION ID","EVENT TIME","NUMBER OF FRAME GAPS","NUMBER OF FRAME REGRESSIONS","NUMBER OF VALID PACKETS","NUMBER OF INVALID PACKETS","NUMBER OF IDLE PACKETS","NUMBER OF STATION PACKETS","NUMBER OF CFDP PACKETS"
+#elseif($body)
+"PACKET SUMMARY",#if($sessionId)"$sessionId.toString()"#else""#end,"$eventTime","$numFrameGaps","$numFrameRegressions","$numValidPackets","$numInvalidPackets","$numIdlePackets","$numStationPackets","$numCfdpPackets"
+#end

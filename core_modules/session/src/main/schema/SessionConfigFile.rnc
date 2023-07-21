@@ -1,0 +1,24 @@
+# AMPCS Session Config File Schema
+# 
+# This schema defines the SessionConfig.xml file. This is
+# the file format written when a user invokes "Save Config" from the
+# Session Configuration GUI windows in AMPCS GUIs, and is also
+# the interchange format between AMPCS applications running
+# in an integrated configuration and between AMPCS Java applications
+# and MTAK. The XML file matching this schema can be passed to
+# any AMPCS application or script that supports a --testConfig
+# command line option.
+# 
+# Version: 1.0
+#
+# ChangeLog: V1.0 3/14/2013 Original Version
+#
+namespace rng = "http://relaxng.org/ns/structure/1.0"
+
+include "SessionCommon.rnc"
+
+## The XML root element. File consists of a Sessions element containing
+## one complete session definition.
+start = element Sessions {
+    session-def
+}

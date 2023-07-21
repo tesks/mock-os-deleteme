@@ -1,0 +1,125 @@
+include::RESTfulDocSpecificContent.adoc[tag=header]
+:toc: macro
+:sectlinks:
+:sectanchors:
+:sectnums:
+:revremark:
+:xrefstyle: full
+
+== Document Change Log
+
+include::RESTfulDocSpecificContent.adoc[tag=change-log]
+
+<<<
+[[overview]]
+== Document Overview
+
+[[identification]]
+=== Identification
+
+[cols=",",options="header",]
+|====================================================================
+|**Level** |**Name**
+|Element |MMCS (Multimission Mission Control Systems)
+|Subsystem Name |Mission Control
+|Assembly |AMMOS Mission Data Processing and Control System (AMPCS)
+|Title |AMPCS Multimission CFDP Monitor and Control Software Interface Specification (SIS)
+|Configuration Number |631.6
+|====================================================================
+
+[[purpose]]
+=== Purpose
+
+include::RESTfulDocSpecificContent.adoc[tag=purpose]
+
+[[references]]
+=== References
+
+. JPL Software Development, Revision 9 (JPL Rules Doc #57653)
+. MGSS Implementation and Maintenance Task Requirements (DOC-001455, Rev C)
+. MGSS System Level (Level 3) Requirements Document (DOC-000001, Rev C)
+. MDAS Element Software Management Plan (DOC-000175)
+. AMMOS L4 Mission Control Subsystem Functional Requirements Document (DOC-000036)
+. AMMOS MPCS Operations Concept Document (DOC-000459)
+. AMMOS MPCS L5 Software Requirements Document (DOC-000528, Rev G)
+
+<<<
+include::RESTfulDocSpecificContent.adoc[tag=environment]
+
+<<<
+[[rest]]
+== REST API
+
+This section defines the AMPCS CFDP monitor and control REST API.
+
+[[generated-content]]
+[[definitions]]
+include::definitions.adoc[leveloffset=+1]
+<<<
+[[Resources]]
+include::paths.adoc[leveloffset=+1]
+
+
+[[files]]
+== CFDP Files
+
+include::RESTfulDocSpecificContent.adoc[tag=files]
+
+[[messages]]
+== CFDP Messages
+
+include::RESTfulDocSpecificContent.adoc[tag=messages]
+
+<<<
+[appendix]
+[[acronyms-and-abbreviations]]
+== Acronyms and Abbreviations
+
+[cols=",",options="header",]
+|==========================
+|*ACROYNM* |*Definition*
+|AMMOS |Advanced Multimission Operations System
+|AMPCS |AMMOS Mission Data Processing and Control System
+|API |Application Programming Interface
+|CCSDS |Consultative Committee for Space Data Systems
+|CFDP | CCSDS File Delivery Protocol
+|CSV |Comma-Separated-Value
+|CHDO |Compressed Header Data Object
+|CLTU |Command Link Transmission Units
+|DSN |Deep Space Network
+|DVT |Data Validity Time
+|ECDR |Extended Channelized Data Record
+|ERT |Earth Received Time
+|EU |Engineering Unit
+|EVR |Event Record
+|FSW |Flight Software
+|GDS |Ground Data System
+|GUI |Graphical User Interface
+|HTTP |HyperText Transfer Protocol
+|HTTPS |Hypertext Transfer Protocol Secure
+|ID |Identifier
+|JMS |Java Message Service
+|LAD |Latest Available Data
+|LST |Local Solar Time
+|MGSS |Multimission Ground System and Services
+|MTAK |MPCS Test Automation Kit
+|MCS |Mission Control Systems
+|MMCS |Multimission Control Systems
+|PDU | Protocol Data Unit
+|PLOP |Physical Layer Operations Procedure
+|REST |Representational State Transfer
+|RNC |RelaxNG Compact
+|SAX |Simple API for XML
+|SCET |Spacecraft Event Time
+|SCLK |Spacecraft Clock
+|SCMF |Standard Spacecraft Message File
+|SFDU |Standard Formatted Data Unit
+|SQL |Structured Query Language
+|SSE |Simulation Support Equipment
+|URL |Uniform Resource Locator
+|URI |Uniform Resource Identifier
+|UTC |Universal Time Coordinated
+|VC |Virtual Channel
+|XML |eXtensible Markup Language
+|XSD |XML Schema Definition
+|==========================

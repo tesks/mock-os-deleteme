@@ -1,0 +1,4 @@
+#if ($body)
+Eha SessionId=$sessionId SessionHost=$sessionHost ChannelId=$channelId #if($dssId >= 0)DssId=$dssId #{end}Name=$name #if($module)Module=$module #{end}ERT=$ert #if($scet)SCET=$scet #{end}#if($lst)LST=$lst #{end}#if($rct)RCT=$rct #{end}#if($sclk)SCLK=$sclk #{end}DataNumber=$dataNumber #if($eu)EU=$eu #{end}#if($status)Status=$status #{end}#if($dnAlarmState)DNAlarmState=$dnAlarmState #{end}#if($euAlarmState)EUAlarmState=$euAlarmState #{end}Realtime=#if($nullTool.isNotNull($isRealTime))$isRealTime #else"null" #{end}#if($vcid)VCID=$vcid#{end}#if($apid) APID=$apid#{end}#if($apidName) ApidName=$apidName#{end}#if($spsc) SPSC=$spsc#{end}#if($packetRct) PacketRCT=$packetRct#{end}#if($vcfc) SourceVCFC=$vcfc#{end}
+
+#{end}

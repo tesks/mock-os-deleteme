@@ -1,0 +1,12 @@
+<OutOfSyncBytesMessage eventTime = "$eventTime">
+#if ($dsnInfo) 
+  <DSNInfo>
+    <ert>$ert</ert>
+    <bitRate>$bitRate</bitRate>
+    <numBits>$numBits</numBits>
+    <relayScid>$relayScid</relayScid>
+    <dssId>$dssId</dssId>
+  </DSNInfo>
+#end
+  <outOfSyncBytesLength>$outOfSyncBytesLength</outOfSyncBytesLength>
+</OutOfSyncBytesMessage>

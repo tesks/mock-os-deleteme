@@ -1,0 +1,26 @@
+#set ( $shellName = "sh" )
+#shell( $shellName )
+
+#init()
+
+#Java()
+
+#set ( $headless = "true" )
+#SWT( $headless )
+
+#set( $tpsLibraries   =   ["piccolo","commons_cli","commons_lang", "commons_lang3","commons_collections","woodstox","velocity_engine_core","shared", "commons_logging" ] )
+#constructClasspath( $tpsLibraries )
+#constructLog4j2Classpath()
+
+#set ( $appName = "chill_sclk_scet" )
+#set ( $appClass = "jpl.gds.app.tools.time.SclkScetApp" )
+#set ( $appArgs = "" )
+#set ( $headless = "false" )
+#set ( $doExec = "true" )
+#set ( $doLog = "false" )
+#set ( $minMem = "128m" )
+#set ( $maxMem = "512m" )
+#set ( $responderHelper = "" )
+#set ( $sysProperties = "" )
+#set ( $includePassThruArgs = "true" )
+#execJava ( $appName $appClass $appArgs $headless $doExec $doLog $minMem $maxMem $responderHelper $sysProperties $includePassThruArgs )

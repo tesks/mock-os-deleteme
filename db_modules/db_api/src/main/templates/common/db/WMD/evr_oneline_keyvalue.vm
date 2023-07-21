@@ -1,0 +1,3 @@
+#if ($body)
+Evr SessionId=$sessionId SessionHost=$sessionHost Name="$name" Module="$module" Level="$level" EventID="$event" SCLK=$sclk SCET=$scet ERT=$ert Message="$message"
+#end

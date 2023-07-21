@@ -1,0 +1,625 @@
+#set ( $shellName = "sh" )
+#shell( $shellName )
+
+# MPCS-4208 - Recast as velocity template.
+# MPCS-8880 - utf8 => latin1
+
+# MPCS-11246 - Set CHILL_MISSION
+#checkChillMission()
+
+echolog()
+{
+    echo "`date`: $1" | tee --append $LOG
+}
+
+
+echodebug()
+{
+    if test "X$DEBUG" = "Xtrue"
+    then
+        echolog "$1"
+    fi
+}
+
+
+completed()
+{
+    rm --force $TEMP
+
+    echolog "Exited"
+
+    exit 0
+}
+
+
+# Clean up on exit
+trap completed 0 1 2 3 15
+
+if test ! -d $JPLDIR
+then
+    echo "JPLDIR does not exist: $JPLDIR" 1>&2
+    exit 2
+fi
+
+export TEMP=$JPLDIR/$$.imp
+
+if test "X$PORT" = "X"
+then
+    PORT="22"
+fi
+
+if test "X$CAPEDIR" = "X"
+then
+    CAPEDIR=$JPLDIR
+fi
+
+if test "X$WHO" = "X"
+then
+    WHO=`id -n -u`
+fi
+
+if test "X$DBWHO" = "X"
+then
+    DBWHO=$WHO
+fi
+
+if test "X$WHERE" = "X"
+then
+    WHERE=localhost
+fi
+
+if test "X$DB" = "X"
+then
+    DB=${CHILL_MISSION}${dbName}
+fi
+
+# MPCS-8384 - Support for extended SCET
+TABLE_SUFFIX=""
+
+if test "X$EXTENDED_SCET" = "XYES"
+then
+    TABLE_SUFFIX="2"
+fi
+
+DEBUG=false
+
+if test "X$DEBUG_PULL" != "X"
+then
+    DEBUG=true
+fi
+
+if test "X$DBPASSWORD" = "X"
+then
+    read -s -p "Enter MySQL user password for '$DBWHO': " DBPASSWORD
+    echo
+
+    if test "X$DBPASSWORD" = "X"
+    then
+        PRODUCT_PASSWORD='""'
+    fi
+else
+    PRODUCT_PASSWORD="$DBPASSWORD"
+fi
+
+if test "X$EXPORTDIR" = "X"
+then
+    EXPORTDIR=export_ldi
+fi
+
+if test "X$DBPORT" = "X"
+then
+    DBPORT=3306
+fi
+
+if test "X$DBHOST" = "X"
+then
+    DBHOST=localhost
+fi
+
+UPDATE_PRODUCT=true
+
+if test "X$START_TIME" = "X"
+then
+    START_TIME=`date +%Y-%jT%H:%M:%S`
+fi
+
+if test "X$PRODUCT_OLD_DIR" = "X" -o "X$PRODUCT_NEW_DIR" = "X"
+then
+    UPDATE_PRODUCT=false
+
+    if test "X$PRODUCT_OLD_DIR" != "X" -o "X$PRODUCT_NEW_DIR" != "X"
+    then
+        echolog "ERROR: PRODUCT_OLD_DIR, PRODUCT_NEW_DIR, and CHILL_GDS"
+        echolog "must be set to enable chill_update_paths."
+        echolog
+        echolog "CHILL_GDS=$CHILL_GDS"
+        echolog "PRODUCT_OLD_DIR=$PRODUCT_OLD_DIR"
+        echolog "PRODUCT_NEW_DIR=$PRODUCT_NEW_DIR"
+        exit 2
+    fi
+elif test "X$CHILL_GDS" = "X"
+then
+    UPDATE_PRODUCT=false
+
+    echolog "ERROR: PRODUCT_OLD_DIR and PRODUCT_NEW_DIR were set but "
+    echolog "CHILL_GDS was not set. Unable to process chill_update_paths"
+    echolog
+    echolog "PRODUCT_OLD_DIR=$PRODUCT_OLD_DIR"
+    echolog "PRODUCT_NEW_DIR=$PRODUCT_NEW_DIR"
+    exit 2
+fi
+
+LOG=$JPLDIR/chill_pull_local_v5_0_3.log
+
+rm -f $LOG
+
+RCPEXIT=$JPLDIR/rcp.exit
+SLEEP=2
+DEST=$JPLDIR/dest
+EXPORT=$CAPEDIR/$EXPORTDIR
+
+echolog "Using:"
+echolog "CAPEDIR=$CAPEDIR"
+echolog "JPLDIR=$JPLDIR"
+echolog "EXPORTDIR=$EXPORTDIR"
+echolog "DEST=$DEST"
+echolog "WHERE=$WHERE"
+echolog "WHO=$WHO"
+echolog "DBWHO=$DBWHO"
+echolog "DB=$DB"
+echolog "DBHOST=${DBHOST}"
+echolog "DBPORT=$DBPORT"
+
+if test $UPDATE_PRODUCT = "true"
+then
+    echolog "CHILL_GDS=$CHILL_GDS"
+    echolog "PRODUCT_OLD_DIR=$PRODUCT_OLD_DIR"
+    echolog "PRODUCT_NEW_DIR=$PRODUCT_NEW_DIR"
+fi
+
+echolog ""
+
+PRE="LOAD DATA CONCURRENT LOCAL INFILE '"
+
+POSTH="' IGNORE INTO TABLE Host CHARACTER SET latin1 FIELDS TERMINATED BY ',' ESCAPED BY '\\\\'"
+POSTH="${POSTH} (hostId, hostName, hostOffset)"
+
+POSTCHD="' IGNORE INTO TABLE ChannelData CHARACTER SET latin1 FIELDS TERMINATED BY ',' ESCAPED BY '\\\\'"
+POSTCHD="${POSTCHD} (sessionId,hostId,sessionFragment,id,channelId,fromSse,type,channelIndex,"
+POSTCHD="${POSTCHD}module,name,dnFormat,euFormat)"
+
+POSTCH="' IGNORE INTO TABLE ChannelAggregate CHARACTER SET latin1 FIELDS TERMINATED BY ',' ESCAPED BY '\\\\'"
+POSTCH="${POSTCH} (hostId,sessionId,sessionFragment,id,channelType,packetIds,beginRctCoarse,endRctCoarse,beginErtCoarse,"
+POSTCH="${POSTCH}beginErtFine,endErtCoarse,endErtFine,beginSclkCoarse,endSclkCoarse,beginScetCoarse,endScetCoarse,dssId,"
+POSTCH="${POSTCH}vcid,count,distinctCount,contents,chanIdsString)"
+
+POSTCM="' IGNORE INTO TABLE CommandMessage CHARACTER SET latin1 FIELDS TERMINATED BY ',' ESCAPED BY '\\\\'"
+POSTCM="${POSTCM} (sessionId,hostId,sessionFragment,requestId,message,type,originalFile,scmfFile,commandedSide,finalized,"
+POSTCM="${POSTCM}checksum,totalCltus)"
+
+POSTCS="' IGNORE INTO TABLE CommandStatus CHARACTER SET latin1 FIELDS TERMINATED BY ',' ESCAPED BY '\\\\'"
+POSTCS="${POSTCS} (sessionId,hostId,sessionFragment,requestId,rctCoarse,rctFine,eventTimeCoarse,eventTimeFine,status,"
+POSTCS="${POSTCS}failReason,bit1RadTimeCoarse,bit1RadTimeFine,lastBitRadTimeCoarse,lastBitRadTimeFine,dssId,final)"
+
+# Note: REPLACE and not IGNORE for EndSession only
+POSTES="' REPLACE INTO TABLE EndSession CHARACTER SET latin1 FIELDS TERMINATED BY ',' ESCAPED BY '\\\\'"
+POSTES="${POSTES} (sessionId,endTime,endTimeCoarse,endTimeFine,hostId,sessionFragment)"
+
+POSTEV="' IGNORE INTO TABLE Evr${TABLE_SUFFIX} CHARACTER SET latin1 FIELDS TERMINATED BY ',' ESCAPED BY '\\\\'"
+POSTEV="${POSTEV} (sessionId,hostId,sessionFragment,id,packetId,name,eventId,ertCoarse,ertFine,scetCoarse,scetFine,"
+POSTEV="${POSTEV}rctCoarse,rctFine,sclkCoarse,sclkFine,level,module,message,dssId,vcid,isRealtime)"
+
+POSTEVM="' IGNORE INTO TABLE EvrMetadata CHARACTER SET latin1 FIELDS TERMINATED BY ',' ESCAPED BY '\\\\'"
+POSTEVM="${POSTEVM} (sessionId,hostId,sessionFragment,id,keyword,value)"
+
+POSTF="' IGNORE INTO TABLE Frame CHARACTER SET latin1 FIELDS TERMINATED BY ',' ESCAPED BY '\\\\'"
+POSTF="${POSTF} (sessionId,hostId,sessionFragment,id,type,rctCoarse,rctFine,ertCoarse,ertFine,relaySpacecraftId,"
+POSTF="${POSTF}vcid,vcfc,dssId,bitRate,badReason,fillFrame,bodyLength,headerLength,trailerLength)"
+
+POSTFB="' IGNORE INTO TABLE FrameBody CHARACTER SET latin1 FIELDS TERMINATED BY ',' ESCAPED BY '\\\\'"
+POSTFB="${POSTFB} (sessionId,hostId,sessionFragment,@body,header,trailer,id)"
+POSTFB="${POSTFB} SET body = COMPRESS(@body)"
+
+POSTL="' IGNORE INTO TABLE LogMessage CHARACTER SET latin1 FIELDS TERMINATED BY ',' ESCAPED BY '\\\\'"
+POSTL="${POSTL} (sessionId,hostId,sessionFragment,rctCoarse,rctFine,eventTimeCoarse,eventTimeFine,classification,"
+POSTL="${POSTL}message,type,contextId,contextHostId)"
+
+POSTHCH="' IGNORE INTO TABLE HeaderChannelAggregate CHARACTER SET latin1 FIELDS TERMINATED BY ',' ESCAPED BY '\\\\'"
+POSTHCH="${POSTHCH} (hostId,sessionId,sessionFragment,id,channelType,beginRctCoarse,endRctCoarse,beginErtCoarse,"
+POSTHCH="${POSTHCH}beginErtFine,endErtCoarse,endErtFine,apid,dssId,vcid,count,distinctCount,contents,chanIdsString)"
+
+
+POSTMCH="' IGNORE INTO TABLE MonitorChannelAggregate CHARACTER SET latin1 FIELDS TERMINATED BY ',' ESCAPED BY '\\\\'"
+POSTMCH="${POSTMCH} (hostId,sessionId,sessionFragment,id,beginRctCoarse,endRctCoarse,beginMstCoarse,beginMstFine,"
+POSTMCH="${POSTMCH}endMstCoarse,endMstFine,dssId,count,distinctCount,contents,chanIdsString)"
+
+
+POSTSCH="' IGNORE INTO TABLE SseChannelAggregate CHARACTER SET latin1 FIELDS TERMINATED BY ',' ESCAPED BY '\\\\'"
+POSTSCH="${POSTSCH} (hostId,sessionId,sessionFragment,id,packetIds,beginRctCoarse,endRctCoarse,beginErtCoarse,beginErtFine,"
+POSTSCH="${POSTSCH}endErtCoarse,endErtFine,beginSclkCoarse,endSclkCoarse,beginScetCoarse,endScetCoarse,count,"
+POSTSCH="${POSTSCH}distinctCount,contents,chanIdsString)"
+
+POSTP="' IGNORE INTO TABLE Packet${TABLE_SUFFIX} CHARACTER SET latin1 FIELDS TERMINATED BY ',' ESCAPED BY '\\\\'"
+POSTP="${POSTP} (sessionId,hostId,sessionFragment,id,rctCoarse,rctFine,scetCoarse,scetFine,ertCoarse,ertFine,"
+POSTP="${POSTP}sclkCoarse,sclkFine,apid,apidName,spsc,badReason,bodyLength,headerLength,trailerLength,frameId,dssId,"
+POSTP="${POSTP}vcid,sourceVcfc,fillFlag)"
+
+POSTPB="' IGNORE INTO TABLE PacketBody CHARACTER SET latin1 FIELDS TERMINATED BY ',' ESCAPED BY '\\\\'"
+POSTPB="${POSTPB} (sessionId,hostId,sessionFragment,@body,header,trailer,id)"
+POSTPB="${POSTPB} SET body = COMPRESS(@body)"
+
+# MPCS-4208 - Get extra product columns by mission
+# MPCS-11332  : chill_pull_local won't load data to the Database during LDI testing
+# Moved the logic from Velocity template to the shell script due to the changes associated with MPCS-10660
+# Default field list. Mission specific fields set below based on CHILL_MISSION variable
+PRODUCT_FIELD_LIST=",checksum,cfdpTransactionId,fileSize"
+
+# Following comments are copied over from the Velocity template for reference
+# Macro for supplying the 'extra' columns
+# for the Product table. Used by the remote 'pull'
+# script. Note you need a comma at the beginning if
+# there are any columns. Any new mission that uses
+# remoting and needs anything other than the default
+# Product columns will need an entry here.
+# MPCS-4208 Added.
+# MPCS-8384 - Typo in column list
+if [ "$CHILL_MISSION" = "m20" ]
+then
+    PRODUCT_FIELD_LIST=",requestId,deleteOnSend,priority,transmissionControlCriterion,transmissionStatus,commSessionId"
+    PRODUCT_FIELD_LIST="$PRODUCT_FIELD_LIST,fswVersion,fswMode,onboardCreationTime,productTag,creationStringId,sequenceExecutionCounter"
+    PRODUCT_FIELD_LIST="$PRODUCT_FIELD_LIST,roverMotionSiteIndex,roverMotionDriveIndex,roverMotionPoseIndex,roverMotionArmIndex"
+    PRODUCT_FIELD_LIST="$PRODUCT_FIELD_LIST,roverMotionChimraIndex,roverMotionDrillIndex,roverMotionRsmIndex,roverMotionHgaIndex"
+    PRODUCT_FIELD_LIST="$PRODUCT_FIELD_LIST,roverAttitude,roverPosition,sensingMastOrientation,sampleArmOrientation,productFileSize,productChecksum"
+fi
+
+export PRODUCT_APPEND="$PRODUCT_FIELD_LIST"
+
+POSTPR="' IGNORE INTO TABLE Product${TABLE_SUFFIX} CHARACTER SET latin1 FIELDS TERMINATED BY ',' ESCAPED BY '\\\\'"
+POSTPR="${POSTPR} (sessionId,hostId,sessionFragment,rctCoarse,rctFine,creationTimeCoarse,creationTimeFine,"
+POSTPR="${POSTPR}dvtScetCoarse,dvtScetFine,vcid,isPartial,apid,apidName,sequenceId,sequenceVersion,"
+POSTPR="${POSTPR}commandNumber,xmlVersion,totalParts,dvtSclkCoarse,dvtSclkFine,fullPath,fileName,ertCoarse,ertFine,"
+POSTPR="${POSTPR}groundStatus,sequenceCategory,sequenceNumber,version${PRODUCT_APPEND})"
+
+POSTS="' IGNORE INTO TABLE Session CHARACTER SET latin1 FIELDS TERMINATED BY ',' ESCAPED BY '\\\\'"
+POSTS="${POSTS} (sessionId,name,type,description,fullName,user,host,"
+POSTS="${POSTS}downlinkConnectionType,uplinkConnectionType,outputDirectory,fswDictionaryDir,"
+POSTS="${POSTS}sseDictionaryDir,sseVersion,fswVersion,venueType,testbedName,"
+POSTS="${POSTS}rawInputType,startTime,startTimeCoarse,startTimeFine,"
+POSTS="${POSTS}spacecraftId,downlinkStreamId,"
+POSTS="${POSTS}mpcsVersion,fswDownlinkHost,fswUplinkHost,fswUplinkPort,fswDownlinkPort,"
+POSTS="${POSTS}sseHost,sseUplinkPort,sseDownlinkPort,inputFile,hostId,sessionFragment,topic,"
+POSTS="${POSTS}outputDirectoryOverride,subtopic,dssId,vcid,fswDownlinkFlag,sseDownlinkFlag,"
+POSTS="${POSTS}uplinkFlag,databaseSessionId,databaseHost)"
+
+# MPCS-10827 - Export context configuration
+POSTCC="' IGNORE INTO TABLE ContextConfig CHARACTER SET latin1 FIELDS TERMINATED BY ',' ESCAPED BY '\\\\'"
+POSTCC="${POSTCC} (contextId,hostId,user,type,host,name,mpcsVersion)"
+
+POSTKV="' IGNORE INTO TABLE ContextConfigKeyValue CHARACTER SET latin1 FIELDS TERMINATED BY ',' ESCAPED BY '\\\\'"
+POSTKV="${POSTKV} (contextId,hostId,keyName,value)"
+
+POSTEVS="' IGNORE INTO TABLE SseEvr${TABLE_SUFFIX} CHARACTER SET latin1 FIELDS TERMINATED BY ',' ESCAPED BY '\\\\'"
+POSTEVS="${POSTEVS} (sessionId,hostId,sessionFragment,id,packetId,name,eventId,ertCoarse,ertFine,scetCoarse,scetFine,"
+POSTEVS="${POSTEVS}rctCoarse,rctFine,sclkCoarse,sclkFine,level,module,message)"
+
+POSTEVMS="' IGNORE INTO TABLE SseEvrMetadata CHARACTER SET latin1 FIELDS TERMINATED BY ',' ESCAPED BY '\\\\'"
+POSTEVMS="${POSTEVMS} (sessionId,hostId,sessionFragment,id,keyword,value)"
+
+POSTPS="' IGNORE INTO TABLE SsePacket${TABLE_SUFFIX} CHARACTER SET latin1 FIELDS TERMINATED BY ',' ESCAPED BY '\\\\'"
+POSTPS="${POSTPS} (sessionId,hostId,sessionFragment,id,rctCoarse,rctFine,scetCoarse,scetFine,ertCoarse,ertFine,"
+POSTPS="${POSTPS}sclkCoarse,sclkFine,apid,apidName,spsc,badReason,bodyLength,headerLength,trailerLength)"
+
+POSTPBS="' IGNORE INTO TABLE SsePacketBody CHARACTER SET latin1 FIELDS TERMINATED BY ',' ESCAPED BY '\\\\'"
+POSTPBS="${POSTPBS} (sessionId,hostId,sessionFragment,@body,header,trailer,id)"
+POSTPBS="${POSTPBS} SET body = COMPRESS(@body)"
+
+# MPCS-11780 - Export CFDP tables
+POSTCFDPFG="' IGNORE INTO TABLE CfdpFileGeneration CHARACTER SET latin1 FIELDS TERMINATED BY ',' ESCAPED BY '\\\\'"
+POSTCFDPFG="${POSTCFDPFG} (sessionId,hostId,sessionFragment,eventTimeCoarse,eventTimeFine,cfdpProcessorInstanceId,downlinkFileMetadataFileLocation,downlinkFileLocation,contextId,contextHostId)"
+
+POSTCFDPFUF="' IGNORE INTO TABLE CfdpFileUplinkFinished CHARACTER SET latin1 FIELDS TERMINATED BY ',' ESCAPED BY '\\\\'"
+POSTCFDPFUF="${POSTCFDPFUF} (sessionId,hostId,sessionFragment,eventTimeCoarse,eventTimeFine,cfdpProcessorInstanceId,uplinkFileMetadataFileLocation,uplinkFileLocation,contextId,contextHostId)"
+
+POSTCFDPI="' IGNORE INTO TABLE CfdpIndication CHARACTER SET latin1 FIELDS TERMINATED BY ',' ESCAPED BY '\\\\'"
+POSTCFDPI="${POSTCFDPI} (sessionId,hostId,sessionFragment,indicationTimeCoarse,indicationTimeFine,cfdpProcessorInstanceId,type,faultCondition,transactionDirection,sourceEntityId,transactionSequenceNumber,serviceClass,destinationEntityId,involvesFileTransfer,totalBytesSentOrReceived,triggeringType,pduId,pduHeaderVersion,pduHeaderType,pduHeaderDirection,pduHeaderTransmissionMode,pduHeaderCrcFlagPresent,pduHeaderDataFieldLength,pduHeaderEntityIdLength,pduHeaderTransactionSequenceNumberLength,pduHeaderSourceEntityId,pduHeaderTransactionSequenceNumber,pduHeaderDestinationEntityId,contextId,contextHostId)"
+
+POSTCFDPPR="' IGNORE INTO TABLE CfdpPduReceived CHARACTER SET latin1 FIELDS TERMINATED BY ',' ESCAPED BY '\\\\'"
+POSTCFDPPR="${POSTCFDPPR} (sessionId,hostId,sessionFragment,pduTimeCoarse,pduTimeFine,cfdpProcessorInstanceId,pduId,metadata,contextId,contextHostId)"
+
+POSTCFDPPS="' IGNORE INTO TABLE CfdpPduSent CHARACTER SET latin1 FIELDS TERMINATED BY ',' ESCAPED BY '\\\\'"
+POSTCFDPPS="${POSTCFDPPS} (sessionId,hostId,sessionFragment,pduTimeCoarse,pduTimeFine,cfdpProcessorInstanceId,pduId,metadata,contextId,contextHostId)"
+
+POSTCFDPRREC="' IGNORE INTO TABLE CfdpRequestReceived CHARACTER SET latin1 FIELDS TERMINATED BY ',' ESCAPED BY '\\\\'"
+POSTCFDPRREC="${POSTCFDPRREC} (sessionId,hostId,sessionFragment,eventTimeCoarse,eventTimeFine,cfdpProcessorInstanceId,requestId,requesterId,httpUser,httpHost,requestContent,contextId,contextHostId)"
+
+POSTCFDPRRES="' IGNORE INTO TABLE CfdpRequestResult CHARACTER SET latin1 FIELDS TERMINATED BY ',' ESCAPED BY '\\\\'"
+POSTCFDPRRES="${POSTCFDPRRES} (sessionId,hostId,sessionFragment,eventTimeCoarse,eventTimeFine,cfdpProcessorInstanceId,requestId,rejected,resultContent,contextId,contextHostId)"
+
+# Update is not LDI, just a file with SQL
+PREUPDATE="source "
+POSTUPDATE=""
+
+echolog "Started `date`"
+
+while true
+do
+    if test -e $RCPEXIT
+    then
+        # We must exit
+
+        echolog "Stopped `date`"
+        break
+    fi
+
+    # MPCS-12189 Optimize chill_pull_local script
+    # Builds an array of every LDI file in $DEST
+    FILES=`ls -c -1 --reverse $DEST 2>/dev/null`
+
+    if test "X$FILES" = "X"
+    then
+        # Error or no file available; wait and try again
+        sleep $SLEEP
+
+        continue
+    fi
+
+    for FILE in $FILES; do
+
+        DESTI=$DEST/$FILE
+
+        # Pass it to MySQL
+
+        CMD=""
+
+        if expr $FILE : "Host_" >/dev/null 2>&1
+        then
+            CMD=${PRE}${DESTI}${POSTH}
+
+        elif expr $FILE : "ChannelData_" >/dev/null 2>&1
+        then
+            CMD=${PRE}${DESTI}${POSTCHD}
+
+        elif expr $FILE : "ChannelAggregate" >/dev/null 2>&1
+        then
+            CMD=${PRE}${DESTI}${POSTCH}
+
+        elif expr $FILE : "Evr${TABLE_SUFFIX}_" >/dev/null 2>&1
+        then
+            CMD=${PRE}${DESTI}${POSTEV}
+
+        elif expr $FILE : "EvrMetadata_" >/dev/null 2>&1
+        then
+            CMD=${PRE}${DESTI}${POSTEVM}
+
+        elif expr $FILE : "HeaderChannelAggregate" >/dev/null 2>&1
+        then
+            CMD=${PRE}${DESTI}${POSTHCH}
+
+        elif expr $FILE : "MonitorChannelAggregate" >/dev/null 2>&1
+        then
+            CMD=${PRE}${DESTI}${POSTMCH}
+
+        elif expr $FILE : "SseChannelAggregate" >/dev/null 2>&1
+        then
+            CMD=${PRE}${DESTI}${POSTSCH}
+
+        elif expr $FILE : "Packet${TABLE_SUFFIX}_" >/dev/null 2>&1
+        then
+            CMD=${PRE}${DESTI}${POSTP}
+
+        elif expr $FILE : "PacketBody_" >/dev/null 2>&1
+        then
+            CMD=${PRE}${DESTI}${POSTPB}
+
+        elif expr $FILE : "Product${TABLE_SUFFIX}_" >/dev/null 2>&1
+        then
+            CMD=${PRE}${DESTI}${POSTPR}
+
+        elif expr $FILE : "SseEvr${TABLE_SUFFIX}_" >/dev/null 2>&1
+        then
+            CMD=${PRE}${DESTI}${POSTEVS}
+
+        elif expr $FILE : "SseEvrMetadata_" >/dev/null 2>&1
+        then
+            CMD=${PRE}${DESTI}${POSTEVMS}
+
+        elif expr $FILE : "SsePacket${TABLE_SUFFIX}_" >/dev/null 2>&1
+        then
+            CMD=${PRE}${DESTI}${POSTPS}
+
+        elif expr $FILE : "SsePacketBody_" >/dev/null 2>&1
+        then
+            CMD=${PRE}${DESTI}${POSTPBS}
+
+        elif expr $FILE : "Frame_" >/dev/null 2>&1
+        then
+            CMD=${PRE}${DESTI}${POSTF}
+
+        elif expr $FILE : "FrameBody_" >/dev/null 2>&1
+        then
+            CMD=${PRE}${DESTI}${POSTFB}
+
+        elif expr $FILE : "Session_" >/dev/null 2>&1
+        then
+            CMD=${PRE}${DESTI}${POSTS}
+
+        elif expr $FILE : "EndSession_" >/dev/null 2>&1
+        then
+            CMD=${PRE}${DESTI}${POSTES}
+
+        elif expr $FILE : "ContextConfig_" >/dev/null 2>&1
+        then
+            CMD=${PRE}${DESTI}${POSTCC}
+
+        elif expr $FILE : "ContextConfigKeyValue_" >/dev/null 2>&1
+        then
+            CMD=${PRE}${DESTI}${POSTKV}
+
+        elif expr $FILE : "CommandMessage_" >/dev/null 2>&1
+        then
+            CMD=${PRE}${DESTI}${POSTCM}
+
+        elif expr $FILE : "CommandStatus_" >/dev/null 2>&1
+        then
+            CMD=${PRE}${DESTI}${POSTCS}
+
+        elif expr $FILE : "LogMessage_" >/dev/null 2>&1
+        then
+            CMD=${PRE}${DESTI}${POSTL}
+
+        elif expr $FILE : "CfdpFileGeneration_" >/dev/null 2>&1
+        then
+            CMD=${PRE}${DESTI}${POSTCFDPFG}
+
+        elif expr $FILE : "CfdpFileUplinkFinished_" >/dev/null 2>&1
+        then
+            CMD=${PRE}${DESTI}${POSTCFDPFUF}
+
+
+        elif expr $FILE : "CfdpIndication_" >/dev/null 2>&1
+        then
+            CMD=${PRE}${DESTI}${POSTCFDPI}
+
+
+        elif expr $FILE : "CfdpPduReceived_" >/dev/null 2>&1
+        then
+            CMD=${PRE}${DESTI}${POSTCFDPPR}
+
+
+        elif expr $FILE : "CfdpPduSent_" >/dev/null 2>&1
+        then
+            CMD=${PRE}${DESTI}${POSTCFDPPS}
+
+
+        elif expr $FILE : "CfdpRequestReceived_" >/dev/null 2>&1
+        then
+            CMD=${PRE}${DESTI}${POSTCFDPRREC}
+
+
+        elif expr $FILE : "CfdpRequestResult_" >/dev/null 2>&1
+        then
+            CMD=${PRE}${DESTI}${POSTCFDPRRES}
+
+        elif expr $FILE : "Update_" >/dev/null 2>&1
+        then
+            CMD=${PREUPDATE}${DESTI}${POSTUPDATE}
+        fi
+
+        if test "X$CMD" != "X"
+        then
+            echolog "Inserting $FILE at $DESTI}"
+
+            PREFIX=`expr substr ${FILE} 1 6`
+
+            if test "X$TESTMODE" != "X"
+            then
+                # Special for testing on a single host. This code must be looked
+                # at carefully and mdified for your specific situation. Watch the
+                # host name (mushroom) and the host id (65536) and the new host id
+                # (65539). You probably should not be using a host id like 0 or 1
+                # because it might give you false replacements.
+                #
+                # This is a horrible kludge but it is very useful because it lets
+                # you test with a single database instance. That, and you can then
+                # compare the counts, etc.; you cannot do that easily with two
+                # database instances.
+
+                rm -f $$.txt
+
+                sed -e "s/mushroom/remotehost/g" ${DESTI} >$$.txt
+
+                cp $$.txt ${DESTI}
+
+                if test "X$PREFIX" = "XSessio" -o "X$PREFIX" = "XEndSes"
+                then
+                    sed -e "s/,65536,/,65539,/g" ${DESTI} >$$.txt
+                else
+                    # Replace just the second field
+                    sed -e "s/^\([^,][^,]*\),65536,/\1,65539,/g" ${DESTI} >$$.txt
+                fi
+
+                cp $$.txt ${DESTI}
+
+                # This is for Host
+                sed -e "s/^65536,/65539,/g" ${DESTI} >$$.txt
+
+                cp $$.txt ${DESTI}
+
+                rm -f $$.txt
+            fi
+
+            # MPCS-8384 - Specify protocol since we are using TCP port
+
+            mysql \
+                $CHILL_MYSQL_OPTIONS \
+                --local-infile=1 \
+                --user="$DBWHO" \
+                --password="$DBPASSWORD" \
+                --port="$DBPORT" \
+                --protocol=TCP \
+                --host="$DBHOST" \
+                --database="$DB" \
+                --execute="$CMD" >>$LOG 2>&1
+
+            STATUS=$?
+
+            if test $STATUS -ne 0
+            then
+                echolog "Db rejected $CMD $STATUS"
+                exit 1
+            else
+                echolog "Db accepted $FILE"
+                echolog
+
+                # Update product paths after a product or session has been loaded
+                # into the DB
+
+                if expr $FILE : "Product${TABLE_SUFFIX}_" + $FILE : "Session_" >/dev/null 2>&1
+                then
+                    if test $UPDATE_PRODUCT = "true"
+                    then
+                        END_TIME=`date +%Y-%jT%H:%M:%S`
+
+                        PRODUCT_CMD="$CHILL_GDS/bin/admin/chill_update_paths"
+                        PRODUCT_CMD="${PRODUCT_CMD} --autoRun"
+                        PRODUCT_CMD="${PRODUCT_CMD} --productAlso"
+                        PRODUCT_CMD="${PRODUCT_CMD} --toSessionPath $PRODUCT_NEW_DIR"
+                        PRODUCT_CMD="${PRODUCT_CMD} --fromSessionPath $PRODUCT_OLD_DIR"
+                        PRODUCT_CMD="${PRODUCT_CMD} --databaseHost $DBHOST"
+                        PRODUCT_CMD="${PRODUCT_CMD} --databasePort $DBPORT"
+                        PRODUCT_CMD="${PRODUCT_CMD} --dbUser $DBWHO"
+                        PRODUCT_CMD="${PRODUCT_CMD} --fromTestStart $START_TIME"
+
+                        echolog "Update paths: ${PRODUCT_CMD}"
+
+                        # Do not log database password
+                        $PRODUCT_CMD --dbPwd $PRODUCT_PASSWORD >>$LOG 2>&1
+
+                        STATUS=$?
+
+                        if test $STATUS -ne 0
+                        then
+                            echolog "ERROR: chill_update_paths failed: $STATUS"
+                        else
+                            echolog "chill_update_paths successful for range $START_TIME to ${END_TIME}"
+                        fi
+                    fi
+                fi
+            fi
+        else
+            echolog "Db ignored $DESTI COMMAND $CMD"
+            exit 1
+        fi
+
+        rm --force $DESTI >>$LOG 2>&1
+
+        if test $? -ne 0
+        then
+            echolog "ERROR: $DESTI could not be deleted"
+        else
+            echolog "$DESTI deleted"
+        fi
+
+        echolog ""
+    done
+done

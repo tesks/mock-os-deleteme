@@ -1,0 +1,101 @@
+#set ( $shellName = "sh" )
+#shell( $shellName )
+
+# AMPCS user script to compile Java algorithms, such as derivation
+# and custom EU calculation classes. This script replaces the deprecated 
+# java_compile script. 
+#
+# Any CLASSPATH currently set in the environment will be inherited,
+# with AMPCS classes placed BEFORE any current CLASSPATH entries.
+# This allows mission-defined libraries to be referenced by the Java to
+# be compiled, but assures that current AMPCS classes will be found first.
+#
+# The value of any existing JAVA_HOME environment variable will be used.
+# If it does not exist, the default AMPCS Java location will be used.
+# Note that, if defined, JAVA_HOME must point to a JDK installation, not
+# a JRE installation.
+#
+# The CHILL_GDS environment variable must be set to point to an AMPCS
+# installation for the mission the Java code applies to.
+# 
+# Command Line Arguments:
+#     $1 - Destination directory for java class files. Will be created
+#          if non-existing
+#     $2 thru $N - Java source files to compile 
+# Returns:
+#     0 if successful
+#     1 if compilation fails
+
+# Check existence of CHILL_GDS variable
+if [ "$CHILL_GDS" = "" ] ; then
+	echo "Your CHILL_GDS environment variable is not set."
+    exit 1	
+fi
+
+#Java()
+
+if [ ! -f ${JAVA_HOME}/bin/javac ]; then
+    echo "${JAVA_HOME}/bin does not contain a Java compiler (javac). JRE installation rather than JDK?"
+    exit 1
+fi
+
+# Check for help request or too few arguments 
+if [ "$1" = "-h" ] || [ $# -lt 2 ]  ; then
+    echo "chill_java_compile <destination-dir> <java-source-file> [ <java-source-file> <java-source-file>...]" 1>&2
+    echo "     or to compile a whole tree:" 1>&2
+    echo "chill_java_compile <destination-root-dir> <java-source-root-dir>" 1>&2
+    exit 1
+fi
+
+DEST=$1
+
+# Make the destination directory if it doesn't exist, including parent directories
+if [ ! -d $DEST ]; then
+    mkdir -p $DEST
+fi
+
+# Construct the Java classpath. User class path is retained.
+#
+# DEVELOPERS: Do not add anything to this classpath without permission 
+# from the AMPCS CogE.
+#
+# Account for version identifiers on jars
+# Restricted dictionary access to interface jars
+#
+for i in $CHILL_GDS/lib/dictionary_api*.jar \
+$CHILL_GDS/lib/eha_external_api*.jar \
+$CHILL_GDS/lib/shared_lib*.jar
+do
+    CLASSPATH=${i}:${CLASSPATH}
+done
+
+# Issue the compilation command                                                                                                                           
+if [ $# -eq 2 ]; then
+   if [[ $2 =~ \.java$ ]]; then
+       echo "Compiling java file $2"
+       shift
+       echo "$JAVA_HOME/bin/javac -classpath $CLASSPATH -d $DEST -g $@"
+       $JAVA_HOME/bin/javac -classpath $CLASSPATH -d $DEST -g "$@"
+   else
+       echo "Compiling all files in tree $2. Searching for java files..."
+       FILE=$TMPDIR/javafiles.$$
+       find $2 -name "*.java" -print > $FILE
+       echo "$JAVA_HOME/bin/javac -classpath $CLASSPATH -d $DEST -g @$FILE"
+       $JAVA_HOME/bin/javac -classpath $CLASSPATH -d $DEST -g @$FILE
+   fi
+else
+    echo "Compiling supplied Java files"
+    shift
+    echo "$JAVA_HOME/bin/javac -classpath $CLASSPATH -d $DEST -g $@"
+    $JAVA_HOME/bin/javac -classpath $CLASSPATH -d $DEST -g "$@"
+fi
+
+if [ $? = 0 ]; then
+   echo ""
+   echo "Compilation succeeded"
+   echo "Output class files have been written to $DEST"
+   exit 0
+else
+   echo "Compilation failed"
+   exit 1
+fi

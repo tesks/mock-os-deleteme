@@ -1,0 +1,14 @@
+**/.DS_Store
+**/.pydevproject 
+**/.pmd 
+**/.settings/
+**/tar/
+**/build/
+**/target/
+**/dist/
+**/rpm/
+**/ccollab.log
+**/velocity.log
+**/velocity.log.*
+**/.project
+**/.classpath

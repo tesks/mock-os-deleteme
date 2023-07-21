@@ -1,0 +1,28 @@
+#set ($bodyText="")
+#set($ch1='Session Id,')
+#set($ch2='Session Host,')
+#set($ch3='Event Time,')
+#set($ch4='Severity,')
+#set($ch5='Type,')
+#set($ch6='Message')
+#set($comma=",")
+#set ($columnHeaders="$ch1$ch2$ch3$ch4$ch5$ch6")
+#set($b1="$comma")
+#set($b2="$comma")
+#set($b3="$comma")
+#set($b4="$comma")
+#set($b5="$comma")
+#set($b6="$comma")
+#if($testSessionId)#set($b1="$testSessionId")#end
+#if($sessionHost)#set($b2="$comma$sessionHost")#end
+#if($eventTime)#set($b3="$comma$eventTime")#end
+#if($severity)#set($b4="$comma$severity")#end
+#if($type)#set($b5="$comma$type")#end
+#if($message)#set($b6="$comma$message")#end
+#set($bodyText="$b1$b2$b3$b4$b5$b6")
+<LogMessage>
+   <Table>
+        <![CDATA[$columnHeaders]]>
+        <![CDATA[$bodyText]]>
+   </Table>
+</LogMessage>

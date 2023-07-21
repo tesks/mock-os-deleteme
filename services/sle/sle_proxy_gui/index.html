@@ -1,0 +1,1371 @@
+<html>
+<head>
+<link rel="stylesheet" href="vendors/Semantic-UI/semantic.min.css">
+<link rel="stylesheet" href="vendors/DataTables/datatables.min.css" />
+<link rel="stylesheet" href="resources/css/app.css">
+<script src="vendors/JQuery/jquery-3.1.1.js"></script>
+<script src="vendors/Semantic-UI/semantic.min.js"></script>
+
+<script src="vendors/Moment/moment.min.js"></script>
+<script src="vendors/DataTables/datatables.min.js"></script>
+<script src="app-config.js"></script>
+<script src="resources/js/config/config.js"></script>
+<script src="resources/js/server-communication/rest-api/data-service.js"></script>
+
+<script src="resources/js/shared/return-type.js"></script>
+<script src="resources/js/shared/shared-profile-property.js"></script>
+<script src="resources/js/shared/return-profile-property.js"></script>
+<script src="resources/js/shared/provider-state-action.js"></script>
+
+<script src="resources/js/error-modal/error-modal.js"></script>
+
+<script src="resources/js/event-bus/event-topic.js"></script>
+<script src="resources/js/event-bus/event-bus.js"></script>
+
+<script src="resources/js/monitor-and-control/state-object-property.js"></script>
+<script src="resources/js/monitor-and-control/sle-state-property.js"></script>
+
+<script src="resources/js/monitor-and-control/config/ampcs/ampcs-config-property.js"></script>
+<script src="resources/js/monitor-and-control/config/ampcs/ampcs-config.js"></script>
+<script src="resources/js/monitor-and-control/config/ampcs/ampcs-config-modal.js"></script>
+<script src="resources/js/monitor-and-control/config/sle-provider/provider-config.js"></script>
+
+<script src="resources/js/monitor-and-control/state/sle-provider/provider-state.js"></script>
+<script src="resources/js/monitor-and-control/state/sle-provider/return-provider-state-controller.js"></script>
+<script src="resources/js/monitor-and-control/state/sle-provider/forward-provider-state-controller.js"></script>
+<script src="resources/js/monitor-and-control/state/sle-provider/mod-index-bitrate-view-controller.js"></script>
+
+<script src="resources/js/monitor-and-control/state/ampcs/chill-state-property.js"></script>
+<script src="resources/js/monitor-and-control/state/ampcs/downlink-state-controller.js"></script>
+<script src="resources/js/monitor-and-control/state/ampcs/uplink-state-controller.js"></script>
+
+
+<script src="resources/js/manage-providers/summary/providers.js"></script>
+<script src="resources/js/manage-providers/modal/profile.js"></script>
+<script src="resources/js/monitor-and-control/message/message-view-controller.js"></script>
+
+<script src="resources/js/live-utc-time.js"></script>
+
+<script src="resources/js/dimmer/loading-dimmer.js"></script>
+<script src="resources/js/util/util.js"></script>
+
+<script src="resources/js/server-communication/websocket/websocket-message-type.js"></script>
+<script src="resources/js/server-communication/websocket/websocket-message-handler.js"></script>
+<script src="resources/js/server-communication/server-connection-indicator.js"></script>
+<script src="resources/js/dimmer/server-communication-dimmer.js"></script>
+<script src="resources/js/main-app-controller.js"></script>
+</head>
+
+<body>
+
+  <!-- Top Menu / Navigation Bar -->
+  <div id="navbar" class="ui top fixed pointing menu">
+    <div class="header item">Chill SLE Proxy</div>
+    <a class="active item" data-tab="monitor-and-control"> Monitor
+      and Control </a> <a class="item" data-tab="manage-providers">
+      Manage Service Providers </a>
+  </div>
+  
+  <!-- Monitor and Control tab -->
+  <div class="ui active tab" data-tab="monitor-and-control">
+    
+    <!-- Monitor and Control UI Segment -->
+    <div id="content" class="ui segment" style="margin-top: 55px;">
+    
+      <!-- Configuration Accordion -->
+      <div id="config-accordion" class="ui styled fluid accordion">
+        
+        <!-- Configuration Accordion Title -->
+        <div id="config-accortion-title" class="title">
+          <i class="dropdown icon"></i> Configuration
+        </div>
+        
+        <!-- Configuration Accordion Content -->
+        <div class="content">
+        
+          <!-- Configuration Accordion Content Grid -->
+          <div class="ui grid" style="padding: 0em;">
+          
+            <!-- SLE Service Providers Configuration Column -->
+            <div class="eight wide column ">
+            
+              <!-- SLE Service Providers Configuration Segment -->
+              <div class="ui segment">
+              
+                <!-- SLE Service Providers Horizontal Divider -->
+                <div class="ui horizontal divider">Service
+                  Providers</div>
+                <br />
+                
+                <!-- SLE Service Providers Configuration Internal Grid -->
+                <div class="ui sixteen column grid">
+                
+                  <!-- Title Row -->  
+                  <div class="row">
+                    <div class="four wide column"></div>
+                    <div class="six wide column">
+                      <h4 class="ui header">Return</h4>
+                    </div>
+                    <div class="six wide column">
+                      <h4 class="ui header">Forward</h4>
+                    </div>
+                  </div>
+                  <!-- End Title Row -->
+                  
+                  <!-- Profile Name Row --> 
+                  <div class="row">
+                    <div class="four wide column">
+                      <div class="ui fluid small label right pointing">
+                        <h5 class="ui header right aligned">Profile
+                          Name:</h5>
+                      </div>
+                    </div>
+                    <div class="six wide column">
+                      <div id="return-provider-dropdown"
+                        class="ui selection search compact fluid dropdown"
+                        style="padding-top: 6px; padding-bottom: 6px">
+                        <input id="return-provider-dropdown-inner-input" type="hidden" name="provider"> <i
+                          class="dropdown icon"></i>
+                        <div class="default text">Return Provider</div>
+                        <div class="menu"></div>
+                      </div>
+                    </div>
+                    <div class="six wide column">
+                      <div id="forward-provider-dropdown"
+                        class="ui selection search compact fluid dropdown"
+                        style="padding-top: 6px; padding-bottom: 6px">
+                        <input id="forward-provider-dropdown-inner-input" type="hidden" name="provider"> <i
+                          class="dropdown icon"></i>
+                        <div class="default text">Forward Provider</div>
+                        <div class="menu"></div>
+                      </div>
+                    </div>
+                  </div>
+                  <!-- End Profile Name Row -->
+                  
+                  <!-- Host Row --> 
+                  <div class="row">
+                    <div class="four wide column">
+                      <div class="ui fluid small label right pointing">
+                        <h5 class="ui header right aligned">Hosts:</h5>
+                      </div>
+                    </div>
+                    <div class="six wide column">
+                      <div class="ui fluid small input">
+                        <!--padding-top:6px;padding-bottom:6px-->
+                        <input id="return-provider-hosts" type="text"
+                          readonly="" placeholder="Return Hosts"
+                          style="pointer-events: none; padding-top: 6px; padding-bottom: 6px">
+                      </div>
+                    </div>
+                    <div class="six wide column">
+                      <div class="ui fluid small input">
+                        <input id="forward-provider-hosts" type="text"
+                          readonly="" placeholder="Forward Hosts"
+                          style="pointer-events: none; padding-top: 6px; padding-bottom: 6px">
+                      </div>
+                    </div>
+                  </div>
+                  <!-- End Host Row --> 
+                  
+                  <!-- Instance Id Row -->
+                  <div class="row">
+                    <div class="four wide column">
+                      <div class="ui fluid small label right pointing">
+                        <h5 class="ui header right aligned">Instance
+                          ID:</h5>
+                      </div>
+                    </div>
+                    <div class="six wide column">
+                      <div class="ui fluid small input">
+                        <input id="return-provider-instance-id"
+                          type="text" readonly=""
+                          placeholder="Instance ID"
+                          style="pointer-events: none; padding-top: 6px; padding-bottom: 6px">
+                      </div>
+                    </div>
+                    <div class="six wide column">
+                      <div class="ui fluid small input">
+                        <input id="forward-provider-instance-id"
+                          type="text" readonly=""
+                          placeholder="Instance ID"
+                          style="pointer-events: none; padding-top: 6px; padding-bottom: 6px">
+                      </div>
+                    </div>
+                  </div>
+                  <!-- End Instance Id Row --> 
+                  
+                  <!-- Provider Authentication Row --> 
+                  <div class="row">
+                    <div class="four wide column">
+                      <div class="ui fluid small label right pointing">
+                        <h5 class="ui header right aligned">Provider
+                          Auth Mode:</h5>
+                      </div>
+                    </div>
+                    <div class="six wide column">
+                      <div class="ui fluid small input">
+                        <!--padding-top:6px;padding-bottom:6px-->
+                        <input id="return-provider-auth-mode"
+                          type="text" readonly=""
+                          placeholder="Return Provider Auth Mode"
+                          style="pointer-events: none; padding-top: 6px; padding-bottom: 6px">
+                      </div>
+                    </div>
+                    <div class="six wide column">
+                      <div class="ui fluid small input">
+                        <input id="forward-provider-auth-mode"
+                          type="text" readonly=""
+                          placeholder="Forward Provider Auth Mode"
+                          style="pointer-events: none; padding-top: 6px; padding-bottom: 6px">
+                      </div>
+                    </div>
+                  </div>
+                  <!-- End Provider Authentication Row -->
+                  
+                  <!-- Provider Name Row -->
+                  <div class="row">
+                    <div class="four wide column">
+                      <div class="ui fluid small label right pointing">
+                        <h5 class="ui header right aligned">Provider
+                          Name:</h5>
+                      </div>
+                    </div>
+                    <div class="six wide column">
+                      <div class="ui fluid small input">
+                        <!--padding-top:6px;padding-bottom:6px-->
+                        <input id="return-provider-name" type="text"
+                          readonly="" placeholder="Return Provider Name"
+                          style="pointer-events: none; padding-top: 6px; padding-bottom: 6px">
+                      </div>
+                    </div>
+                    <div class="six wide column">
+                      <div class="ui fluid small input">
+                        <input id="forward-provider-name" type="text"
+                          readonly=""
+                          placeholder="Forward Provider Name"
+                          style="pointer-events: none; padding-top: 6px; padding-bottom: 6px">
+                      </div>
+                    </div>
+                  </div>
+                  <!-- End Provider Name Row -->
+                  
+                  <!-- User Authentication Mode Row -->
+                  <div class="row">
+                    <div class="four wide column">
+                      <div class="ui fluid small label right pointing">
+                        <h5 class="ui header right aligned">User
+                          Auth Mode:</h5>
+                      </div>
+                    </div>
+                    <div class="six wide column">
+                      <div class="ui fluid small input">
+                        <input id="return-provider-user-auth-mode"
+                          type="text" readonly=""
+                          placeholder="Authentication Mode"
+                          style="pointer-events: none; padding-top: 6px; padding-bottom: 6px">
+                      </div>
+                    </div>
+                    <div class="six wide column">
+                      <div class="ui fluid small input">
+                        <input id="forward-provider-user-auth-mode"
+                          type="text" readonly=""
+                          placeholder="Authentication Mode"
+                          style="pointer-events: none; padding-top: 6px; padding-bottom: 6px">
+                      </div>
+                    </div>
+                  </div>
+                  <!-- End User Authentication Mode Row -->
+                  
+                  <!-- User Name Row -->
+                  <div class="row">
+                    <div class="four wide column">
+                      <div class="ui fluid small label right pointing">
+                        <h5 class="ui header right aligned">User
+                          Name:</h5>
+                      </div>
+                    </div>
+                    <div class="six wide column">
+                      <div class="ui fluid small input">
+                        <input id="return-provider-username" type="text"
+                          readonly="" placeholder="Username"
+                          style="pointer-events: none; padding-top: 6px; padding-bottom: 6px">
+                      </div>
+                    </div>
+                    <div class="six wide column">
+                      <div class="ui fluid small input">
+                        <input id="forward-provider-username"
+                          type="text" readonly="" placeholder="Username"
+                          style="pointer-events: none; padding-top: 6px; padding-bottom: 6px">
+                      </div>
+                    </div>
+                  </div>
+                  <!-- End User Name Row -->
+  
+                  <!-- Return Type Row -->
+                  <div class="row">
+                    <div class="four wide column">
+                      <div class="ui fluid small label right pointing">
+                        <h5 class="ui header right aligned">Return
+                          Type:</h5>
+                      </div>
+                    </div>
+                    <div class="six wide column">
+                      <div class="ui fluid small input">
+                        <input id="return-provider-return-type"
+                          type="text" readonly=""
+                          placeholder="Return Type"
+                          style="pointer-events: none; padding-top: 6px; padding-bottom: 6px">
+                      </div>
+                    </div>
+                  </div>
+                  <!-- End Return Type Row -->
+                  
+                  <!-- Start Time Row -->
+                  <div class="row">
+                    <div class="four wide column">
+                      <div class="ui fluid small label right pointing">
+                        <h5 class="ui header right aligned">Start
+                          Time:</h5>
+                      </div>
+                    </div>
+                    <div class="six wide column">
+                      <div class="ui fluid small input">
+                        <input id="return-provider-start-time"
+                          type="text" readonly=""
+                          placeholder="Start Time"
+                          style="pointer-events: none; padding-top: 6px; padding-bottom: 6px">
+                      </div>
+                    </div>
+                  </div>
+                  <!-- End Start Time Row -->
+                  
+                  <!-- Stop Time Row -->
+                  <div class="row">
+                    <div class="four wide column">
+                      <div class="ui fluid small label right pointing">
+                        <h5 class="ui header right aligned">Stop
+                          Time:</h5>
+                      </div>
+                    </div>
+                    <div class="six wide column">
+                      <div class="ui fluid small input">
+                        <input id="return-provider-stop-time"
+                          type="text" readonly=""
+                          placeholder="Stop Time"
+                          style="pointer-events: none; padding-top: 6px; padding-bottom: 6px">
+                      </div>
+                    </div>
+                  </div>
+                  <!-- End Stop Time Row -->
+                  
+                  <!-- Frame Quality Row -->
+                  <div class="row" name="return-all-config-field">
+                    <div class="four wide column">
+                      <div class="ui fluid small label right pointing">
+                        <h5 class="ui header right aligned">Frame
+                          Quality:</h5>
+                      </div>
+                    </div>
+                    <div class="six wide column">
+                      <div class="ui fluid small input">
+                        <input id="return-provider-frame-quality"
+                          type="text" readonly=""
+                          placeholder="Frame Quality"
+                          style="pointer-events: none; padding-top: 6px; padding-bottom: 6px">
+                      </div>
+                    </div>
+                  </div>
+                  <!-- End Frame Quality Row -->
+                  
+                  <!-- Frame Version Row -->
+                  <div class="row" name="return-channel-config-field">
+                    <div class="four wide column">
+                      <div class="ui fluid small label right pointing">
+                        <h5 class="ui header right aligned">Frame
+                          Version:</h5>
+                      </div>
+                    </div>
+                    <div class="six wide column">
+                      <div class="ui fluid small input">
+                        <input id="return-provider-frame-version"
+                          type="text" readonly=""
+                          placeholder="Frame Version"
+                          style="pointer-events: none; padding-top: 6px; padding-bottom: 6px">
+                      </div>
+                    </div>
+                  </div>
+                  <!-- End Frame Version Row -->
+                  
+                  <!-- Spacecraft Id Row -->
+                  <div class="row" name="return-channel-config-field">
+                    <div class="four wide column">
+                      <div class="ui fluid small label right pointing">
+                        <h5 class="ui header right aligned">Spacecraft
+                          ID:</h5>
+                      </div>
+                    </div>
+                    <div class="six wide column">
+                      <div class="ui fluid small input">
+                        <input id="return-provider-sc-id" type="text"
+                          readonly="" placeholder="Spacecraft ID"
+                          style="pointer-events: none; padding-top: 6px; padding-bottom: 6px">
+                      </div>
+                    </div>
+                  </div>
+                  <!-- End Spacecraft Id Row -->
+                  
+                  <!-- Virtual Channel Id Row -->
+                  <div class="row" name="return-channel-config-field">
+                    <div class="four wide column">
+                      <div class="ui fluid small label right pointing">
+                        <h5 class="ui header right aligned">Virtual
+                          Channel ID:</h5>
+                      </div>
+                    </div>
+                    <div class="six wide column">
+                      <div class="ui fluid small input">
+                        <input id="return-provider-vc-id" type="text"
+                          readonly="" placeholder="Virtual Channel ID"
+                          style="pointer-events: none; padding-top: 6px; padding-bottom: 6px">
+                      </div>
+                    </div>
+                  </div>
+                  <!-- End Virtual Channel Id Row -->
+                </div>
+                <!-- End SLE Service Providers Configuration Internal Grid -->
+              </div>
+              <!-- End SLE Service Providers Configuration Segment -->
+            </div>
+            <!-- End SLE Service Providers Configuration Column -->
+
+            <!-- AMPCS Configuration Column -->
+            <div class="eight wide column ">
+              
+              <!-- AMPCS Configuration Segment -->
+              <div class="ui segment">
+                <div class="ui horizontal divider">AMPCS</div>
+                <br />
+                
+                <!-- AMPCS Configuration grid -->
+                <div class="ui sixteen column grid">
+                
+                  <!-- Header row -->
+                  <div class="row">
+                    <div class="four wide column"></div>
+                    <div class="six wide column">
+                      <h4 class="ui header">Downlink</h4>
+                    </div>
+                    <div class="six wide column">
+                      <h4 class="ui header">Uplink</h4>
+                    </div>
+                  </div>
+                  <!-- End Header row -->
+                  
+                  <!-- Host row -->
+                  <div class="row">
+                    <div class="four wide column">
+                      <div class="ui fluid small label right pointing">
+                        <h4 class="ui header right aligned">Host:</h4>
+                      </div>
+                    </div>
+                    <div class="six wide column">
+                      <div class="ui fluid small input">
+                        <input id="downlink-host" type="text"
+                          readonly="" placeholder="Downlink Host"
+                          style="pointer-events: none; padding-top: 6px; padding-bottom: 6px">
+                      </div>
+                    </div>
+                  </div>
+                  <!-- End Host row -->
+                  
+                  <!-- Port row -->
+                  <div class="row">
+                    <div class="four wide column">
+                      <div class="ui fluid small label right pointing">
+                        <h4 class="ui header right aligned">Port:</h4>
+                      </div>
+                    </div>
+                    <div class="six wide column">
+                      <div class="ui fluid small input">
+                        <input id="downlink-port" type="text"
+                          readonly="" placeholder="Downlink port"
+                          style="pointer-events: none; padding-top: 6px; padding-bottom: 6px">
+                      </div>
+                    </div>
+                    <div class="six wide column">
+                      <div class="ui fluid small input">
+                        <input id="uplink-port" type="text" readonly=""
+                          placeholder="Uplink port"
+                          style="pointer-events: none; padding-top: 6px; padding-bottom: 6px">
+                      </div>
+                    </div>
+                  </div>
+                  <!-- End Port row -->
+                  
+                  <div class="row">
+                    <div class="four wide column"></div>
+                    <div class="six wide column">
+                      <button id="edit-downlink-config-button"
+                        class="fluid ui blue small button">Edit
+                        Downlink Config</button>
+                    </div>
+                    <div class="six wide column"></div>
+                  </div>
+
+                </div>
+                <!-- End AMPCS Configuration grid -->
+              
+              </div>
+              <!-- End AMPCS Configuration Segment -->
+           
+            </div>
+            <!-- End AMPCS Configuration Column -->
+          </div>
+          <!-- End Configuration Accordion Content Grid -->
+        </div>
+        <!-- End Configuration Accordion Content -->
+      </div>
+      <!-- End Configuration Accordion -->
+      </br>
+      
+      <!-- State Accordion -->
+      <div id="state-accordion" class="ui styled fluid accordion">
+        <div class="title">
+          <i class="dropdown icon"></i> State
+        </div>
+        
+        <!-- State content -->
+        <div class="content">
+        
+          <!-- State column -->
+          <div class="sixteen wide column ">
+          
+            <!-- State table -->
+            <table class="ui very compact collapsing definition table">
+              <thead>
+                <tr>
+                  <th class="two wide"></th>
+                  <th class="three wide"><h4 class="ui header">Return
+                      Provider</h4></th>
+                  <th class="three wide"><h4 class="ui header">Forward
+                      Provider</h4></th>
+                  <th class="three wide"><h4 class="ui header">AMPCS
+                      Downlink</h4></th>
+                  <th class="three wide"><h4 class="ui header">AMPCS
+                      Uplink</h4></th>
+                </tr>
+              </thead>
+              <tbody>
+                <!-- Current State row -->
+                <tr>
+                  <td class="right aligned">Current State:</td>
+                  <td style="padding: 2px 2px 2px 2px">
+                    <div id="return-provider-state-label"
+                      class="ui fluid medium label">
+                      <h4 id="return-provider-state-label-text"
+                        class="ui header aligned">Unbound</h4>
+                    </div>
+                  </td>
+                  <td style="padding: 2px 2px 2px 2px">
+                    <div id="forward-provider-state-label"
+                      class="ui fluid medium label">
+                      <h4 id="forward-provider-state-label-text"
+                        class="ui header aligned">Unbound</h4>
+                    </div>
+                  </td>
+                  <td style="padding: 2px 2px 2px 2px">
+                    <div id="chill-down-state-label"
+                      class="ui fluid medium label">
+                      <h4 id="chill-down-state-label-text"
+                        class="ui header aligned">Disconnected</h4>
+                    </div>
+                  </td>
+                  <td style="padding: 2px 2px 2px 2px">
+                    <div id="chill-up-state-label"
+                      class="ui fluid medium green label">
+                      <h4 id="chill-up-state-label-text"
+                        class="ui header aligned">Enabled</h4>
+                    </div>
+                  </td>
+                </tr>
+                <!-- End Current State row -->
+                
+                <!-- State Change row -->
+                <tr>
+                  <td class="right aligned">State Change Time:</td>
+                  <td style="padding: 2px 2px 2px 2px">
+                    <div class="ui fluid medium label">
+                      <p id="return-provider-state-time"></p>
+                    </div>
+                  </td>
+                  <td style="padding: 2px 2px 2px 2px">
+                    <div class="ui fluid medium label">
+                      <p id="forward-provider-state-time" class=""></p>
+                    </div>
+                  </td>
+                  <td style="padding: 2px 2px 2px 2px">
+                    <div class="ui fluid medium label">
+                      <p id="chill-down-state-time" class=""></p>
+                    </div>
+                  </td>
+                  <td style="padding: 2px 2px 2px 2px">
+                    <div class="ui fluid medium label">
+                      <p id="chill-up-state-time" class=""></p>
+                    </div>
+                  </td>
+                </tr>
+                <!-- End State Change row -->
+                
+                <!-- Last Data Time row -->
+                <tr>
+                  <td class="right aligned">Last Data Time:</td>
+                  <td style="padding: 2px 2px 2px 2px">
+                    <div class="ui fluid medium label">
+                      <p id="return-provider-last-message-time" class=""></p>
+                    </div>
+                  </td>
+                  <td style="padding: 2px 2px 2px 2px">
+                    <div class="ui fluid medium label">
+                      <p id="forward-provider-last-message-time"
+                        class=""></p>
+                    </div>
+                  </td>
+                  <td style="padding: 2px 2px 2px 2px">
+                    <div class="ui fluid medium label">
+                      <p id="chill-down-last-message-time" class=""></p>
+                    </div>
+                  </td>
+                  <td style="padding: 2px 2px 2px 2px">
+                    <div class="ui fluid medium label">
+                      <p id="chill-up-last-message-time" class=""></p>
+                    </div>
+                  </td>
+                </tr>
+                <!-- End Last Data Time row -->
+                
+                <!-- Data Count row -->
+                <tr>
+                  <td class="right aligned">Data Count:</td>
+                  <td style="padding: 2px 2px 2px 2px">
+                    <div class="ui fluid medium label">
+                      <p id="return-provider-data-message-count"
+                        class=""></p>
+                    </div>
+                  </td>
+                  <td style="padding: 2px 2px 2px 2px">
+                    <div class="ui fluid medium label">
+                      <p id="forward-provider-data-message-count"
+                        class=""></p>
+                    </div>
+                  </td>
+                  <td style="padding: 2px 2px 2px 2px">
+                    <div class="ui fluid medium label">
+                      <p id="chill-down-data-message-count" class=""></p>
+                    </div>
+                  </td>
+                  <td style="padding: 2px 2px 2px 2px">
+                    <div class="ui fluid medium label">
+                      <p id="chill-up-data-message-count" class=""></p>
+                    </div>
+                  </td>
+                </tr>
+                <!-- End Data Count row -->
+                
+                <!-- Connection Number row -->
+                <tr>
+                  <td class="right aligned">Connection Number:</td>
+                  <td style="padding: 2px 2px 2px 2px">
+                    <div class="ui fluid medium label">
+                      <p id="return-provider-connection-number"></p>
+                    </div>
+                  </td>
+                  <td style="padding: 2px 2px 2px 2px">
+                    <div class="ui fluid medium label">
+                      <p id="forward-provider-connection-number"
+                        class=""></p>
+                    </div>
+                  </td>
+                  <td style="padding: 2px 2px 2px 2px">
+                  </td>
+                  <td style="padding: 2px 2px 2px 2px">
+                  </td>
+                </tr>
+                <!-- End Connection Number row -->
+
+                <!-- Delivery Mode row -->
+                <tr>
+                  <td class="right aligned">Delivery Mode:</td>
+                  <td style="padding: 2px 2px 2px 2px">
+                    <div class="ui fluid medium label">
+                      <p id="return-provider-delivery-mode"></p>
+                    </div>
+                  </td>
+                  <td style="padding: 2px 2px 2px 2px">
+                    <div class="ui fluid medium label">
+                      <p id="forward-provider-delivery-mode"
+                        class=""></p>
+                    </div>
+                  </td>
+                  <td style="padding: 2px 2px 2px 2px">
+                  </td>
+                  <td style="padding: 2px 2px 2px 2px">
+                  </td>
+                </tr>
+                <!-- End Delivery Mode row -->
+                
+                <!-- Mod Index and Bitrate sub-table row -->
+                <tr>
+                  <td></td>
+                  <td></td>
+                  <td class="center aligned">
+                    <div id="mod-index-bitrate-config"
+                      class="disableddiv">
+                      
+                      <!-- Mod Index and Bitrate internal table -->
+                      <table class="ui very compact definition  table">
+                        <thead>
+                          <tr>
+                            <th />
+                            <th><h5 class="ui header">Current</h5></th>
+                            <th><h5 class="ui header">New</h5></th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          <tr>
+                            <td class="right aligned"><h5
+                                class="ui header">Mod Index:</h5></td>
+                            <td style="padding: 2px 2px 2px 2px">
+                              <div class="ui fluid medium label">
+                                <p id="mod-index-label" class=""></p>
+                              </div>
+                            </td>
+                            <td style="padding: 2px 2px 2px 2px">
+                              <div class="ui fluid small input">
+                                <input id="mod-index-input" type="text"
+                                  placeholder=""
+                                  style="padding-top: 6px; padding-bottom: 6px">
+                              </div>
+                            </td>
+                          </tr>
+                          <tr>
+                            <td class="right aligned"><h5
+                                class="ui header">Bitrate:</h5></td>
+                            <td style="padding: 2px 2px 2px 2px">
+                              <div class="ui fluid medium label">
+                                <p id="bitrate-label" class=""></p>
+                              </div>
+                            </td>
+                            <td style="padding: 2px 2px 2px 2px">
+                              <div id="bitrate-dropdown"
+                                class="ui selection fluid compact dropdown">
+                                <i class="dropdown icon"></i>
+                                <div class="small text"></div>
+                                <div class="menu">
+                                </div>
+                              </div>
+                            </td>
+                          </tr>
+                          <tr>
+                            <td />
+                            <td style="padding: 2px 2px 2px 2px">
+                              <button
+                                id="mod-index-bitrate-reset-button"
+                                class="ui right floated tiny button">
+                                <i class=""></i>Reset
+                              </button>
+                            </td>
+                            <td style="padding: 2px 2px 2px 2px">
+                              <button
+                                id="mod-index-bitrate-apply-button"
+                                class="ui right floated blue tiny button">
+                                <i class=""></i>Apply
+                              </button>
+                            </td>
+                          </tr>
+                        </tbody>
+                      </table>
+                      <!-- End Mod Index and Bitrate internal table -->
+                    </div>
+
+                  </td>
+                  <td></td>
+                  <td></td>
+                </tr>
+                <!-- End Mod Index and Bitrate sub-table row -->
+                
+                <!-- Action row -->
+                <tr class="top aligned">
+                  <td class="right aligned">Action:</td>
+                  
+                  <!-- Return Provider Action cell -->
+                  <td class="center aligned">
+                    
+                    <!-- Return Provider Action grid -->
+                    <div class="ui two column grid">
+                      <div class="row"></div>
+                      <div class="row"></div>
+                      <div class="row">
+                        <div class="eight wide right aligned column">
+                          <button id="return-provider-bind-button"
+                            class="ui labeled icon blue disabled tiny button">
+                            <i class="lock icon"></i>Bind
+                          </button>
+                        </div>
+                        <div class="eight wide left aligned column">
+                          <button id="return-provider-unbind-button"
+                            class="ui right labeled icon disabled tiny button">
+                            <i class="unlock off icon"></i>Unbind
+                          </button>
+                        </div>
+                      </div>
+                      <div class="row">
+                        <div class="eight wide right aligned column">
+                          <button id="return-provider-start-button"
+                            class="ui labeled icon green disabled tiny button">
+                            <i class="play icon"></i>Start
+                          </button>
+                        </div>
+                        <div class="eight wide left aligned column">
+                          <button id="return-provider-stop-button"
+                            class="ui right labeled icon red disabled tiny button">
+                            <i class="stop icon"></i>Stop
+                          </button>
+                        </div>
+                      </div>
+                      <div class="row">
+                        <div class="sixteen wide center aligned column">
+                          <button id="return-provider-abort-button"
+                            class="tiny ui labeled icon red disabled tiny button">
+                            <i class="ban icon"></i>Abort
+                          </button>
+                        </div>
+                      </div>
+                      <div class="row"></div>
+                      <div class="row"></div>
+                    </div>
+                    <!-- End Return Provider Action grid -->
+                    
+                  </td>
+                  <!-- End Return Provider Action cell -->
+                  
+                  <!-- Forward Provider Action cell -->
+                  <td class="top aligned">
+                    
+                    <!-- Forward Provider Action grid -->
+                    <div class="ui two column  grid">
+                      <div class="row"></div>
+                      <div class="row"></div>
+                      <div class="row">
+                        <div class="eight wide right aligned column">
+                          <!-- data-tooltip="Must select a provider profile to enable the Bind operation." -->
+                          <button id="forward-provider-bind-button"
+                            class="ui labeled icon blue disabled tiny button">
+                            <i class="lock icon"></i>Bind
+                          </button>
+                        </div>
+                        <div class="eight wide left aligned column">
+                          <button id="forward-provider-unbind-button"
+                            class="ui right labeled icon disabled tiny button">
+                            <i class="unlock off icon"></i>Unbind
+                          </button>
+                        </div>
+                      </div>
+                      <div class="row">
+                        <div class="eight wide right aligned column">
+                          <button id="forward-command-mod-on-button"
+                            class="ui labeled icon blue disabled tiny button">
+                            <i class="toggle on icon"></i>CMD Mod On
+                          </button>
+                        </div>
+                        <div class="eight wide left aligned column">
+                          <button id="forward-command-mod-off-button"
+                            class="ui right labeled icon disabled tiny button">
+                            <i class="toggle off icon"></i>CMD Mod Off
+                          </button>
+                        </div>
+                      </div>
+                      <div class="row">
+                        <div class="eight wide right aligned column">
+                          <button id="forward-range-mod-on-button"
+                            class="ui labeled icon blue disabled tiny button">
+                            <i class="toggle on icon"></i>Range Mod On
+                          </button>
+                        </div>
+                        <div class="eight wide left aligned column">
+                          <button id="forward-range-mod-off-button"
+                            class="ui right labeled icon disabled tiny button">
+                            <i class="toggle off icon"></i>Range Mod Off
+                          </button>
+                        </div>
+                      </div>
+                      <div class="row">
+                        <div class="eight wide right aligned column">
+                          <button id="forward-provider-start-button"
+                            class="ui labeled icon green disabled tiny button">
+                            <i class="play icon"></i>Start
+                          </button>
+                        </div>
+                        <div class="eight wide left aligned column">
+                          <button id="forward-provider-stop-button"
+                            class="ui right labeled icon red disabled tiny button">
+                            <i class="stop icon"></i>Stop
+                          </button>
+                        </div>
+                      </div>
+                      <div class="row">
+                        <div class="sixteen wide center aligned column">
+                          <button id="forward-provider-abort-button"
+                            class="tiny ui labeled icon red disabled tiny button">
+                            <i class="ban icon"></i>Abort
+                          </button>
+                        </div>
+                      </div>
+                      <div class="row"></div>
+                      <div class="row"></div>
+                    </div>
+                    <!-- End Forward Provider Action grid -->
+                  
+                  </td>
+                  <!-- End Forward Provider Action cell -->
+                  
+                  <!-- AMPCS Downlink Action cell -->
+                  <td class="top aligned">
+                  
+                    <!-- AMPCS Downlink Action grid -->
+                    <div class="ui two column grid">
+                      <div class="row"></div>
+                      <div class="row"></div>
+                      <div class="row">
+                        <div class="eight wide right aligned column">
+                          <button id="downlink-connect-button"
+                            class="ui labeled icon green tiny button">
+                            <i class="lock icon"></i>Connect
+                          </button>
+                        </div>
+                        <div class="eight wide left aligned column">
+                          <button id="downlink-disconnect-button"
+                            class="ui right labeled icon disabled tiny button">
+                            <i class="unlock off icon"></i>Disconnect
+                          </button>
+                        </div>
+                      </div>
+                      <div class="row"></div>
+                      <div class="row"></div>
+                    </div>
+                    <!-- End AMPCS Downlink Action grid -->
+                  
+                  </td>
+                  <!-- End AMPCS Downlink Action cell -->
+                  
+                  <!-- AMPCS Uplink Action cell -->
+                  <td class="top aligned">
+                  
+                    <!-- AMPCS Uplink Action grid -->
+                    <div class="ui two column grid">
+                      <div class="row"></div>
+                      <div class="row"></div>
+                      <div class="row">
+                        <div class="eight wide right aligned column">
+                          <button id="uplink-enable-button"
+                            class="ui labeled icon green disabled tiny button">
+                            <i class="checkmark box icon"></i>Enable
+                          </button>
+                        </div>
+                        <div class="eight wide left aligned column">
+                          <button id="uplink-disable-button"
+                            class="ui right labeled icon tiny button">
+                            <i class="square outline icon"></i>Disable
+                          </button>
+                        </div>
+                      </div>
+                      <div class="row"></div>
+                      <div class="row"></div>
+                    </div>
+                    <!-- End AMPCS Uplink Action grid -->
+                  
+                  </td>
+                  <!-- End AMPCS Uplink Action cell -->
+                  
+                </tr>
+                <!-- End Action row -->
+              
+              </tbody>
+            </table>
+            <!-- End State table -->
+          </div>
+          <!-- End State column -->
+        </div>
+        <!-- End State content -->
+      </div>
+      <!-- End State Accordion -->
+      
+      </br>
+      
+      <!-- Message Accordion -->
+      <div id="message-accordion" class="ui styled fluid accordion">
+        <div class="title">
+          <i class="dropdown icon"></i> Message
+        </div>
+        <div class="content">
+          <div class="ui grid ">
+            <div class="fourteen wide column"></div>
+            <div class="one wide right floated column">
+              <label>Auto-scroll:</label>
+            </div>
+            <div class="one wide right floated column">
+              <div id="message-table-scroll-checkbox"
+                class="ui toggle checkbox">
+                <input type="checkbox" name="public"> <label></label>
+                </br>
+              </div>
+            </div>
+          </div>
+          <div class="sixteen wide column ">
+
+            <table id="message-table"
+              class="ui celled table display compact" width="100%">
+            </table>
+          </div>
+        </div>
+      </div>
+      <!-- End Message Accordion -->
+    
+    </div>
+    <!-- End Monitor and Control UI Segment -->
+
+  </div>
+  <!-- End Monitor and Control tab -->
+  
+  <!-- Manage Providers Tab -->
+  <div class="ui tab" data-tab="manage-providers">
+    <div class="ui segment" style="margin-top: 55px;">
+      <div class="ui segments">
+        <div class="ui segment">
+          <div id="param-add-button"
+            class="ui labeled icon dropdown tiny button">
+            <i class="add icon"></i> <span class="text">Add</span>
+            <div class="menu">
+              <div class="item" data-value="RETURN">Return</div>
+              <div class="item" data-value="FORWARD">Forward</div>
+            </div>
+
+          </div>
+          <button id="param-edit-button"
+            class="ui labeled icon tiny button disabled">
+            <i class="edit icon"></i>Edit
+          </button>
+
+          <button id="param-delete-button"
+            class="ui labeled icon tiny button disabled">
+            <i class="delete icon"></i>Delete
+          </button>
+        </div>
+        <div class="ui segment">
+          <table id="profile-summary-table" class="ui celled table"
+            width="100%">
+            <thead>
+              <tr>
+                <th>Profile Name</th>
+                <th>Profile Type</th>
+                <th>Hosts</th>
+                <th>Instance ID</th>
+                <th>Provider Auth Mode</th>
+                <th>Provider Name</th>
+                <th>User Auth Mode</th>
+                <th>User Name</th>
+                <th>Return Type</th>
+                <th>Start Time</th>
+                <th>Stop Time</th>
+                <th>Frame Version</th>
+                <th>Frame Quality</th>
+                <th>SC ID</th>
+                <th>VC ID</th>
+              </tr>
+            </thead>
+          </table>
+        </div>
+      </div>
+    </div>
+    
+    
+    <!-- Provider Profile Add/Edit Modal -->
+    <div id="provider-add-edit-modal" class="ui modal">
+      <!-- Modal header -->
+      <div id="provider-add-edit-modal-header" class="header"></div>
+      
+      <!-- Modal content -->
+      <div class="content">
+      
+        <!-- Profile Form -->
+        <div id="provider-add-edit-form" class="ui form">
+          
+          
+          <div class="three fields">
+            <div class="six wide required field">
+              <label>Profile Name</label> <input id="profile-name"
+                type="text" placeholder="Name">
+            </div>
+            <div class="eight wide required field">
+              <label>Hosts</label> <input id="hosts" type="text"
+                placeholder="'host:port' or 'host1:port|host2:port|...'">
+            </div>
+          </div>
+          
+          <div class="sixteen wide field">
+            <label>Instance ID</label> <input id="instance-id"
+              type="text" placeholder="Instance ID">
+          </div>
+
+          <div class="four fields">
+            <div class="four wide field">
+              <label>User Authentication Mode</label>
+
+              <div id="user-auth-mode-dropdown"
+                class="ui selection dropdown">
+                <input type="hidden" name=""> <i
+                  class="dropdown icon"></i>
+                <div class="default text"></div>
+                <div class="menu">
+                  <div class="item" data-value="NONE">NONE</div>
+                  <div class="item" data-value="BIND">BIND</div>
+                  <div class="item" data-value="ALL">ALL</div>
+                </div>
+              </div>
+
+            </div>
+            <div class="four wide field">
+              <label>User Name </label> <input id="user-name"
+                type="text" placeholder="User Name">
+            </div>
+            <div class="four wide field">
+              <label>User Password</label> <input id="user-password"
+                type="password" placeholder="User Password">
+            </div>
+            <div class="four wide field">
+              <label>Confirm User Password</label> <input
+                id="user-password-confirmation" type="password"
+                placeholder="Confirm User Password">
+            </div>
+          </div>
+          <div class="three fields">
+            <div class="four wide field">
+              <label>Provider Authentication Mode</label>
+              <div id="provider-auth-mode-dropdown"
+                class="ui selection dropdown">
+                <input type="hidden" name=""> <i
+                  class="dropdown icon"></i>
+                <div class="default text"></div>
+                <div class="menu">
+                  <div class="item" data-value="NONE">NONE</div>
+                  <div class="item" data-value="BIND">BIND</div>
+                  <div class="item" data-value="ALL">ALL</div>
+                </div>
+              </div>
+            </div>
+            <div class="four wide field">
+              <label>Provider Name</label> <input id="provider-name"
+                type="text" placeholder="Name">
+            </div>
+            <div class="four wide field">
+              <label>Provider Password</label> <input
+                id="provider-password" type="password"
+                placeholder="Provider Password">
+            </div>
+            <div class="four wide field">
+              <label>Confirm Provider Password</label> <input
+                id="provider-password-confirmation" type="password"
+                placeholder="Confirm Provider Password">
+            </div>
+          </div>
+
+          <div id="return-type-mode-content">
+            <div class="three fields">
+              <div class="four wide field">
+                <label>Return Type</label>
+                <div id="return-type-dropdown"
+                  class="ui selection dropdown">
+                  <input type="hidden" name=""> <i
+                    class="dropdown icon"></i>
+                  <div class="default text"></div>
+                  <div class="menu">
+                    <div class="item" data-value="RETURN_ALL">RETURN_ALL</div>
+                    <div class="item" data-value="RETURN_CHANNEL">RETURN_CHANNEL</div>
+                  </div>
+                </div>
+              </div>
+              <div class="six wide field">
+                <label>Start Time</label> <input id="start-time"
+                  type="text" placeholder="Start Time">
+              </div>
+              <div class="six wide field">
+                <label>Stop Time</label> <input id="stop-time"
+                  type="text" placeholder="Stop Time">
+              </div>
+            </div>
+            <div id="return-channel-fields" class="fields">
+              <div class="four wide field">
+                <label>Spacecraft ID</label> <input id="sc-id"
+                  type="text" placeholder="SC ID">
+              </div>
+              <div class="four wide field">
+                <label>Frame Version</label> <input id="frame-version"
+                  type="text" placeholder="Frame Version">
+              </div>
+              <div class="four wide field">
+                <label>Virtual Channel ID</label> <input id="vc-id"
+                  type="text" placeholder="VC ID">
+              </div>
+            </div>
+            <div id="return-all-fields" class="fields">
+              <div class="four wide field">
+                <label>Frame Quality</label>
+                <div id="frame-quality-dropdown"
+                  class="ui selection dropdown">
+                  <input type="hidden" name=""> <i
+                    class="dropdown icon"></i>
+                  <div class="default text"></div>
+                  <div class="menu">
+                    <div class="item" data-value="GOOD">GOOD</div>
+                    <div class="item" data-value="ERRED">ERRED</div>
+                    <div class="item" data-value="ALL">ALL</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- End Profile Form -->
+      
+      </div>
+      <!-- End Modal content -->
+      
+      <div class="actions">
+        <div id="provider-modal-cancel-button" class="ui button">Cancel</div>
+        <div id="provider-modal-submit-button" class="ui blue button">Submit</div>
+      </div>
+    </div>
+    <!-- End Provider Profile Add/Edit Modal -->
+    
+    <!-- Cancel Confirm Modal -->
+    <div id="cancel-confirm-modal" class="ui small modal">
+      <div id="modal-header" class="header">Confirm Cancel</div>
+      <div class="content">
+        <p>New/updated provider information will not be saved, are
+          you sure you want to cancel ?</p>
+      </div>
+      <div class="actions">
+        <div id="cancel-confirm-no-button" class="ui button">No</div>
+        <div id="cancel-confirm-yes-button" class="ui blue button">Yes</div>
+      </div>
+    </div>
+    <!-- End Cancel Confirm Modal -->
+    
+    <!-- Profile Delete Confirm Modal -->
+    <div id="profile-delete-confirm-modal" class="ui small modal">
+      <div class="header">Confirm Delete</div>
+      <div class="content">
+        <p>Are you sure you wan't to delete the selected profile(s) ?</p>
+      </div>
+      <div class="actions">
+        <div class="ui cancel button">no</div>
+        <div class="ui approve blue button">Yes</div>
+      </div>
+    </div>
+    <!-- End Profile Delete Confirm Modal -->    
+    
+  </div>
+  <!-- End Manage Providers Tab -->
+
+  <!-- Footer -->
+  <div id="footer">
+    <div class="ui segment">
+      <div class="ui grid">
+        <div class="four column row">
+          <div class="four wide column ">
+            <div id="server-connection-indicator"
+              class="ui circular mini label"></div>
+          </div>
+          <div class="four wide column "></div>
+          <div class="four wide column"></div>
+          <div class="four wide column">
+            <div id="live-utc-time"
+              class="ui medium right attached label"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- End Footer -->
+  
+  <!-- Downlink Config Edit Modal -->
+  <div id="downlink-edit-modal" class="ui small modal">
+    <div id="downlink-edit-modal-header" class="header">Downlink
+      Config</div>
+    <div class="content">
+      <div id="ampcs-config-form" class="ui form">
+        <div class="two fields">
+          <div class="twelve wide field">
+            <label>Downlink Host</label> <input id="modal-downlink-host"
+              type="text" placeholder="Downlink Host">
+          </div>
+          <div class="four wide field">
+            <label>Downlink Port</label> <input id="modal-downlink-port"
+              type="text" placeholder="Downlink Port">
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="actions">
+      <div id="downlink-config-modal-cancel-button" class="ui button">Cancel</div>
+      <div id="downlink-config-modal-submit-button"
+        class="ui blue button">Submit</div>
+    </div>
+  </div>
+  <!-- End Downlink Config Edit Modal -->
+  
+  <!-- Error Modal -->
+  <div id="error-modal" class="ui small modal">
+    <div id="error-modal-header" class="header">Encountered An
+      Error</div>
+    <div id="error-modal-message" class="content"></div>
+    <div class="actions">
+      <div id="yes-button" class="ui approve button">Ok</div>
+    </div>
+  </div>
+  <!-- End Error Modal -->
+  
+   <!-- Server Communication Dimmer -->
+   <div id="server-communication-dimmer" class="ui page dimmer">
+    <div class="content">
+      <div class="center">
+        <div class="ui icon header">
+          <i class="red minus circle icon"></i>
+          <p id="dimmer-message" style="color: white;">Unable to
+            communicate with server</p>
+          <div class="muted description"></div>
+        </div>
+        <div class="actions">
+          <div id="reload-app-button"
+            class="ui small green basic ok inverted button">
+            <i class="refresh icon"></i>Reload Application
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- End Server Communication Dimmer -->
+  
+  <!-- Loading Dimmer -->
+  <div id="loading-dimmer" class="ui page dimmer">
+    <div class="content">
+      <div class="center">
+        <div class="ui text loader">Initializing Application
+          Please Wait</div>
+      </div>
+    </div>
+  </div>
+  <!-- End Loading Dimmer -->
+  
+</body>
+</html>

@@ -1,0 +1,24 @@
+<FrameSyncSumMessage eventTime = "$eventTime">
+  <inSync>$inSync</inSync>
+  <numFrames>$numFrames</numFrames>
+  <idleFrames>$idleFrames</idleFrames>
+  <deadFrames>$deadFrames</deadFrames>
+  <badFrames>$badFrames</badFrames>
+  <frameBytes>$frameBytes</frameBytes>
+  <outOfSyncBytes>$outOfSyncBytes</outOfSyncBytes>
+  <outOfSyncCount>$outOfSyncCount</outOfSyncCount>
+#if ($summaryList)
+  <frameSummaries>
+#foreach($sum in $summaryList)  
+       <frameSummary frameType="$sum.getFrameType()" vcid="$sum.getVcid()" sequenceCount="$sum.getSequenceCount()" instanceCount="$sum.getCount()" lastErtTime="$sum.getLastErtStr()"/>
+#end
+  </frameSummaries>
+#end
+#if ($encodingList)
+  <encodingSummaries>
+#foreach($sum in $encodingList)  
+       <encodingSummary encodingType="$sum.getType()" vcid="$sum.getVcid()" sequenceCount="$sum.getLastSequence()" instanceCount="$sum.getInstanceCount()" lastErtTime="$sum.getLastErtStr()" badFrameCount="$sum.getBadFrameCount()" errorCount="$sum.getErrorCount()"/>
+#end
+  </encodingSummaries>
+#end
+</FrameSyncSumMessage>

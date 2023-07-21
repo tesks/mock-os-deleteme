@@ -1,0 +1,49 @@
+# 
+# AMPCS Common context metadata schema.
+# 
+# Common context metadata is included in message headers.
+# This schema defines the available metadata keywords.
+# 
+# Version: 1.1
+# ChangeLog: V1.0 Added for AMPCS R8
+# ChangeLog: V1.1 Updated ID from string to regex; Added restPort element
+#
+
+namespace rng = "http://relaxng.org/ns/structure/1.0"
+
+## Root context element
+context-def =
+    element context {
+        
+        ## Context identifier. If the context is a session, this will consist of
+        ## "context number/context host name/context host ID/session fragment ID".
+        attribute id { context-id-def },
+        
+        ## Zero or more metadata keyword/value pairs
+        element keyword_value {
+
+            ## Context keyword
+            attribute key { context-metadata-key-def },
+
+            ## Value
+            attribute value { xsd:string }
+        }*
+    }
+
+## Context Identification definition
+context-id-def = xsd:token { pattern = "[\d]+/[A-Za-z0-9_\-\.]{1,64}/[\d]+/[\d]+/[\d]+/[\d]+" }
+
+## Available context metadata keywords
+context-metadata-key-def = ( 
+                    "CONTEXT_ID" | "AMPCS_VERSION" | "CONTEXT_VERSION " | "CREATE_TIME" | 
+                    "MESSAGE_TYPE" | "SOURCE_PID" | "MESSAGE_COUNTER" | "CONTEXT_USER" | 
+                   "SPACECRAFT_ID" | "SPACECRAFT_NAME" | "MISSION_ID" | 
+                   "MISSION_NAME" | "PERSPECTIVE_ID" | "VENUE_TYPE" | 
+                   "CONFIGURED_VCID" | "CONFIGURED_DSSID" | "TELEMETRY_STREAM_TYPE" |
+                   "TESTBED_NAME" | "FSW_DICTIONARY_DIR" | "FSW_DICTIONARY_VERSION" |
+                   "SSE_DICTIONARY_DIR" | "SSE_DICTIONARY_VERSION" | 
+                   "CONTEXT_FRAGMENT" | "CONTEXT_HOST" | "CONTEXT_HOST_ID" |
+                   "CONTEXT_NUMBER" | "APPLICATION_OUTPUT_DIRECTORY" |
+                   "APPLICATION_ROOT_TOPIC" | "REST_PORT" | "CONTEXT_TYPE"
+)                 
+

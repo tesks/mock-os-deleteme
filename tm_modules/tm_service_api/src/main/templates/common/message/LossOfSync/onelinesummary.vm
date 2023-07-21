@@ -1,0 +1,1 @@
+LOSS OF SYNC condition set at $eventTime, ERT=$ert DSSID=$dssId, Last Frame Type=$frameType, Last VCID=$vcid, Last ERT=$lastFrameErt, Last VCFC=$vcfc, bitrate=$bitRate

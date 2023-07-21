@@ -1,0 +1,11 @@
+#macro( escape $field)
+#if($field.toString())#set($field=$field.toString().replace('\', '\\').replace('"', '\"'))
+#else#set($field="")
+#{end}
+$field#end
+#if ($header)
+record_type,session_id,session_host,channel_id,dss_id,vcid,name,module,ert,scet,lst,sclk,dn,eu,status,dn_alarm_state,eu_alarm_state,realtime,type
+#{end}
+#if ($body)
+"eha","#escape($sessionId)","#escape($sessionHost)","#escape($channelId)","#if($dssId >= 0)$dssId#end","#escape($vcid)","#escape($name)","#escape($module)","#escape($ert)","#escape($scet)","#escape($lst)","#escape($sclk)","#escape($dataNumber)","#escape($eu)","#escape($status)","#escape($dnAlarmState)","#escape($euAlarmState)","#escape($isRealTime)","#escape($channelType)"
+#{end}

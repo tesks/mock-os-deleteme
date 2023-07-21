@@ -1,0 +1,20 @@
+<SuspectChannelsMessage eventTime = "$eventTime">
+  <fromSSE>$fromSSE</fromSSE>
+  <SuspectChannels>
+#if ($dnList)
+#foreach($chan in $dnList) 
+    <channel channel_id="$chan" field="DN" /> 
+#end
+#end
+#if ($euList)
+#foreach($chan in $euList) 
+    <channel channel_id="$chan" field="EU" /> 
+#end
+#end
+#if ($alarmList)
+#foreach($chan in $yellowList) 
+    <channel channel_id="$chan" field="ALARM" /> 
+#end
+#end
+   </SuspectChannels>
+</SuspectChannelsMessage>

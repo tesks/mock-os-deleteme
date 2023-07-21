@@ -1,0 +1,5 @@
+#if ($body)
+#if($commandString)
+$commandString
+#end
+#end

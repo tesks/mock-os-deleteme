@@ -1,0 +1,37 @@
+#macro (justify $width $str)
+#set ($length = $str.length())
+#if ($width == $length || $width < $length)$str#else
+#set ($counter = $width - $length)
+#set ($space = " ")
+#set ($outstr = $str)
+#foreach ($foo in [1..$counter])#set($outstr = "${space}${outstr}")#end$outstr#end
+#end
+#if ($header)
+#if ($usesLst)
+|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+<---------ERT---------> <-----SCLK-----> <---------SCET--------> <---------LST---------> XXXX-NNNN C <--------channel name--------> <---current raw----> / <---previous raw---> <--current value---> (<-raw delta->)
+#else
+|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+<---------ERT---------> <-----SCLK-----> <---------SCET--------> XXXX-NNNN C <--------channel name--------> <---current raw----> / <---previous raw---> <--current value---> (<-raw delta->)
+#end
+#elseif ($body)
+#if ($eu)
+#set ($eu = $formatter.anCsprintf("%10.4g", $eu))
+#end
+#if ($channelType.toString() == "FLOAT" || $channelType.toString() == "DOUBLE")
+#if ($delta)
+#set ($delta = $formatter.anCsprintf("%10.4g", $delta))
+#end
+#if ($dataNumber)
+#set ($dataNumber = $formatter.anCsprintf("%10.4g", $dataNumber))
+#end
+#if ($previous)
+#set ($previous = $formatter.anCsprintf("%10.4g", $previous))
+#end
+#end
+#if ($usesLst)
+#justify(23 $ert) #justify(16 $sclk.toString()) #justify(23 $scet) #if($lst)#justify(23 $lst)#else#justify(23 "Unknown")#end #justify(9 $channelId.toString()) $channelType.getBriefChannelType() #if($title)#justify(30 $title)#else#justify(30 "Unknown")#end #justify(20 $dataNumber.toString()) / #if($previous)#justify(20 $previous.toString())#else#justify(20 "N/A")#end #if($eu)#justify(20 $eu.toString())#elseif($status)#justify(20 $status)#else#justify(20 " ")#end #if($delta)(#justify(12 $delta.toString()))#end
+#else
+#justify(23 $ert) #justify(16 $sclk.toString()) #justify(23 $scet) #justify(9 $channelId.toString()) $channelType.getBriefChannelType() #if($title)#justify(30 $title)#else#justify(30 "Unknown")#end #justify(20 $dataNumber.toString()) / #if($previous)#justify(20 $previous.toString())#else#justify(20 "N/A")#end #if($eu)#justify(20 $eu.toString())#elseif($status)#justify(20 $status)#else#justify(20 " ")#end #if($delta)(#justify(12 $delta.toString()))#end
+#end
+#end

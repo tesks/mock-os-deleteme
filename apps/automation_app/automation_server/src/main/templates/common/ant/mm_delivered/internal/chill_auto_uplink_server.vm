@@ -1,0 +1,41 @@
+#set ( $shellName = "sh" )
+#shell( $shellName )
+
+#init()
+
+#Java()
+
+#set ( $headless = "true" )
+#SWT( $headless )
+
+#*
+Overwrite DARWIN_SWT_OPTS to omit XstartOnFirstThread.
+This app needs the SWT libraries but would exit prematurely with XstartOnFirstThread
+*#
+if [ "$OS_UNAME" = "Darwin" ] ; then
+    DARWIN_SWT_OPTS="-Djava.awt.headless=$headless"
+fi
+
+#set( $tpsLibraries   =   ["spring_boot_starter_log4j2","log4j_web","tomcat_embed_core","reflections", "spring_boot_starter_tomcat", "hibernate", "piccolo", "commons_cli", "commons_lang", "commons_lang3", "commons_collections", "commons_logging", "commons_http", "woodstox","mysql", "velocity_engine_core", "restlet", "jersey2", "jaxrs", "jackson", "jaxb", "jface", "shared", "commons_io" ] )
+#constructClasspath( $tpsLibraries )
+
+#addCssClasspath()
+#addSpringClasspath()
+#addSpringBootClasspath()
+#addSwagger2Classpath()
+#constructLog4j2Classpath()
+#addICMDClasspath()
+#addCtsClasspath()
+
+#set ( $appName = "chill_auto_uplink_server" )
+#set ( $appClass = "jpl.gds.automation.auto.app.AutoProxyApp" )
+#set ( $appArgs = "" )
+#set ( $headless = "false" )
+#set ( $doExec = "true" )
+#set ( $doLog = "false" )
+#set ( $minMem = "128m" )
+#set ( $maxMem = "512m" )
+#set ( $responderHelper = "" )
+#set ( $sysProperties = "" )
+#set ( $includePassThruArgs = "true" )
+#execJava ( $appName $appClass $appArgs $headless $doExec $doLog $minMem $maxMem $responderHelper $sysProperties $includePassThruArgs )

@@ -1,0 +1,149 @@
+#!/bin/bash
+#
+# chill_status_publisher service launch script, for use during Linux host startup
+#
+# chkconfig: 35 98 2
+# description: starts the chill_status_publisher service
+#
+# Updated script to remove hard-coded
+# mission name, update AMMOS paths, annotate locations that may need to
+# be edited for non-AMMOS installations, change location of script 
+# launched to bin/admin, add check for existence of CHILL_GDS
+#
+
+if [ "$CHILL_GDS" = "" ]
+then
+    # !!!!!! GDS ADMINISTRATORS: EDIT THIS LINE to point to your AMPCS installation !!!!!! 
+    # current ampcs mission and version
+    CHILL_GDS="/opt/ammos/ampcs/mpcs/${CHILL_MISSION}/current"
+    export CHILL_GDS
+fi
+
+# Script to execute
+CMD="$CHILL_GDS/bin/admin/chill_status_publisher"
+
+# Actual launched executable
+LAUNCHED_CMD=CommandStatusPublisherApp
+
+# !!!!!! GDS ADMINISTRATORS: EDIT THESE LINES if using non-standard user or group names !!!!!! 
+USER=ampcsadm
+GROUP=ampcsadm
+
+# !!!!!! GDS ADMINISTRATORS: EDIT THIS LINE to point to where you want logs to go !!!!!! 
+LOGDIR="/var/ammos/msop/mpcs_rw/chillstatuspub"
+
+# Application logs here:
+APPLOGFILE="$LOGDIR/chillstatuspub.log"
+
+# Catchall logs here:
+LOGFILE="$LOGDIR/startstop.log"
+
+# Removed hard-coded file for authentication
+
+# Full command with arguments
+FULLCMD="$CMD --logFile $APPLOGFILE"
+
+# ensure that an ampcs version exists
+if [ ! -d "$CHILL_GDS" ]; then
+    echo "ERROR: could not locate ampcs directory. exiting."
+    exit 1
+fi
+
+# Removed hard-coded file for authentication
+
+# Ensure that executable exists
+if test ! -x "$CMD"
+then
+    echo "ERROR: could not locate executable. exiting."
+    exit 1
+fi
+
+
+# source function library.
+. /etc/rc.d/init.d/functions
+
+start()
+{
+    # create log dir if needed
+    if [ ! -d $LOGDIR ]; then
+        echo "creating log dir"
+        /bin/mkdir -p $LOGDIR
+        /bin/chown $USER:$GROUP $LOGDIR
+    fi
+
+    # start the process
+    echo "starting chill_status_publisher"
+
+    nohup runuser $USER -c "$FULLCMD" >$LOGFILE 2>&1 &
+
+    RETVAL=$?
+
+    return $RETVAL
+}
+
+
+# We pgrep the pid of the actual command run.
+get_my_pid()
+{
+    PARENT=`pgrep -f $LAUNCHED_CMD`
+    if [ -z "$PARENT" ]; then
+        export PID=0
+        return
+    fi
+
+    export PID=$PARENT
+
+    return
+}
+
+status_at()
+{
+    get_my_pid
+    if [ "$PID" != 0 ]; then
+        echo "chill_status_publisher is running (pid $PID)"
+    else
+        echo "chill_status_publisher is not running"
+    fi
+}
+
+stop()
+{
+    get_my_pid
+    if [ "$PID" != 0 ]; then
+        echo "stopping pid $PID"
+        kill $PID
+        echo "chill_status_publisher has stopped"
+        return 0
+    else
+        echo "chill_status_publisher is not running"
+        return 1
+    fi
+}
+
+restart()
+{
+    stop
+    sleep 5
+    start
+}
+
+
+case "$1" in
+start)
+    start
+    ;;
+stop)
+    stop
+    ;;
+reload|restart)
+    restart
+    ;;
+status)
+    status_at
+    ;;
+*)
+    echo $"Usage: $0 {start|stop|restart|status}"
+    exit 1
+esac
+
+exit 0

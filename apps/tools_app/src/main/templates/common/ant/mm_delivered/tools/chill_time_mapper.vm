@@ -1,0 +1,23 @@
+#set ( $shellName = "sh" )
+#shell( $shellName )
+
+#init()
+
+#Java()
+
+#set( $tpsLibraries   =   ["piccolo","commons_cli","commons_lang", "commons_lang3","commons_collections","woodstox","velocity_engine_core","shared", "disruptor" ] )
+#constructClasspath( $tpsLibraries )
+#constructLog4j2Classpath()
+
+#set ( $appName = "chill_time_mapper" )
+#set ( $appClass = "jpl.gds.app.tools.time.TimeMapperApp" )
+#set ( $appArgs = "" )
+#set ( $headless = "false" )
+#set ( $doExec = "true" )
+#set ( $doLog = "false" )
+#set ( $minMem = "128m" )
+#set ( $maxMem = "512m" )
+#set ( $responderHelper = "" )
+#set ( $sysProperties = "" )
+#set ( $includePassThruArgs = "true" )
+#execJava ( $appName $appClass $appArgs $headless $doExec $doLog $minMem $maxMem $responderHelper $sysProperties $includePassThruArgs )

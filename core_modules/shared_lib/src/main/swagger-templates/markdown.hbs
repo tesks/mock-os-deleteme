@@ -1,0 +1,112 @@
+{{! 3/2/2016 - Adding handle bar templates that are }}
+{{! used by swagger to create the global lad REST API html pages. }}
+{{! These templates were copied from the swagger examples and have not been touched. }}
+{{! 01/10/2018 - Moved all hbs templates to shared_lib }}
+
+#{{#info}}{{title}}
+
+
+## {{join schemes " | "}}://{{host}}{{basePath}}
+
+
+{{description}}
+
+{{#contact}}
+[**Contact the developer**](mailto:{{email}})
+{{/contact}}
+
+**Version** {{version}}
+
+[**Terms of Service**]({{termsOfService}})
+
+{{#license}}[**{{name}}**]({{url}}){{/license}}
+
+{{/info}}
+
+{{#if consumes}}**Consumes:** {{join consumes ", "}}{{/if}}
+
+{{#if produces}}**Produces:** {{join produces ", "}}{{/if}}
+
+{{#if securityDefinitions}}
+# Security Definitions
+{{/if}}
+{{> security}}
+
+# APIs
+
+{{#each paths}}
+## {{@key}}
+{{#this}}
+{{#get}}
+### GET
+{{> operation}}
+{{/get}}
+
+{{#put}}
+### PUT
+{{> operation}}
+{{/put}}
+
+{{#post}}
+### POST
+
+{{> operation}}
+
+{{/post}}
+
+{{#delete}}
+### DELETE
+{{> operation}}
+{{/delete}}
+
+{{#option}}
+### OPTION
+{{> operation}}
+{{/option}}
+
+{{#patch}}
+### PATCH
+{{> operation}}
+{{/patch}}
+
+{{#head}}
+### HEAD
+{{> operation}}
+{{/head}}
+
+{{/this}}
+{{/each}}
+
+# Definitions
+{{#each definitions}}
+## <a name="/definitions/{{key}}">{{@key}}</a>
+
+<table border="1">
+    <tr>
+        <th>name</th>
+        <th>type</th>
+        <th>required</th>
+        <th>description</th>
+        <th>example</th>
+    </tr>
+    {{#each this.properties}}
+        <tr>
+            <td>{{@key}}</td>
+            <td>
+                {{#ifeq type "array"}}
+                {{#items.$ref}}
+                    {{type}}[<a href="{{items.$ref}}">{{basename items.$ref}}</a>]
+                {{/items.$ref}}
+                {{^items.$ref}}{{type}}[{{items.type}}]{{/items.$ref}}
+                {{else}}
+                    {{#$ref}}<a href="{{$ref}}">{{basename $ref}}</a>{{/$ref}}
+                    {{^$ref}}{{type}}{{#format}} ({{format}}){{/format}}{{/$ref}}
+                {{/ifeq}}
+            </td>
+            <td>{{#required}}required{{/required}}{{^required}}optional{{/required}}</td>
+            <td>{{#description}}{{{description}}}{{/description}}{{^description}}-{{/description}}</td>
+            <td>{{example}}</td>
+        </tr>
+    {{/each}}
+</table>
+{{/each}}

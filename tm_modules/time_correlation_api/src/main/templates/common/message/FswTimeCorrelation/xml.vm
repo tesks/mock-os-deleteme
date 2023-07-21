@@ -1,0 +1,17 @@
+<FswTimeCorrelationMessage eventTime="$eventTime">
+   <packetSclk>$packetSclk</packetSclk>
+   <packetErt>$packetErt</packetErt>
+   <referenceFrameFound>$referenceFrameFound</referenceFrameFound>
+   <bitRate>$bitRate</bitRate>
+   <frameVcid>$frameVcid</frameVcid>
+   <frameVcfc>$frameVcfc</frameVcfc>
+   <frameLength>$frameLength</frameLength>
+   <frameSclk>$frameSclk</frameSclk>
+#if ($frameErt)
+   <frameErt>$frameErt</frameErt>
+#end
+#if ($frameEncoding)
+   <frameEncoding>$frameEncoding</frameEncoding>
+#end
+   <bitRateIndex>$bitRateIndex</bitRateIndex>
+</FswTimeCorrelationMessage>

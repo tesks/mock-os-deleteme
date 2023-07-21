@@ -1,0 +1,10 @@
+#macro( escape $field)
+#if($field)#set($field=$field.replace('\', '\\').replace('"', '\"'))#else#set($field="")#{end}$field#end
+#if ($header)
+channel_id,channel_type,channel_format,enum_value,enum_string#end
+#if($typeDrf == "ENUM" || $typeDrf == "BOOL")
+#foreach( $enum in $enumDefs.split(",") )
+#set($enumArray = $enum.split("="))
+"#escape($id)","#escape($typeDrf)","#escape($channelFormat)","#escape($enumArray.get(0))","#if($enumArray.size()!=1)#escape($enumArray.get(1))#end"
+#end
+#end

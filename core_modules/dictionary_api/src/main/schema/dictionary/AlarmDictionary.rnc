@@ -1,0 +1,536 @@
+#
+# Multi-mission Channel Alarm dictionary schema.
+#     
+# This schema defines a common, multi-mission format for expression of 
+# alarm limits on telemetry channels. It is used in conjunction with
+# the channel dictionary, which establishes the telemetry channels,
+# used to communicate discrete spacecraft data items that should be 
+# visible on ground displays and queryable in ground data systems.
+#
+# Copyright (c) 2013-2015 California Institute of Technology, '
+# All Rights Reserved. JPL Proprietary Information
+#
+# Change Log:
+#   V1.0   05/20/12  Original version
+#   V1.1   05/20/13  Moved into the AMPCS repository and
+#                    standardized header format
+#   V1.2   07/08/13  Removed element choices in favor of
+#                    element sequences
+#   V1.3   09/18/13  Minor updates in response to DMS SIS
+#                    Review
+#   V2.0   02/06/15  Remove combination alarms. Add
+#                    compound alarms. Remove enum definitions.
+#                    Add alarm IDs. Change off_alarm
+#                    to off_control. Add key-value and description 
+#                    attributes to many elements
+#   V3.0  08/05/15   Enhanced the
+#                    comments on off alarms. Removed attributes
+#                    support at the top level.
+#                    This is the final change for AMPCS 7.3 (MGSS ECR-117883)
+#
+namespace rng = "http://relaxng.org/ns/structure/1.0"
+
+# Include common dictionary XML definitions
+include "CommonDictionary.rnc"
+
+# Start XML document here
+start = alarm-dictionary-def
+
+# Top-level element for the alarm dictionary 
+alarm-dictionary-def =
+    element alarm_dictionary {
+        
+        # Standard dictionary version header and general change log 
+        header-def,
+        
+        # Define alarms. Alarm definitions and off controls
+        # are loaded sequentially, in the order they appear in the
+        # XML. 
+        element alarms { (single-channel-alarm-def | 
+                          off-control-def )* }
+        
+    }
+
+# Defines a list of simple alarms on a single channel, including 
+# identification of the channel to be alarmed, whether the raw (DN) 
+# or calibrated (EU) value is to be alarmed, and the alarm conditions. 
+# This element may be included multiple times for the same channel. 
+# Any alarm with an existing ID will be overwritten. Any alarm with
+# a new ID will be appended to the list of alarms on the specified
+# channel.
+single-channel-alarm-def =
+    element alarm {
+        
+        # Specifies the channel ID to which this alarm applies.
+        attribute channel_id { channel-id-def },
+        
+        # Specifies if the alarm check should be on raw data 
+        # value (DN) or calibrated engineering value (EU).
+        alarm-test-type-def,
+        
+        # Comments regarding changes to this particular alarm element
+        change-log-def?,
+        
+        # Channel may have multiple alarms of any type. The test_type
+        # specified above is applied to all alarms defined here.
+        ( simple-alarm-type-def | compound-alarm-def )+
+    }
+    
+
+# Defines the types of alarm definitions usable in single channel 
+# alarms. 
+#
+simple-alarm-type-def =
+    high-alarm-def
+    | low-alarm-def
+    | inclusive-alarm-def
+    | exclusive-alarm-def
+    | change-alarm-def
+    | state-alarm-def
+    | delta-alarm-def
+    | mask-alarm-def
+    | digital-alarm-def
+
+# Unique identifier for an alarm. Must be unique
+# within the set of all project alarms, whether in the
+# project-specific alarm file, or the user-specified 
+# alarm file. This ID is used to replace or disable
+# previously defined alarms.
+alarm-id-def = attribute id { xsd:ID }
+        
+# Defines the levels of severity of an alarm, from no alarm to very 
+# severe.
+alarm-level-def = attribute level { alarm-level-color-def }
+
+# Indicates whether the alarm state should be calculated using the
+# raw value (DN) or calibrated engineering value (EU) for
+# this channel
+alarm-test-type-def = attribute test_type { alarm-field-def }
+
+# Hysteresis is used to affect a channel's entrance and/or exit from an 
+# alarm state.  Note, however, in missions where all data is Reed-Solomon 
+# or turbo encoded, hysteresis is not normally used or needed for "bit 
+# hits" causing alarms. It has other uses, such as masking temporary 
+# alarms when changing instrument modes, which may cause channel values 
+# to be uncertain for one or more samples.
+#
+# The effects of hysteresis settings can be impacted by the time order 
+# of incoming telemetry.
+alarm-hysteresis-def =
+
+    # Optional: The number of channel samples needed to put 
+    # the channel into an alarm.  Zero turns the hysteresis off,
+    # i.e. defaults it to 1.
+    attribute hysteresis_in { hysteresis-range-def }?,
+    
+    # Optional: The number of channel samples needed to take 
+    # the channel out of alarm.  Zero turns the hysteresis off,
+    # i.e. defaults it to 1.
+    attribute hysteresis_out { hysteresis-range-def }?
+
+# Defines a high-value alarm. Alarm will be triggered if the channel
+# value is equal to or greater than the given limit. This alarm type 
+# is valid only for numeric channels and can be used on either the DN
+# or EU field of the channel sample.
+high-alarm-def =
+    element high_alarm {
+        
+        # ID of this alarm. 
+        alarm-id-def,
+        
+        # Level of this alarm. Optional only in combination alarms.
+        alarm-level-def?,
+        
+        # Optional hysteresis settings for this alarm
+        alarm-hysteresis-def?,
+        
+        # The high value limit, inclusive
+        attribute high_limit { xsd:long | xsd:double },
+        
+        # Categories associated with this alarm
+        categories-def?,
+        
+        # Allow optional information to be appended as key/value pairs
+        attributes-def?,
+        
+        # An optional description for this alarm
+        element description { xsd:string }? 
+    }
+
+# Defines a low-value alarm. Alarm will be triggered if the channel
+# value is equal to or less than the given limit. This alarm is valid 
+# only for numeric channels and can be used on either the DN
+# or EU field of the channel sample.
+low-alarm-def =
+    element low_alarm {
+        
+        # ID of this alarm. 
+        alarm-id-def,
+        
+        # Level of this alarm. Optional only in combination alarms.
+        alarm-level-def?,
+        
+        # Optional hysteresis settings for this alarm
+        alarm-hysteresis-def?,
+        
+        # The low value limit, inclusive
+        attribute low_limit { xsd:long | xsd:double },
+        
+        # Categories associated with this alarm
+        categories-def?,
+        
+        # Allow optional information to be appended as key/value attributes
+        attributes-def?,
+        
+        # An optional description for this alarm
+        element description { xsd:string }? 
+    }
+
+# Defines an inclusive range alarm. Alarm will be triggered if the
+# channel value is within the lower and upper limits, or equal
+# to one of the limits. This alarm type is valid only for numeric 
+# channels and can be used on either the DN or EU field of the 
+# channel sample.
+inclusive-alarm-def =
+    element inclusive_alarm {
+    
+        # ID of this alarm. 
+        alarm-id-def,
+        
+        # Level of this alarm. Optional only in combination alarms.
+        alarm-level-def?,
+        
+        # Optional hysteresis settings for this alarm
+        alarm-hysteresis-def?,
+        
+        # The low value limit, inclusive
+        attribute low_limit { xsd:long | xsd:double },
+        
+        # The high value limit, inclusive
+        attribute high_limit { xsd:long | xsd:double },
+        
+        # Categories associated with this alarm
+        categories-def?,
+        
+        # Allow optional information to be appended as key/value pairs.
+        attributes-def?,
+        
+        # An optional description for this alarm
+        element description { xsd:string }? 
+    }
+
+# Defines an exclusive range alarm. Alarm will be triggered if the
+# channel value is outside of, or equal to one of, the lower and upper 
+# limits. This alarm type is valid only for numeric channels 
+# and can be used on either the DN or EU field of the channel sample.
+exclusive-alarm-def =
+    element exclusive_alarm {
+    
+        # ID of this alarm. 
+        alarm-id-def,
+        
+        # Level of this alarm. Optional only in combination alarms.
+        alarm-level-def?,
+        
+        # Optional hysteresis settings for this alarm
+        alarm-hysteresis-def?,
+        
+        # The low value limit, inclusive
+        attribute low_limit { xsd:long | xsd:double },
+        
+        # The high value limit, inclusive
+        attribute high_limit { xsd:long | xsd:double },
+        
+        # Categories associated with this alarm
+        categories-def?,
+        
+        # Allow optional information to be appended as key/value pairs
+        attributes-def?,
+        
+        # An optional description for this alarm
+        element description { xsd:string }? 
+    }
+
+# Defines a state alarm.  Alarm will be triggered if the channel value
+# matches one of the given state values. This alarm type is valid only for
+# integer, unsigned, and enum channels, and only for DN fields.
+state-alarm-def =
+    element state_alarm {
+    
+        # ID of this alarm.
+        alarm-id-def,
+        
+        # Level of this alarm. Optional only in combination alarms
+        alarm-level-def?,
+        
+        # Optional hysteresis settings for this alarm
+        alarm-hysteresis-def?,
+             
+        # Enumerated states in which an alarm will occur: symbolic or numeric.
+        # If specified as a string, the value must match a symbol value
+        # in the enumeration table that defines the valid values for the 
+        # current channel in the channel dictionary.
+        element state { symbol-def | xsd:long }+,
+        
+        # Categories associated with this alarm
+        categories-def?,
+        
+        # Allow optional information to be appended as key/value pairs
+        attributes-def?,
+        
+        # An optional description for this alarm
+        element description { xsd:string }? 
+    }
+
+# Defines a delta alarm. Alarm will be triggered if the absolute value of the 
+# difference between two consecutive sample values is equal to or exceeds the
+# delta limit.  This alarm type is valid only for numeric channels on either DN or
+# EU fields. The result is dependent upon the processing order of the source 
+# telemetry. Delta limits should be established cautiously for floating point
+# channels and all EU fields, because floating point values do not have an
+# exact binary representation. 
+delta-alarm-def =
+    element delta_alarm {
+    
+        # ID of this alarm. 
+        alarm-id-def,
+        
+        # Level of this alarm. Optional only in combination alarms.
+        alarm-level-def?,
+        
+        # Optional hysteresis settings for this alarm
+        alarm-hysteresis-def?,
+        
+        # The delta limit
+        attribute delta_limit { xsd:double | xsd:long },
+        
+        # Categories associated with this alarm
+        categories-def?,
+        
+        # Allow optional information to be appended as key/value pairs
+        attributes-def?,
+        
+        # An optional description for this alarm
+        element description { xsd:string }? 
+    }
+
+# Defines a mask alarm. The mask is a 16-bit, 4-digit hexadecimal number. 
+# Therefore, a mask can only be used for a channel with possible 
+# values of 0-15 only. The low order bit 0x1 (binary 0000 0000 0000 0001)  
+# represents state zero (count the first bit from the right, or the power of 2), 
+# the high order bit 0x8000 (binary 1000 0000 0000 0000) represents state 15 
+# (count the sixteenth bit from the right). Therefore a mask value of 0x1. 
+# will cause a zero (0) channel value to be in alarm. This is why when the 
+# value to be alarmed is 2, the bit mask = 0x4. 
+#
+# Multiple bits may be set in the mask. For another example, set the mask to 
+# 0x42A3. The binary equivalent is 0100 0010 1010 0011 and will cause the 
+# following states to generate an alarm (count the first bit from the right 
+# as zero and proceed to the left): 0, 1, 5, 7, 9, and 14. 
+#
+# This alarm type is valid only for integer, unsigned, and
+# enum channels and only for DN fields.
+mask-alarm-def =
+    element mask_alarm {
+        
+        # ID of this alarm.
+        alarm-id-def,
+        
+        # Level of this alarm. Optional only in combination alarms
+        alarm-level-def?,
+        
+        # Optional hysteresis settings for this alarm
+        alarm-hysteresis-def?,
+        
+        # The mask
+        attribute value_mask { hex-int },
+        
+        # Categories associated with this alarm
+        categories-def?,
+        
+        # Allow optional information to be appended as key/value pairs
+        attributes-def?,
+        
+        # An optional description for this alarm
+        element description { xsd:string }? 
+    }
+
+# Defines a digital alarm. A digital alarm requires two mask values. NOTE:
+# THIS ALARM TYPE IS DEPRECATED AND WILL NOT BE SUPPORTED IN FUTURE VERSIONS
+# OF THIS SCHEMA.
+# 
+# The value_mask is a hexadecimal number identifying the positions 
+# of the bits to be checked in the channel value. When you set value_mask to 0, 
+# no bits will be checked and no alarm trigger will occur. When value_mask 
+# is non-zero, it indicates then which bits in the channel value are to be 
+# checked and which are not. For example, hex value 0xC is 1100 binary, 
+# specifying that the third and fourth bits from the right in the actual 
+# channel value will be checked.
+# 
+# The valid_mask is a hexadecimal number identifying the values of the bits 
+# to be checked. If any bit being checked (value_mask) is equal to 
+# the value of the same bit in valid_mask, then the channel is in alarm. 
+# Following the values given in the example above, if valid_mask is 0x8, 
+# (1000 binary), then if the fourth bit from the right = 1, the channel 
+# is in alarm. If the third bit from the right  = 0, the channel would 
+# also be in alarm.
+# 
+# This alarm type is valid only for integer, unsigned, and enum 
+# channels, and only for DN fields.
+digital-alarm-def =
+    element digital_alarm {
+    
+        # ID of this alarm. 
+        alarm-id-def,
+       
+        # Level of this alarm. Optional only in combination alarms.
+        alarm-level-def?,
+        
+        # Optional hysteresis settings for this alarm
+        alarm-hysteresis-def?,
+        
+        # The value_mask, indicating which bits are examined
+        attribute value_mask { hex-int },
+        
+        # The valid mask, indicating bit values that trigger alarm
+        attribute valid_mask { hex-int },
+        
+         # Categories associated with this alarm
+        categories-def?,
+        
+        # Allow optional information to be appended as key/value pairs
+        attributes-def?,
+        
+        # An optional description for this alarm
+        element description { xsd:string }? 
+    }
+
+# Defines a change alarm. Alarm will be triggered if the difference
+# between two consecutive sample values is non-zero. This alarm type is
+# valid only for integer, unsigned, enum types, and should be used very 
+# cautiously with floating-point channels or EU fields, since floating 
+# point values do not have an exact binary representation.
+change-alarm-def =
+    element change_alarm {
+        
+        # ID of this alarm. 
+        alarm-id-def,
+             
+        # Level of this alarm. Optional only in combination alarms.
+        alarm-level-def?,
+        
+        # Optional hysteresis settings for this alarm
+        alarm-hysteresis-def?,
+        
+        # Categories associated with this alarm
+        categories-def?,
+        
+        # Allow optional information to be appended as key/value pairs
+        attributes-def?,
+        
+        # An optional description for this alarm
+        element description { xsd:string }? 
+    }
+    
+# Defines a compound alarm, which combines multiple simple alarms 
+# on the same channel using a boolean expression to determine the 
+# final alarm state on the channel. Does not allow for nested 
+# compound alarms. Must supply at least two simple alarms for the
+# boolean combination. The level of the final alarm will be set to 
+# the most severe level triggered among the child alarms.
+compound-alarm-def =
+    element compound_alarm {
+    
+        # ID of this alarm. 
+        alarm-id-def,
+    
+        # Boolean operator used to evaluate the operands, where an 
+        # alarm that is set (triggered) is considered "true" and 
+        # an alarm that is not set (not triggered) is considered 
+        # "false".
+        attribute combination_type { combo-type-def },
+        
+        # Must specify at least two simple alarms as operands to 
+        # combine
+        simple-alarm-type-def,
+        simple-alarm-type-def+,
+        
+        # Categories associated with this alarm
+        categories-def?,
+        
+         # Allow optional information to be appended as key/value pairs
+        attributes-def?,
+        
+        # An optional description for this alarm
+        element description { xsd:string }? 
+    }
+    
+# Enhanced comments on both off alarm
+# types below to indicate their application to simple vs 
+# compound/combination  alarms.
+
+# There are two types of OFF controls, which can be used to disable any 
+# previously loaded alarm. Alarms can be turned off either for
+# a specific alarm ID, or for a specific channel (and for a specific
+# alarm level, if specified). 
+#
+# It is important to note that an OFF control entry will turn off 
+# alarms specified in the XML before the corresponding OFF entry,
+# and any matching alarms previously loaded by the GDS.
+#
+# If other alarms are defined after the OFF control in the XML, those
+# will override the OFF control. In other words, alarm definitions and 
+# OFF controls are loaded and applied sequentially from the XML. It
+# is that last definition that applies.
+off-control-def = off-control-id-def | off-control-channel-def 
+
+# Defines an OFF control for a specific simple or compound alarm ID. 
+#
+# This is the only OFF control that applies to combination alarms, and if
+# so used, it turns off the entire combination. Individual alarms 
+# within combinations cannot be turned off.
+#
+# Likewise, this OFF control applies to an entire compound alarm. 
+# Individual alarms within a compound alarm cannot be turned off.
+off-control-id-def = element off_control_by_id {       
+        # Specifies the unique alarm ID of the alarm to turn off.
+        # Does not use an IDREF because it may be turning off
+        # an alarm that was specified in a different file.
+        attribute id { symbol-def }
+    }
+
+# Defines an OFF control for a channel. It is important to note that
+# if the optional "level" attribute is not supplied, then all alarms
+# in the channel will be disabled. If a new alarm definition for the
+# same channel is found later in the XML, it will obviously have a level
+# associated with it. Since the off control is in effect for 
+# both levels (RED and YELLOW) on the channel, definition of a new 
+# alarm with level YELLOW will result in the OFF control for YELLOW 
+# alarms on the channel being cancelled, but the RED OFF control for the
+# same channel remains in effect until a new RED alarm is encountered.
+#
+# This off control affects only simple and compound alarms. It does not 
+# impact any aspect of a combination alarm. 
+off-control-channel-def = element off_control_by_channel {
+        # Specifies the channel ID of the channel for which to turn alarms
+        # off
+        attribute channel_id { channel-id-def },
+        
+        # Specifies the level of alarms to turn off. If omitted, all alarms
+        # are turned off for the channel
+        alarm-level-def?
+    }
+    
+# Indicates which field of the channel sample is used in the
+# alarm calculation: raw value (DN) or calibrated engineering 
+# value (EU).
+alarm-field-def = string "DN" | string "EU" 
+
+# Defines the levels of severity of an alarm, from no alarm to very severe.
+alarm-level-color-def = string "YELLOW" | string "RED"
+
+# Defines the valid range of hysteresis limits
+hysteresis-range-def = xsd:int { minInclusive = "0" maxInclusive = "255" }
+
+# Defines the valid boolean operators for use in compound alarms
+combo-type-def = string "OR" | string "AND" | string "XOR" 

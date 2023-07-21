@@ -1,0 +1,67 @@
+/**
+ * Copyright 2006-2018. California Institute of Technology.
+ * ALL RIGHTS RESERVED.
+ * U.S. Government sponsorship acknowledged.
+ *
+ * This software is subject to U. S. export control laws and
+ * regulations (22 C.F.R. 120-130 and 15 C.F.R. 730-774). To the
+ * extent that the software is subject to U.S. export control laws
+ * and regulations, the recipient has the responsibility to obtain
+ * export licenses or other export authority as may be required
+ * before exporting such information to foreign countries or
+ * providing access to foreign nationals.
+ */
+/**
+ * AMPCS common protobuf schema for CFDP PDUs
+ *
+ * Version 1.0
+ * ChangeLog:
+ * V1.0 - New for R8
+ */
+syntax = "proto3";
+
+package tm_impl;
+
+import "abstract_message.proto";
+import "holders.proto";
+import "primitives/time_primitives.proto";
+
+option optimize_for = SPEED;
+option java_multiple_files = true;
+option java_package = "jpl.gds.serialization.tm_impl";
+option java_outer_classname = "ProtoBufCfdpPduMessageSerializaiton";
+
+message Proto3CfdpPduMessage{
+    messages.Proto3AbstractMessage super = 1;
+    bytes pduData = 2;
+    oneof containerIds {
+        Proto3CfdpPduMessageFrames frameIds = 3;
+        holder.Proto3PacketIdHolder packetId = 4;
+    }
+    int64 sessionId = 5;
+    int32 hostId = 6;
+    int32 fragment = 7;
+    string sessionName = 8;
+    string host = 9;
+    string user = 10;
+    string fswDictionaryDir = 11;
+    string fswVersion = 12;
+    string venueType = 13;
+    string testbedName = 14;
+    string outputDir = 15;
+    int32 scid = 16;
+    int32 apid = 17;
+    oneof hasApidName { string apidName = 18; }
+    int32 vcid = 19;
+    int32 relayScid = 20;
+    int32 sequenceCount = 21;
+    oneof hasSclk { Proto3Sclk sclk = 22; }
+    oneof hasLst { Proto3Lst lst = 23; }
+    oneof hasScet { Proto3Adt scet = 24; }
+    Proto3Adt ert = 25;
+    bool simulatorGenerated = 26;
+}
+
+message Proto3CfdpPduMessageFrames{
+    repeated holder.Proto3FrameIdHolder singleFrameId = 1;
+}

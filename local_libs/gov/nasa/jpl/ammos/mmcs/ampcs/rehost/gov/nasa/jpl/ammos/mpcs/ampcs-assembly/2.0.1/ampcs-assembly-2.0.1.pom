@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>gov.nasa.jpl.ammos.mmcs.ampcs.rehost.gov.nasa.jpl.ammos.mpcs</groupId>
+  <artifactId>ampcs-assembly</artifactId>
+  <version>2.0.1</version>
+  <name>AMPCS Assembly Project</name>
+  <description>This project will contain the assembly descriptors needed by each mission adaptation of AMPCS.</description>
+	<!-- Distribution Management -->
+	<distributionManagement>
+		<site>
+			<id>ampcs-maven-website</id>
+			<name>The AMPCS Development Project</name>
+			<url>scp://ampcsmasterci.jpl.nasa.gov/home/mpcsbuild/apache-tomcat/webapps/ROOT</url>
+		</site>
+		<repository>
+			<id>artifactory</id>
+			<name>Internal Releases</name>
+			<url>https://cae-artifactory.jpl.nasa.gov:443/artifactory/maven-libs-stage-local/</url>
+		</repository>
+		<snapshotRepository>
+			<id>artifactory</id>
+			<name>Internal Snapshots</name>
+			<url>https://cae-artifactory.jpl.nasa.gov:443/artifactory/maven-libs-snapshot-local</url>
+		</snapshotRepository>
+	</distributionManagement>
+</project>

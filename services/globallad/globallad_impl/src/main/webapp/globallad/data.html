@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>LAD</title>
+    
+    <link rel="stylesheet" href="styles/jquery-ui.min.css" />
+    <link rel="stylesheet" type="text/css" href="styles/defaultStyle.css"/>
+    <link rel="stylesheet" type="text/css" href="lib/fancytree-master/src/skin-win8/ui.fancytree.css"/>
+    
+    
+    <script src="lib/jquery-1.12.4.min.js" type="text/javascript"></script>
+	<script src="lib/globalVars.js" type="text/javascript"></script>
+    <script src="lib/createTables.js" type="text/javascript"></script>
+	<script src="lib/createForms.js" type="text/javascript"></script>
+	<script src="lib/LADFunctions.js" type="text/javascript"></script>
+    <script src="lib/fancytree-master/lib/jquery-ui.custom.js" type="text/javascript"></script>
+    <script src="lib/fancytree-master/src/jquery.fancytree.js" type="text/javascript"></script>
+<!--    <script type="text/javascript" src="lib/zeroclipboard-2.2.0/dist/ZeroClipboard.js"></script> -->
+    <script type="text/javascript">
+	$(document).ready(function(){
+		//prep options
+		$("#getDataOptions").hide();
+		// MPCS-8157 05/05/16 - Added method, now insert time types
+		loadDropDownOptions('TimeTypes','getDataTimeType');
+		loadQueryOptions('getData');
+		
+		
+		
+		$("#insertDataOptions").hide();
+		// loadQueryOptions('insertData');
+		
+		$("#deleteDataOptions").hide();
+		loadQueryOptions('deleteData');
+		
+		//set up tree
+		createLADTree();
+		
+		//make divs resizable
+		$("#leftPane").resizable({handles: 'e', alsoResize : '#tree'});
+		$("#tree").resizable({handles: 's'});
+
+		//verify everything's in view
+		$("#body").height($(window).innerHeight()-151);
+		$('#data').width($(window).innerWidth()-($("#leftPane").width()+6));
+		$('#info').height($('#leftPane').height()-($('#tree').height()+6));
+
+
+		//prep the download link stuff as necessary for the input		
+		var is_chrome = navigator.userAgent.indexOf('Chrome') > -1;
+		var is_explorer = navigator.userAgent.indexOf('MSIE') > -1;
+		var is_firefox = navigator.userAgent.indexOf('Firefox') > -1;
+		var is_safari = navigator.userAgent.indexOf("Safari") > -1;
+		var is_opera = navigator.userAgent.toLowerCase().indexOf("op") > -1;
+		if ((is_chrome)&&(is_safari)) {is_safari=false;}
+		if ((is_chrome)&&(is_opera)) {is_chrome=false;}
+		if(!(is_safari || is_explorer)){
+			$('#viewButtons').append('<input type="button" value="Download Data" onclick="download(' + "'getData'" + ')"/>');
+		}
+		else{
+			$('#viewButtons').append('<a class="fileDownload" id="getDataDownloadButton" download="data.json">Download Data</a>');
+			
+			$('#getDataDownloadButton').attr('href', getUrl('getData', true));
+			var elem = $(this);
+			$('#getDataOptions').each(function() {
+				// Look for changes and update the link appropriately in the download button
+				elem.bind("change", function(event){
+					$('#getDataDownloadButton').attr('href', getUrl('getData', true));
+				});
+			});
+		}
+
+    });
+	
+	//since this resize is called on ANY resize, let's just make sure everything stays in place every time
+	$(window).resize(function(){
+		$('#body').height($(window).innerHeight()-151);
+		$('#leftPane').height($(window).innerHeight()-151);
+		$('#data').width($('#body').width()-($("#leftPane").width()+6));
+		$('#info').height($('#leftPane').height()-($('#tree').height()+6));
+		$('#responseArea').width($('#data').width());
+		$('#responseArea').height($('#data').height()-$('#options').height());
+		$('#getDataFixedOptions').height($('#options').height()-65);
+		$('#insertDataFixedOptions').height($('#options').height()-65);
+		$('#deleteDataFixedOptions').height($('#options').height()-65);
+	});
+    </script>
+</head>
+<body>
+    <div class="Header">
+        <h1> GLOBAL LAD VIEWER </h1>
+        <div class="Table">
+            <div class ="Row">
+                <div class="Cell">
+                    <a href="index.html">Home</a>
+                </div>
+                <div class="Heading">
+                    <a href="data.html">Data</a>
+                </div>
+                <div class="Cell">
+                    <a href="settings.html">Settings</a>
+                </div>
+                <div class="Cell">
+                    <a href="info.html">Information</a>
+                </div>
+                <div class="Cell">
+                    <a href="help.html">Help</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="body" class="body">
+		<div id="leftPane" class="leftPane">
+			<div id="tree" class="tree"> </div>
+			<div id="info" class="info"></div>
+		</div>
+		<div id="data" class="dataDiv">
+			<div id="options" class="optionsDiv">
+				<div class="dataButtonDiv">
+					<input type="button" id="getDataButton" class="dataButton" value="Get Data" onclick="showDataOptions('getData')"/>
+					<input type="button" id="insertDataButton" class="dataButton" value="Insert Data" onclick="showDataOptions('insertData')"/>
+					<input type="button" id="deleteDataButton" class="dataButton" value="Delete Data" onclick="showDataOptions('deleteData')"/>
+				</div>
+				<div id="getDataOptions" class="dataOptionsDiv">
+					<br>
+					<div id="viewButtons">
+						<input type="button" value="View Data" onclick="getDataView()"/>
+						<input type="button" value="Generate curl command" onclick="displayCurl('getData','responseArea')"/>
+					</div>
+					<div id="getDataFixedOptions" class="dataFixedOptionsDiv">
+						<h3 align="center">Select options to view data</h3>
+						<div class="optionsSubDiv">
+							<table class="optionsTable">
+								<tr><th colspan="2">Verify options are set to desired values before requesting data</th></tr>
+								<tr>
+									<td>Data Type</td>
+									<td><select id="getDataQType" name = "getDataQType" onchange="loadQueryOptions('getData')">
+											<option value="eha">EHA</option>
+											<option value="evr">EVR</option>
+										</select>
+									</td>
+								</tr>
+								<tr>
+									<td>Data Source</td>
+									<td><select id="getDataDataSource" name = "getDataDataSource">
+											<option value="all">All</option>
+											<option value="fsw">FSW</option>
+											<option value="sse">SSE</option>
+											<option value="header">Header</option>
+											<option value="monitor">Monitor</option>
+										</select>
+									</td>
+								</tr>
+								<tr>
+									<td>Record State</td>
+									<td><select id="getDataRecordState" name = "getDataRecordState">
+											<option value="both">Both</option>
+											<option value="realtime">Realtime</option>
+											<option value="recorded">Recorded</option>
+										</select>
+									</td>
+								</tr>
+								<tr>
+									<td>Time Type</td>
+									<td><select id="getDataTimeType" name="getDataTimeType">
+										</select>
+									</td>
+								</tr>
+							</table>
+						</div>
+						<div id="getDataQueryOptions" class="optionsSubDiv">
+						</div>
+					</div>
+				</div>
+				<div id="insertDataOptions" class="dataOptionsDiv">
+					<br>
+					<input type="button" value="Insert Data" onclick="insertData()"/>
+					<input type="button" value="Generate curl command" onclick="displayCurl('insertData','responseArea')"/>
+					<div id="insertDataFixedOptions" class="dataFixedOptionsDiv">
+						<h3 align="center">Set options to insert data</h3>
+						<div class="optionsSubDiv">
+							<table class="optionsTable">
+								<tr><th colspan="2">Verify options are set to desired values before inserting data</th></tr>
+								<tr>
+									<td>Data Type</td>
+									<td><select id="insertDataQType" name = "insertDataQType" onchange="loadQueryOptions('insertData')">
+											<option value="eha">EHA</option>
+											<option value="evr">EVR</option>
+										</select>
+									</td>
+								</tr>
+								<tr>
+									<td>Data Source</td>
+									<td><select id="insertDataDataSource" name = "insertDataDataSource">
+											<option value="fsw">FSW</option>
+											<option value="sse">SSE</option>
+											<option value="header">Header</option>
+											<option value="monitor">Monitor</option>
+										</select>
+									</td>
+								</tr>
+								<tr>
+									<td>Record State</td>
+									<td><select id="insertDataRecordState" name = "insertDataRecordState">
+											<option value="realtime">Realtime</option>
+											<option value="recorded">Recorded</option>
+										</select>
+									</td>
+								</tr>
+							</table>
+						</div>
+						<div id="insertDataQueryOptions" class="optionsSubDiv">
+						</div>
+						<div id="insertDataJSONFieldsShared" class="optionsSubDiv">
+							<table class="optionsTable">	
+								<tr><th colspan="2">Input data into all fields below to insert data</th></tr>
+								<tr><td>Event Time</th><td><input type="text" id="insertDataEventTime" name="eventTime"/></td></tr>
+								<tr><td>SCLK Coarse</th><td><input type="text" id="insertDataSclkCoarse" name="sclkCoarse"/></td></tr>
+								<tr><td>SCLK Fine</th><td><input type="text" id="insertDataSclkFine" name="sclkFine"/></td></tr>
+								<tr><td>ERT Milliseconds</th><td><input type="text" id="insertDataErtMilliseconds" name="ertMilliseconds"/></td></tr>
+								<tr><td>ERT Nanoseconds</th><td><input type="text" id="insertDataErtNanoseconds" name="ertNanoseconds"/></td></tr>
+								<tr><td>SCET Milliseconds</th><td><input type="text" id="insertDataScetMilliseconds" name="scetMilliseconds"/></td></tr>
+								<tr><td>SCET Nanoseconds</th><td><input type="text" id="insertDataScetNanoseconds" name="scetNanoseconds"/></td></tr>
+								<tr><td>DSS ID</th><td><input type="text" id="insertDataDssId" name="dssId"/></td></tr>
+								<tr><td>VCID</th><td><input type="text" id="insertDataVcId" name="vcid"/></td></tr>
+								<tr><td>SCID</th><td><input type="text" id="insertDataScId" name="scid"/></td></tr>
+								<tr><td>Host</th><td><input type="text" id="insertDataHost" name="host"/></td></tr>
+								<tr><td>Venue</th><td><input type="text" id="insertDataVenue" name="venue"/></td></tr>
+								<tr><td>Session</th><td><input type="text" id="insertDataSession" name="sessionNumber"/></td></tr>
+							</table>
+						</div>
+						<div id="insertDataJSONFieldsEha" class="optionsSubDiv">
+							<table class="optionsTable">
+								<tr><th colspan="2">EHA Values</th></tr>
+								<tr><td>Channel ID</th><td><input type="text" id="insertDataChannelId" name="channelId"/></td></tr>
+								<tr><td>DN</th><td><input type="text" id="insertDataDn" name="dn"/></td></tr>
+								<tr><td>DN Type</th><td><select id="insertDataDnType" name="dnType">
+															<option value="ascii">ASCII</option>
+															<option value="boolean">Boolean</option>
+															<option value="digital">Digital</option>
+															<option value="float">Float</option>
+															<option value="signed_int">Integer (Signed)</option>
+															<option value="unsigned_int">Integer (Unsigned)</option>
+															<option value="status">Status</option>
+															<option value="time">Time</option>
+														</select>
+													</td></tr>
+								<tr><td>EU</th><td><input type="text" id="insertDataEu" name="eu"/></td></tr>
+								<tr><td>Status</th><td><input type="text" id="insertDataStatus" name="status"/></td></tr>
+								<tr><td colspan="2">(Required when DN Type "Status" is selected)</td></tr>
+							</table>
+						</div>
+						<div id="insertDataJSONFieldsEvr" class="optionsSubDiv">
+							<table class="optionsTable">
+								<tr><th colspan="2">EVR Values</th></tr>
+								<tr><td>EVR Level</th><td><input type="text" id="insertDataEvrLevel" name="evrLevel"/></td></tr>
+								<tr><td>EVR Name</th><td><input type="text" id="insertDataEvrName" name="evrName"/></td></tr>
+								<tr><td>EVR ID</th><td><input type="text" id="insertDataEvrId" name="evrId"/></td></tr>
+								<tr><td>EVR Message</th><td><input type="text" id="insertDataEvrMessage" name="evrMessage"/></td></tr>
+							</table>
+						</div>
+					</div>
+				</div>
+				<div id="deleteDataOptions" class="dataOptionsDiv">
+					<br>
+					<input type="button" value="Delete Data" onclick="deleteData()"/>
+					<input type="button" value="Generate curl command" onclick="displayCurl('deleteData','responseArea')"/>
+					<div id="deleteDataFixedOptions" class="dataFixedOptionsDiv">
+						<h3 align="center">Set options to delete data</h3>
+						<div class="optionsSubDiv">
+							<table class="optionsTable">
+								<tr><th colspan="2">Verify options are set to desired values before deleting data</th></tr>
+								<tr>
+									<td>Data Type</td>
+									<td><select id="deleteDataQType" name = "deleteDataQType" onchange="loadQueryOptions('deleteData')">
+											<option value="eha">EHA</option>
+											<option value="evr">EVR</option>
+										</select>
+									</td>
+								</tr>
+								<tr>
+									<td>Data Source</td>
+									<td><select id="deleteDataDataSource" name = "deleteDataDataSource">
+											<option value="all">All</option>
+											<option value="fsw">FSW</option>
+											<option value="sse">SSE</option>
+											<option value="header">Header</option>
+											<option value="monitor">Monitor</option>
+										</select>
+									</td>
+								</tr>
+								<tr>
+									<td>Record State</td>
+									<td><select id="deleteDataRecordState" name = "deleteDataRecordState">
+											<option value="both">Both</option>
+											<option value="realtime">Realtime</option>
+											<option value="recorded">Recorded</option>
+										</select>
+									</td>
+								</tr>
+							</table>
+						</div>
+						<div id="deleteDataQueryOptions" class="optionsSubDiv">
+						</div>
+					</div>
+				</div>
+			</div>
+			<div id="responseArea" class="responseArea"></div>
+		</div>
+	</div>
+</body>
+</html>

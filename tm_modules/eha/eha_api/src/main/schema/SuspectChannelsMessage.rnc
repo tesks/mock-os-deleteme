@@ -1,0 +1,51 @@
+#
+# AMPCS SuspectChannelsMessage RelaxNG Compact format XML specification.
+#
+# This message is published periodically by the downlink processor to
+# notify listeners of channels in the suspect channel file.
+#
+# Version: 4.0
+#
+# ChangeLog: V3.0 3/14/2013 Updated to import new common session schema.
+# ChangeLog: V4.0 11/28/2017 Major updates for R8
+#
+namespace rng = "http://relaxng.org/ns/structure/1.0"
+datatypes xsd = "http://www.w3.org/2001/XMLSchema-datatypes"
+default namespace = "http://dsms.jpl.nasa.gov/mpcs"
+
+include "ContextCommon.rnc"
+include "Times.rnc"
+
+start = MPCSSuspectChannelsMessage-def
+
+ MPCSSuspectChannelsMessage-def =
+    ## Root element. 
+    element MPCSSuspectChannelsMessage {
+       context-def?,
+       suspectMessage-def+ 
+}
+
+suspectMessage-def =
+    ## The MPCS specific body element. Represents a single MPCS suspect channels message.
+    element SuspectChannelsMessage {
+        ## The time this event was created, in the format YYYY-MM-DDTHH:MM:SS.ttt, 
+        ## or YYYY-DOYTHH:MM:SS.ttt, GMT.
+        attribute eventTime { time-def },
+        
+        context-def?,
+        
+        ## Is this from SSE or FSW controller?
+        element fromSSE { xsd:boolean },
+        ## Represents the event record itself.
+        element SuspectChannels {
+            ## Suspect Channels configuration version
+            attribute version { token }?,
+            ## One suspect channel definition
+            element channel {
+                ## The channel ID
+                attribute channel_id { token },
+                ## Whether DN, EU, or ALARM is suspect. Currently not implemented.
+                attribute field { "DN" | "EU" | "ALARM" }
+            }*
+        }
+    }

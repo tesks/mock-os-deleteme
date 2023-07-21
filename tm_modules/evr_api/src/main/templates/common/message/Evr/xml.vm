@@ -1,0 +1,33 @@
+#if($body)
+<EvrMessage eventTime="$eventTime"> 
+  <Evr module="$module" level="$level">
+    <message#if($name != '') name="$name"#end id="$event"><![CDATA[$message]]></message>
+    <fromSSE>$fromSse</fromSSE>
+    <time realtime="$realTime">
+      <sclk>$sclk</sclk>  
+#if ($scet != '')
+      <scet>$scet</scet>  
+#end
+#if ($lst != '')
+      <lst>$lst</lst>  
+#end  
+#if ($ert != '')
+      <ert>$ert</ert>  
+#end  
+#if ($rct != '')
+      <rct>$rct</rct>  
+#end  
+    </time>
+#if ($metadataKeys)
+    <metadata>
+#set ($index = 0)    
+#foreach ($key in $metadataKeys)
+#set ($val = $metadataVals.get($index))      
+      <value name="$key"><![CDATA[$val]]></value>
+#set ($index = $index + 1)
+#end
+    </metadata>
+#end      
+  </Evr>
+</EvrMessage>
+#end

@@ -1,0 +1,43 @@
+##########################################
+#ACTIVE_MQ_5.0
+##########################################
+#java.naming.factory.initial=org.apache.activemq.jndi.ActiveMQInitialContextFactory
+#java.naming.provider.url=failover://(tcp://localhost:61614?connectionTimeout=0&jms.prefetchPolicy.all=500&jms.useCopyOnSend=false&jms.useCompression=true&wireFormat.maxInactivityDuration=0&keepAlive=true)?initialReconnectDelay=10000&useExponentialBackOff=false&maxReconnectAttempts=0&randomize=false
+#java.naming.provider.url=tcp://localhost:61614?connectionTimeout=0&jms.prefetchPolicy.all=500&jms.useCopyOnSend=false&jms.useCompression=true&wireFormat.maxInactivityDuration=0&keepAlive=true
+#java.naming.provider.url=failover:(tcp://localhost:61614,tcp://localhost:61614)?connectionTimeout=0
+#&jms.prefetchPolicy.all=500&jms.useCopyOnSend=false&jms.useCompression=true&wireFormat.maxInactivityDuration=0&keepAlive=true
+#failover:(tcp://localhost:61616,tcp://remotehost:61616)??initialReconnectDelay=10000&useExponentialBackOff=false&maxReconnectAttempts=0&randomize=false
+#failover://(tcp://localhost:61616,tcp://remotehost:61616)?initialReconnectDelay=10000&useExponentialBackOff=false&maxReconnectAttempts=0&randomize=false
+
+##########################################
+#ACTIVE_MQ_5.5
+##########################################
+java.naming.factory.initial=org.apache.activemq.jndi.ActiveMQInitialContextFactory
+java.naming.provider.url=failover://(tcp://localhost:61614?connectionTimeout=0&jms.useCopyOnSend=false&jms.useCompression=true&wireFormat.maxInactivityDuration=0&keepAlive=true)?initialReconnectDelay=10000&useExponentialBackOff=false&maxReconnectAttempts=0&randomize=false
+#java.naming.provider.url=tcp://localhost:61614?connectionTimeout=0&jms.useCopyOnSend=false&jms.useCompression=true&wireFormat.maxInactivityDuration=0&keepAlive=true
+#java.naming.provider.url=failover:(tcp://localhost:61614,tcp://localhost:61614)?connectionTimeout=0
+#&jms.prefetchPolicy.all=500&jms.useCopyOnSend=false&jms.useCompression=true&wireFormat.maxInactivityDuration=0&keepAlive=true
+#failover:(tcp://localhost:61616,tcp://remotehost:61616)??initialReconnectDelay=10000&useExponentialBackOff=false&maxReconnectAttempts=0&randomize=false
+#failover://(tcp://localhost:61616,tcp://remotehost:61616)?initialReconnectDelay=10000&useExponentialBackOff=false&maxReconnectAttempts=0&randomize=false
+
+#------------------
+#Reconnect Options
+#------------------
+#initialReconnectDelay - How long to wait before the first reconnect attempt (in ms) (default=10)
+#maxReconnectDelay - The maximum amount of time we ever wait between reconnect attempts (in ms) (default=30000)
+#useExponentialBackOff - Should an exponential backoff be used btween reconnect attempts (default=true)
+#backOffMultiplier - The exponent used in the exponential backoff attempts (default=2)
+#maxReconnectAttempts - If not 0, then this is the maximum number of reconnect attempts before an error is sent back to the client (default=0)
+#randomize - use a random algorithm to choose the the URI to use for reconnect from the list provided (default=true)
+#backup - initialize and hold a second transport connection - to enable fast failover (default=false)
+##########################################
+
+
+##########################################
+#Fiorano
+##########################################
+#java.naming.factory.initial = fiorano.jms.runtime.naming.FioranoInitialContextFactory
+#java.naming.provider.url = http://msp-jpldev-1:1856
+#BackupConnectURLs = http://police.jpl.nasa.gov:1856
+#java.naming.security.principal = mpcsmsl
+#java.naming.security.credentials = Fl33-Cof5!

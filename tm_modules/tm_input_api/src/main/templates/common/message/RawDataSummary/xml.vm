@@ -1,0 +1,7 @@
+<RawDataSummaryMessage eventTime="$eventTime">
+	<fromSSE>$fromSse</fromSSE>
+	<isConnected>$connected</isConnected>
+	<isFlowing>$flowing</isFlowing>
+	<lastReadTime>$lastReadTime</lastReadTime>
+	<readCount>$readCount</readCount>
+</RawDataSummaryMessage>

@@ -1,0 +1,445 @@
+# AMPCS Multi-mission common dictionary schema.
+#     
+# Defines XML structures shared by the multi-mission command and
+# telemetry dictionaries.
+#
+# Copyright (c) 2013-2015 California Institute of Technology, All Rights Reserved
+# JPL Proprietary Information
+#
+# Change Log:
+#   V1.0  05/20/12   Original version
+#   V1.1  05/20/13   Moved into AMPCS, normalized header 
+#                    format, minor reorganization.
+#   V1.2  05/24/13   More formatting
+#   V1.3  07/08/13   Minor updates to comments, remove element
+#                    choices in favor of sequences
+#   V1.4  09/18/13   Minor updates in response to DMS SIS Review
+#   V1.5  11/08/13   Minor updates in response to command
+#                    dictionary refactoring
+#   V1.6  05/14/14   Made spacecraft_id header attribute optional.
+#                    Added definition for product viewer element
+#   V1.7  07/14/14   Introduce hex-only-int-16 data type
+#   V2.0  08/05/15   Removed returnType from parameterized
+#                    algorithm. Marked simple algorithm element as
+#                    deprecated. Added definition for channel ID
+#                    group names. Removed key-value attributes 
+#                    from enum tables and algorithms. Modified structure
+#                    of categories and only allow 3 types. Reduced
+#                    enum ordinal values to 32 bits.  Added 32-bit
+#                    hex type.
+#   V3.0 11/09/15    Reduced enum ordinal values to 32 bits.  
+#                    Added 32-bit hex type.
+#                    This is the final change for AMPCS R7.3 (MGSS ECR-117883)
+#   V3.1 08/18/16    Moved raw to engineering unit conversions from
+#   V3.2 09/06/17    Add multiple spacecraft ID support dict build ID.
+#                    Header attributes no longer strictly ordered.
+#   V3.3 06/05/19    Updated deprecated category under categories-def
+#                    to NOT be required
+#   V3.4 11/19/19    Updated mission name to NOT allow spaces
+#   V3.5 09/21/20    Add General definition for 1-63 bit length offset
+#
+namespace rng = "http://relaxng.org/ns/structure/1.0"
+datatypes xsd = "http://www.w3.org/2001/XMLSchema-datatypes"
+
+# General definition of data type used for names. Since names may be stored in 
+# databases or searchable as text, the allowed character set is limited to 
+# letters, numbers, underscores, and dashes, and length is restricted to 64.
+name-def = xsd:token { pattern="[A-Za-z0-9_\-]{1,64}" }
+
+## General definition for the mission name. Since names may be stored in
+## databases or searchable as text, the allowed character set is limited to
+## letters, numbers, underscores, and dashes, and length is restricted to 64.
+mission-name-def = xsd:token { pattern="[A-Za-z0-9_\-]{1,64}" }
+
+# General definition of data type used for long names. Since names may be 
+# stored in databases or searchable as text, the allowed character set is limited 
+# to letters, numbers, underscores, and dashes, and length is restricted to 128.
+name-128-def = xsd:token { pattern="[A-Za-z0-9_\-]{1,128}" }
+
+# General definition of data type used for short names. Since names may be 
+# stored in databases or searchable as text, the allowed character set is limited 
+# to letters, numbers, underscores, and dashes, and length is restricted to 16.
+name-16-def = xsd:token { pattern="[A-Za-z0-9_\-]{1,16}" }
+
+# General definition of an enumeration symbol or short name. Limited
+# to 64 characters in length.
+symbol-def = xsd:token { maxLength="64"} 
+
+# General definition of an enumeration symbol or short name. Limited
+# to 32 characters in length.
+symbol-def-32 = xsd:token { maxLength="32"} 
+
+# General definition for 32 bit unsigned values. Range is limited to 4294967295.
+unsigned-32-def = xsd:nonNegativeInteger { maxInclusive="4294967295"}
+
+# General definition for 16 bit unsigned values. Range is limited to 65535.
+unsigned-16-def = xsd:nonNegativeInteger { maxInclusive="65535"}
+
+# General definition for 8 bit unsigned values. Range is limited to 255.
+unsigned-8-def = xsd:nonNegativeInteger { maxInclusive="255"}
+
+# General definition for 8 bit unsigned positive values. Range is limited to 255.
+unsigned-8-pos-def = xsd:positiveInteger { maxInclusive="255"}
+
+# General definition for 0-63 bit offset values.
+offset-64-def = xsd:nonNegativeInteger { maxInclusive="63"}
+
+# General definition for 1-63 bit length offset values.
+offset-64-length-def = xsd:nonNegativeInteger { minInclusive = "1" maxInclusive="63"}
+
+# General definition for a 400 character-length string.
+string-400-def = xsd:normalizedString  {maxLength="400"}
+
+# General definition for a 512 character-length string.
+string-512-def = xsd:normalizedString  {maxLength="512"}
+
+# General definition for a non-empty token field
+non-empty-token-def = xsd:token { minLength="1" }
+
+# General definition for a 2048 character-length string.
+string-2048-def = xsd:normalizedString {maxLength="2048"}
+
+# General definition for a 64-character token field
+token-64-def = xsd:token { maxLength="64" }
+
+#  Removed zero-terminated string type and
+# added note regarding prefix length for length_prefixed strings.
+#
+# Type of string value. fixed_length implies the string argument occupies 
+# the entire data length in the received packet. length_prefixed implies 
+# that an actual data length field precedes the actual variable 
+# length string data. This length must be an unsigned value
+# in the data.
+#
+string-type-def = attribute type { "fixed_length" | "length_prefixed" }
+   
+# General change log element. Used to include change logs on both dictionaries 
+# and elements within dictionaries.
+change-log-def = element change_log {
+    element log {
+    
+        # Author of the change
+        attribute author { xsd:token },
+        
+        # Date of the change
+        attribute date { xsd:date },
+        
+        # Text description of the change. Multi-line text allowed. White space 
+        # preserved.
+        xsd:string
+    }*
+}
+
+# Changed type of text element to
+# normalized string and limited length.
+#
+# General key-value element, for specifying additional data not specifically
+# called for by the schema. Allows projects and subsystems to include information
+# not required by the general schema without modification to the schema itself.
+key-value-def = element keyword_value {
+
+    # Name of the additional attribute
+    attribute key { xsd:token },
+    
+    # Value of the additional attribute
+    xsd:normalizedString { maxLength="265"}
+}
+
+# Key-value list element. Allows for a list of 0 or more of the keyword_value 
+# elements.
+attributes-def = element attributes {
+    key-value-def*
+}
+
+# Common dictionary header, to be included in all dictionaries.
+header-def = element header {
+
+    # Name of the project/mission generating or using the dictionary
+    attribute mission_name { mission-name-def }
+    
+    # Numeric ID of the spacecraft the dictionary applies to.
+    
+    # Made this element optional.
+    # SCID is not always known at time of XML generation, and
+    # the same XML May be used for multiple spacecraft. A value
+    # of 0 can also be used to indicate that SCID is unknown
+    # or unused.
+    & spacecraft-id-attr-or-list-def?
+    
+    # Version of the dictionary
+    & attribute version { xsd:token }
+    
+    # version of the schema upon which the dictionary is based
+    & attribute schema_version { xsd:token }
+    
+    # Globally unique build identifier of the dictionary.
+    # Each dictionary associated with a build identifier must not
+    # be changed once deployed in any venue, ever.
+    # The guarantee that a unique build identifier corresponds to
+    # an immutable dictionaries are needed by other subsystems in
+    # order to determine when a dictionary has changed.
+    # This may be the same as the "version" attribute if the user
+    # desires.
+    & attribute dictionary_build_id { xsd:token }?
+    
+
+    # Dictionary change log
+    & change-log-def? 
+}
+
+# Add spacecraft_id list. Can be used instead
+# of the spacecraft_id element, but both cannot be present.
+spacecraft-id-attr-or-list-def = (
+    attribute spacecraft_id { xsd:nonNegativeInteger }
+    | element spacecraft_ids {
+        element spacecraft_id { attribute value {xsd:nonNegativeInteger } }+
+    }
+)
+
+# General enumeration value element. Used to map a string symbol to numeric value 
+# or vice-versa. In most cases, the numeric value is used and transmitted by the 
+# flight software. The symbolic value is mapped to numeric value on the ground.
+enum-def = element enum {
+
+    # Symbolic value. Length restricted for display and storage purposes.
+    attribute symbol { symbol-def },
+    
+    # Changed from xsd:integer (which allows 64 bits)
+    # to xsd:int (restricted to 32 bits)
+    #
+    # Numeric value corresponding to the symbol. Note that the value can be signed.
+    attribute numeric { xsd:int }
+    
+}
+
+# General enumeration table, which provides a named list of 0 or more 
+# enumeration value elements, plus an optional change log and list of key-value 
+# attributes.
+enum-table-def = element enum_table {
+
+    # Name of the enumeration table. Enum table names are restricted
+    # to the character set allowed by a name token and limited in length for
+    # ease of processing and display purposes.
+    attribute name { name-def } ,
+    
+    # Enumeration values in the table
+    element values {
+        enum-def+
+    },
+    
+
+    # Optional change-log for this enumeration table
+    change-log-def? 
+}
+
+# DEPRECATED. Do not use in new dictionaries.
+# Use parameterized-algorithm-def instead.
+#
+# Algorithm definition for algorithms that take no additional parameters, and 
+# have a fixed return type (depending on where they are used.) Such algorithms 
+# are used to generate engineering units values.
+simple-algorithm-def = element simple_algorithm {
+    # Name of the algorithm. The name must be unique to each algorithm, but the 
+    # same algorithm may be employed in more than one location.
+    attribute name { xsd:token },
+    
+
+    # Optional change-log for this algorithm
+    change-log-def?
+}
+
+# General algorithm definition for algorithms that may take parameters and 
+# specify a return type. Such algorithms are used to compute custom telemetry 
+# or product values on the ground.  
+parameterized-algorithm-def = element parameterized_algorithm {
+
+    # Name of the algorithm. The name must be unique to each algorithm, but 
+    # the same algorithm may be employed in more than one location.
+    attribute name { xsd:token },
+    
+
+    # Optional parameters to algorithm. Algorithms must know the data types 
+    # of the parameters since all parameter values are defined as strings here. 
+    # Parameter names are restricted
+    # to the character set allowed by a name token and limited in length.
+    algorithm-parameter-def*,
+    
+
+    # Optional change-log for this algorithm
+    change-log-def? 
+}
+
+# Defines a parameter to an algorithm. Note that all parameters are strings, 
+# so the algorithm developer must know the data types expected.
+algorithm-parameter-def = element parameter {
+
+    # Required. Parameters can no longer
+    # be accessed by index.
+    #
+    # Name for the parameter.   
+    attribute name { name-def },
+    
+    # Value of the parameter.
+    xsd:string 
+}
+
+
+ #  Modified structure to specifically
+ # allow only three categories and provide easier mission overrride
+ # of allowed values.
+ #
+ # This is used to categorize items into groups. Possible category names 
+ # are "module", "ops category", "subsystem", ...
+ # It is possible that there are multiple ways of organizing groups of 
+ # elements, so that there may be more than one category entry for a given 
+ # item.
+categories-def = element categories {
+     (
+        # Mission-specific flight or simulation module.
+        element module { mission-module-def }?,
+        
+        # Mission-specific flight or simulation subsystem.
+        element subsystem { mission-subsystem-def }?,
+        
+        # Mission-specific flight or simulation category
+        element ops_category { mission-ops-category-def }?,
+        
+        #
+        # DEPRECATED - Use only specific category elements above
+        # in new dictionaries.
+        # Fixed category to NOT be required
+        # since it is now deprecated
+        
+        # Defines a single category user-defined category entry
+        element category {
+     
+             # The name of the category
+             attribute name { category-name-def },
+         
+             # The value of the category
+             attribute value { symbol-def-32 }
+         }*
+     )
+}
+
+#
+# Mission-specific flight/simulation module pattern. Specific
+# missions may copy this schema and make this a list.
+mission-module-def = symbol-def-32
+
+#
+# Mission-specific flight/simulation subsystem pattern. Specific
+# missions may copy this schema and make this a list.
+mission-subsystem-def = symbol-def-32
+  
+
+#
+# Mission-specific flight/simulation OPS category pattern. Specific
+# missions may copy this schema and make this a list.  
+mission-ops-category-def = symbol-def-32
+    
+
+# Defines the allowed pattern for forming telemetry channel IDs
+channel-id-def = xsd:token {  pattern="[A-Za-z]{1}[A-Za-z0-9]{0,3}-[0-9]{4}" } 
+
+#
+# Defines the allowed pattern for forming telemetry channel 
+# group IDs.
+channel-group-def = name-16-def
+
+# Possible values for category name
+category-name-def = "module" | "subsystem" | "ops category" 
+
+# Removed definitions related to alarm
+# and EVR notification not used by any schema that imports this file.
+
+# Hex integer pattern 
+hex-only-int = xsd:token { pattern = "[0-9a-fA-F]+" }
+
+# Hex integer pattern exclusively (no decimal) up to 16 bits
+hex-only-int-16 = xsd:token { pattern = "0[x|X][0-9a-fA-F]+" length="6" }
+
+# Hex integer pattern exclusively (no decimal) up to 32 bits
+hex-only-int-32 = xsd:token { pattern = "0[x|X][0-9a-fA-F]+" minLength="3" maxLength="10" }
+
+# Hex or decimal integer pattern
+hex-int = xsd:token { pattern = "[0-9]+|0x[0-9a-fA-F]+|0X[0-9a-fA-f]+" }
+
+# Valid packet APID range
+apid-range-def = xsd:nonNegativeInteger { maxInclusive="2047" }
+
+#
+# Acceptable pattern for command stems
+stem-def = xsd:token { pattern="[A-Z][A-Z0-9_]{1,32}" }
+
+# Range for the index in a DN-to-EU polynomial specification
+poly-index-range-def = xsd:nonNegativeInteger { maxInclusive = "7" }
+
+# Added definition to the common schema.
+#
+# Data product viewer identification. If the viewer is the default AMPCS DP 
+# viewer then the viewer element can be omitted entirely. Otherwise, the 
+# viewer script path should be specified using the name attribute.
+#
+# The viewer must be a script or application that takes at least one command 
+# line argument: the full path to the product data file. It is up to the 
+# individual project to decide whether the full path to the viewer is placed 
+# here, or whether the viewer script name is supplied without path, in which 
+# case the user's executable PATH must include the viewer directory in order 
+# for AMPCS to launch the viewer. 
+#
+# If additional command line arguments are required 
+# by the viewer, they should be supplied as the text value of the viewer
+# element, exactly as they should be supplied on the viewer command line. 
+# When the viewer is launched, the command line will consist of the viewer
+# name, the text value of this element (the viewer command line arguments),
+# followed by the full path to the data product file.
+product-viewer-def = element viewer {
+     # The viewer script name, with or without directory path
+     attribute name { text },
+            
+     # Arguments to the script, if any
+     (empty | text)
+}
+
+
+# Defines a table interpolation for computing an engineering unit value.
+# Each raw telemetry value in the table maps to an engineering value. 
+# Order of the points matter; it is assumed that the raw values are in increasing 
+# order. The engineering value is a linear estimate between two points in the table.
+# If the value is less than the first raw value, then the engineering value 
+# is created by using a linear interpolation from the slope of the next two 
+# values and the engineering value of the first value.
+# If the value is greater than the last raw value, then the engineering 
+# value is created by a linear evaluation from the slope of the last 
+# two values and the value of the last engineering value.
+table-lookup-def =  element table_lookup { 
+     # Defines one raw/eng pair in the interpolation table
+     element point { 
+     
+         # Raw value for this interpolation point
+         attribute raw { xsd:float },
+     
+         # Eng value for this interpolation point
+         attribute eng { xsd:float }
+     }*
+}
+
+# Defines a polynomial expansion for computing an engineering unit value.
+# This is defined as an iteratively computed value: eng = (eng * raw) + factor[i], 
+# where i is the factor number from N to 0.
+poly-def = element polynomial_expansion {
+
+    # Defines factors for the polynomial. Factors will be used in order, with the
+    # first being factor 0, the second factor 1, and the last factor N. The number
+    # of factors is limited to 8. Indices must be continuous. One cannot specify
+    # index 0 and index 2 without specifying index 1.
+    element factor { 
+    
+        # The polynomial index
+        attribute index { poly-index-range-def },
+        
+        # The polynomial coefficient
+        attribute coeff { xsd:float } 
+    }+
+}

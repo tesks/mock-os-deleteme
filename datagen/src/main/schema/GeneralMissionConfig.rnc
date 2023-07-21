@@ -1,0 +1,39 @@
+# AMPCS General Data Generator Mission Configuration Schema
+#
+# This schema defines the XML used to configure a mission for the
+# AMPCS data generator. This schema is used in cases where the
+# mission configuration is minimal. More complex capabilities
+# have their own mission configuration schemas.
+#
+# Version 1.0 - M. DeMore (MPCS-6854 - 11/21/14)
+# Version 1.1 - M. DeMore change comments about defaults for SCLK
+#               elements. Added packet header class element 
+#               (MPCS-7663 - 9/10/15)
+
+include "CommonConfig.rnc"
+
+# Root element. Start XML document here.
+start =
+  element GeneratorMissionConfig {
+    
+    # MPCS-7663 - 9/10/15. Added packet header class element.
+    
+    # See the common schema for definition.
+    packet-header-class-def?,
+    
+    # See the common schema for definition
+    max-packet-len-def?,
+    
+    # MPCS-7663 - 9/10/15. Removed statement about defaults for SCLK elements
+    # below. To decouple from the mission builds, we can no longer rely upon 
+    # mission configuration.
+    
+    # See the common schema for definitions of these.
+    sclk-coarse-len-def?,
+    sclk-fine-len-def?,
+    use-fraction-sclk-def?,
+    sclk-sep-char-def?,
+    
+    # See the common schema for definition
+    fill-apid-def?
+  }

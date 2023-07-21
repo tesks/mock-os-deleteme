@@ -1,0 +1,1 @@
+SCMF reqId=$iCmdRequestId reqStatus=$iCmdRequestStatus $scmfFile

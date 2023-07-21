@@ -1,0 +1,44 @@
+// tag::header[]
+= image:MGSS_logo.png[] __Multimission Ground Systems and Services__: image:Separator_Line.png[] AMPCS Uplink Automation and CFDP Proxy RESTful M&C SIS
+
+// end::header[]
+
+// tag::purpose[]
+This document describes the RESTful Monitor & Control (M&C) Interface to the AMPCS R8 chill_auto_uplink_server and chill_auto_cfdp_proxy applications. This interface can be used to interact with a running AUTO uplink server or CFDP proxy process in order to obtain its status, create a session, make log entries, radiate PDUs, or shut the process down. This SIS describes only the M&C interface to these processes. It does not attempt to document the functional aspects of AUTO or CFDP processing itself, only how these proxy applications may be remotely controlled through a RESTful interface.
+// end::purpose[]
+
+// tag::change-log[]
+[cols=",,,",]
+|========================================================================
+|*Revision* |*Issue Date* |*Affected Sections or Pages* |*Change Summary*
+|Initial |12/23/2017 |All |Initial issue of document.
+|Second Draft |4/12/2018 |Intro sections |Updates in response to DMS review of other SIS documents.
+|========================================================================
+// end::change-log[]
+
+// tag::environment[]
+== Environment
+=== Hardware Characteristics and Limitations
+No specific hardware is required for use of the interface described by this SIS.
+
+=== Interface Medium and Characteristics
+The interface medium is HTTP or HTTPS over ethernet.  The API is implemented as stateless 
+HTTP(S) GET, PUT, POST, and DELETE requests. When used over HTTP, exchanges are plain text.  When used
+over HTTPS, the transport is encrypted.
+
+=== Standards and Protocols
+The M&C interface to the chill_auto_uplink_server and chill_auot_cfdp_proxy applications uses a Representational State Transfer (RESTful) interface, a widely used internet standard approach. The interface provides HTTP(S) requests to control process behavior and report process state. The specific HTTP requests available are documented later in <<Resources>> section of this document. The data structures used are documented later in the <<Definitions>> section of this document.
+
+When content is returned in response to requests, it is expressed in standard JavaScript Object Notation (JSON) format.
+
+=== Software Initialization
+There is no required software initialization to use the HTTP RESTful interface.  A basic unix "curl" command is adequate. The URI scheme is shown below. The host on which chill_down is running must be substituted for _<current AUTO proxy process host>_. In the URIs for the specific <<Resources>> listed later in this document, the base path is included.
+
+[%hardbreaks]
+__Host__ : <current AUTO proxy process host>
+__BasePath__ : /auto
+__Schemes__ : HTTP, HTTPS
+
+To make an HTTPS connection, you must be set up to use secure transport.  This means you must have a keystore in place. For more information about configuring secure HTTPS services with AMPCS, refer to the _AMPCS Adaptation Guide for Customers_. 
+
+// end::environment[]

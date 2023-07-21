@@ -1,0 +1,4 @@
+#if ($body)
+Evr SessionId=$sessionId SessionHost=$sessionHost #if($name)Name=$name #end#if($module)Module=$module #end#if($level)Level=$level #end#if($event)EventID=$event #{end}FromSSE=$fromSse #if($nullTool.isNotNull($realTime))Realtime=$realTime #end#if($sclk)SCLK=$sclk #end#if($scet)SCET=$scet #end#if($lst)LST=$lst #end#if($ert)ERT=$ert #end#if($rct)RCT=$rct #end#if($message)Message=$message#end MetadataKeys=$mdKeysList MetadataValues=$mdValsList #if($vcid)VCID=$vcid #end#if($dssId >= 0)DssId=$dssId
+#end
+#end

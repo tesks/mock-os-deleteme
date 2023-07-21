@@ -1,0 +1,35 @@
+#
+# AMPCS ProductStarted RelaxNG Compact format XML specification.
+#
+# This message is published whenever the multimission product builder in
+# the downlink processor seems the first PDU for a new data product.
+#
+# Version: 4.0
+#
+# ChangeLog: V3.0 3/14/2013 Updated to import new common session schema.
+# ChangeLog: V4.0 11/28/2017 Major updates for R8
+#
+namespace rng = "http://relaxng.org/ns/structure/1.0"
+datatypes xsd = "http://www.w3.org/2001/XMLSchema-datatypes"
+default namespace = "http://dsms.jpl.nasa.gov/mpcs"
+
+
+include "ContextCommon.rnc"
+include "Times.rnc"
+
+start = MPCSProductStartedMessage-def
+
+MPCSProductStartedMessage-def = element MPCSProductStartedMessage {
+     context-def?,
+     ProductStartedMessage-def
+}
+
+ProductStartedMessage-def = element ProductStartedMessage {
+    attribute eventTime { time-def },
+    context-def?,
+    element type { token },
+    element vcid { xsd:nonNegativeInteger },
+    element apid { xsd:nonNegativeInteger },
+    element totalParts { xsd:nonNegativeInteger },
+    element transactionId { token }
+}

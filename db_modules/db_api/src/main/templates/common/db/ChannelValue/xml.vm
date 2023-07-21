@@ -1,0 +1,69 @@
+#if ($body)
+<EhaChannelValue>
+    <SessionId>$sessionId</SessionId>
+    <SessionHost>$sessionHost</SessionHost>
+#if($channelId)
+    <ChannelId>$channelId</ChannelId>
+#end
+#if($dssId >= 0)
+    <DssId>$dssId</DssId>
+#end
+#if($name)
+    <Name>$name</Name>
+#end
+#if($module)
+    <Module>$module</Module>
+#end
+#if($ert)
+    <ERT>$ert</ERT>
+#end
+#if($scet)
+    <SCET>$scet</SCET>
+#end
+#if($lst)
+    <LST>$lst</LST>
+#end
+#if($rct)
+    <RCT>$rct</RCT>
+#end
+#if($sclk)
+    <SCLK>$sclk</SCLK>
+#end
+    <DataNumber><![CDATA[$dataNumber]]></DataNumber>
+#if($eu)
+    <EU>$eu</EU>
+#end 
+#if($status)
+    <Status>$status</Status>
+#end 
+#if ($dnAlarmState)
+    <DnAlarmState>$dnAlarmState</DnAlarmState>
+#end    
+#if ($euAlarmState)
+    <EuAlarmState>$euAlarmState</EuAlarmState>
+#end
+#if ($nullTool.isNotNull($isRealTime))
+    <Realtime>$isRealTime</Realtime>
+#else
+	<Realtime>null</Realtime>
+#end
+#if($vcid)
+    <VCID>$vcid</VCID>
+#end
+#if($apid)
+    <APID>$apid</APID>
+#end
+#if($apidName)
+    <ApidName>$apidName</ApidName>
+#end
+#if($spsc)
+    <SPSC>$spsc</SPSC>
+#end
+#if($packetRct)
+    <PacketRCT>$packetRct</PacketRCT>
+#end
+#if($vcfc)
+    <SourceVCFC>$vcfc</SourceVCFC>
+#end
+</EhaChannelValue>
+#end

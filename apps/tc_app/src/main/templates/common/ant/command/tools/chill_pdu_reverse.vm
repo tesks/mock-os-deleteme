@@ -1,0 +1,28 @@
+#set ( $shellName = "sh" )
+#shell( $shellName )
+
+#init()
+
+#Java()
+
+#set ( $headless = "true" )
+#SWT( $headless )
+
+#set( $tpsLibraries   =   ["piccolo","commons_cli","commons_lang", "commons_lang3","commons_collections","commons_logging","woodstox","velocity_engine_core","shared" ] )
+#constructClasspath( $tpsLibraries )
+#addSpringClasspath()
+#constructLog4j2Classpath()
+#addCtsClasspath()
+
+#set ( $appName = "chill_cltu_to_pdu" )
+#set ( $appClass = "jpl.gds.tcapp.app.PduReverseApp" )
+#set ( $appArgs = "" )
+#set ( $headless = "false" )
+#set ( $doExec = "true" )
+#set ( $doLog = "false" )
+#set ( $minMem = "512m" )
+#set ( $maxMem = "1536m" )
+#set ( $responderHelper = "" )
+#set ( $sysProperties = "" )
+#set ( $includePassThruArgs = "true" )
+#execJava ( $appName $appClass $appArgs $headless $doExec $doLog $minMem $maxMem $responderHelper $sysProperties $includePassThruArgs )

@@ -1,0 +1,31 @@
+#set ( $shellName = "sh" )
+#shell( $shellName )
+
+#init()
+
+#Java()
+
+#set ( $headless = "true" )
+#SWT( $headless )
+
+#set( $tpsLibraries = ["piccolo", "commons_cli", "commons_lang", "commons_lang3", "commons_collections", "commons_logging", "woodstox", "disruptor", "mysql", "velocity_engine_core", "jersey2", "jaxrs", "jackson", "icmd", "jface", "jdom", "jfreechart", "jing", "shared", "commons_io" ] )
+#constructClasspath( $tpsLibraries )
+#addJmsClasspath()
+#verifyMessagingService()
+#addCssClasspath()
+#addDsneClasspath()
+#addSpringClasspath()
+#constructLog4j2Classpath()
+#addCtsClasspath()
+
+#set ( $appName = "chill_up" )
+#set ( $appClass = "jpl.gds.tcapp.app.gui.UplinkApp" )
+#set ( $headless = "false" )
+#set ( $doExec = "true" )
+#set ( $doLog = "true" )
+#set ( $minMem = "512m" )
+#set ( $maxMem = "1536m" )
+#set ( $responderHelper = "" )
+#set ( $sysProperties = "" )
+#set ( $includePassThruArgs = "true" )
+#execJavaSimple ( $appName $appClass $appArgs $headless $doExec $doLog $minMem $maxMem $responderHelper $sysProperties $includePassThruArgs )

@@ -1,0 +1,172 @@
+/*
+body {
+  padding: 0em;
+}*/
+
+/*body {  min-width:1500px; }*/
+
+body{
+   min-width:1300px; /* suppose you want minimun width of 1000px */
+   width: auto !important;  /* Firefox will set width as auto */
+   width:1300px;             /* As IE ignores !important it will set width as 1000px; */
+}
+
+table.dataTable,
+table.dataTable th,
+table.dataTable td {
+  -webkit-box-sizing: content-box;
+  -moz-box-sizing: content-box;
+  box-sizing: content-box;
+}
+
+.dataTables_filter {
+  padding-bottom: 10px;
+}
+
+.dataTables_scrollBody {
+     overflow-x: hidden !important;
+ }
+
+.ui.segment#content{
+  // padding should be the same as header height
+  padding-top: 155px;
+}
+
+.ui.grid>.row {
+    padding-top: 2px;
+    padding-bottom: 2px;
+    padding-left: 2px;
+    padding-right: 2px;
+}
+
+.ui.grid>.row>.column {
+    padding-top: 1px;
+    padding-bottom: 1px;
+    padding-left: 2px;
+    padding-right: 2px;
+}
+/*
+.ui.grid>.column:not(.row) {
+    padding-top: 2px;
+    padding-bottom: 2px;
+    padding-left: 2px;
+    padding-right: 2px;
+}
+
+
+.ui.grid>.row {
+    padding-top: 2px;
+    padding-bottom: 2px;
+    padding-left: 2px;
+    padding-right: 2px;
+}*/
+
+.inner_table {
+    height: 160px;
+    overflow-y: auto;
+}
+
+
+td {
+  padding-top: 2px;
+  padding-right: 2px;
+  padding-bottom: 2px;
+  padding-left: 2px;
+}
+
+.disableddiv {
+    pointer-events: none;
+    opacity: 0.4;
+}
+
+/*
+.ui.disabled.button[data-tooltip] {
+  pointer-events: auto !important;
+  opacity: 1 !important;
+  background-color: rgba(33, 133, 208, 0.45);
+}
+*/
+/*
+#footer {position: relative;
+    margin-top: -150px; /* negative value of footer height
+    height: 150px;
+    clear:both;}
+
+.sticky#footer {
+      /*position: absolute;
+      position:fixed;
+
+      bottom: 0;
+}*/
+
+
+.main{min-height:100%;
+      padding-bottom:100px;
+      box-sizing:border-box;}
+.footer {
+  background-color: #212121;
+  position: absolute;
+  /* bottom: 0;  remove this */
+  margin-top: -500px; /* add this */
+  left: 0;
+  width: 100%;
+  padding: 15px 0;
+}
+
+#footer
+{
+    /*background-color:red;*/
+    position:fixed;
+    bottom:0px;
+    left:0px;
+    right:0px;
+    height:30px;
+    margin-bottom:0px;
+}
+
+input[id$='-input'] {
+  padding-top:6px;
+  padding-bottom:6px;
+}
+
+.reduced-padding {
+  padding-top:6px;
+  padding-bottom:6px;
+}
+
+/* Tiny Modal Width */
+
+@media only screen and (max-width: 767px) {
+  .ui.tiny.modal {
+    width: 95%;
+    margin: 0em 0em 0em -47.5%;
+  }
+}
+
+@media only screen and (min-width: 768px) {
+  .ui.tiny.modal {
+    width: 50%;
+    margin: 0em 0em 0em -25%;
+  }
+}
+
+@media only screen and (min-width: 992px) {
+  .ui.tiny.modal {
+    width: 200px;
+    margin: 0em 0em 0em -100px;
+  }
+}
+
+@media only screen and (min-width: 1200px) {
+  .ui.tiny.modal {
+    width: 300px;
+    margin: 0em 0em 0em -150px;
+  }
+}
+
+@media only screen and (min-width: 1920px) {
+  .ui.tiny.modal {
+    width: 400px;
+    margin: 0em 0em 0em -200px;
+  }
+}

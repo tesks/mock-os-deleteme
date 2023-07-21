@@ -1,0 +1,9 @@
+<ActivityReport>
+	<activity_id>#if($activityId)$activityId#end</activity_id>
+	<topic>#if($topic)$topic#end</topic>
+	<created>#if($created)$created#end</created>
+	<reporter>#if($reporter)$reporter#end</reporter>
+	<modified>#if($modified)$modified#end</modified>
+	<host>#if($host)$host#end</host>
+	<venue>#if($venue)$venue#end</venue>
+</ActivityReport>

@@ -1,0 +1,41 @@
+#!/bin/bash
+
+if [ $# -lt 1 ]
+then
+    echo "Usage: chill_migrate_data_in [mysql options] <sql-dump-file>"
+    exit
+fi
+
+if [ -z "$CHILL_GDS" ]; then
+        echo "Your CHILL_GDS environment variable is not set"
+        exit 1
+fi
+
+mysqlArgs=
+
+while [ $# -gt 1 ]; do
+    mysqlArgs="$mysqlArgs $1"
+    shift
+done
+
+# MPCS-11199 - Set CHILL_MISSION
+#checkChillMission()
+
+DBNAME=${CHILL_MISSION}${dbName}
+
+
+echo "This script will load $@ into the MySQL database for the ${CHILL_MISSION} MPCS installation."
+printf "Are you sure this is what you want to do? (y/n) "
+read ANSWER
+
+if [ "$ANSWER" != "y" -a "$ANSWER" != "Y" ]; then
+        echo "Terminating without loading file into ${CHILL_MISSION} database..."
+        exit 1
+fi
+
+echo "Loading ${CHILL_MISSION} database..."
+mysql $CHILL_MYSQL_OPTIONS $mysqlArgs -e "source $@" ${DBNAME}
+
+echo ""
+echo "Finished loading $1 into ${CHILL_MISSION} database"
+

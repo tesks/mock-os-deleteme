@@ -1,0 +1,70 @@
+ /**
+ * Copyright 2006-2018. California Institute of Technology.
+ * ALL RIGHTS RESERVED.
+ * U.S. Government sponsorship acknowledged.
+ *
+ * This software is subject to U. S. export control laws and
+ * regulations (22 C.F.R. 120-130 and 15 C.F.R. 730-774). To the
+ * extent that the software is subject to U.S. export control laws
+ * and regulations, the recipient has the responsibility to obtain
+ * export licenses or other export authority as may be required
+ * before exporting such information to foreign countries or
+ * providing access to foreign nationals.
+ */
+ /**
+ * AMPCS common protobuf schema for Telemetry Packet messages.
+ *
+ * Version: 1.0
+ * ChangeLog:
+ * V1.0 - New for R8
+ */
+syntax = "proto3";
+
+package packet;
+
+import "primitives/time_primitives.proto";
+import "abstract_message.proto";
+import "holders.proto";
+
+option optimize_for = SPEED;
+option java_multiple_files = true;
+option java_package = "jpl.gds.serialization.packet";
+option java_outer_classname = "ProtoBufTelemetryPacketMessageSerialization";
+
+message Proto3TelemetryPacketInfo {
+    int32 version = 1;
+    int32 type = 2;
+    int32 apid = 3;
+    int32 seqCount = 4;
+    int32 size = 5;
+    double bitrate = 6;
+    int32 primaryHeaderLength = 7;
+    int32 secondaryHeaderLength = 8;
+    string frameType = 9;
+    string apidName = 10;
+    int32 groupingFlags = 11;
+    repeated int64 sourceVcfcs = 12;
+    oneof hasScid { int32 scid = 13; }
+    oneof hasErt { Proto3Adt ert = 14; }
+    oneof hasSclk { Proto3Sclk sclk = 15; }
+    oneof hasScet { Proto3Adt scet = 16; }
+    oneof hasVcid { int32 vcid = 17; }
+    oneof hasDssId { int32 dssId = 18; }
+    oneof hasSol { Proto3Lst sol = 19; }
+    bool usesSol = 20;
+    bool secondaryHeaderFlag = 21;
+    bool isFill = 22;
+    bool fromSse = 23;
+    int32 relayScid = 24;
+}
+
+message Proto3TelemetryPacketMessage {
+    messages.Proto3AbstractMessage super = 1;
+    Proto3TelemetryPacketInfo pktInfo = 2;
+    bytes pkt = 3;
+    holder.Proto3HeaderHolder header = 4;
+    holder.Proto3TrailerHolder trailer = 5;
+    oneof hasPacketId { holder.Proto3PacketIdHolder packetId = 6; }
+    holder.Proto3FrameIdHolder frameId = 7;
+    oneof hasRct { Proto3Adt rct = 8; }
+}

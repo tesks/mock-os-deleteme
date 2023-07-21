@@ -1,0 +1,152 @@
+#set ( $shellName = "sh" )
+#shell( $shellName )
+
+#checkForHelpOption()
+#checkChillMission()
+
+if test "$showHelp" = "true"
+then
+    printf "${CHILL_MISSION} chill_create_mission_database --user <username> [Other-MySQL-options]"
+    
+    printf "The environment variable named "CHILL_GDS" must point to the root of the MPCS installation (one level above the MPCS "bin" directory). If this environment variable is not present, the script will fail.
+
+    To execute the script, it should simply be run from the command line. The script will first prompt you for a suffix to the standard database names. The usual answer to this is to enter an empty string. The script then will prompt you to confirm that the databases should be created. If 'y' is entered, then database creation will occur. If 'n' is entered, then the script will exit with no changes having been made.
+    
+    The script will then prompt you to supply the host-offset for the database host. If you are a developer, you may enter "0". Otherwise, entire the host-offset assigned to the database host. The value is an integer between 0 and 255 inclusive.
+    
+    The script will then prompt you for the extra time indexes. If 'y' is entered, the extra time indexes will be incorporated. If 'n' is entered, they will not.
+    
+    This script has no options, it simply passes everything through to MySQL. A password may be required.
+    
+    Some missions have an extra index to support ECDR generation. Those missions will ask an extra question at the end to determine the correct index to add. The accepted values are ERT or SCET.
+    
+    Post-Requisite: You must run chill_grant_mission_permissions on all newly-created MPCS databases."
+
+    exit 1
+fi
+
+#init()
+#set ( $operation = "create" )
+NAME=${CHILL_MISSION}${dbName}
+
+printf "Enter database name suffix, if any:"
+read SUFFIX
+
+printf "NAME = ${NAME}"
+
+if test "X$SUFFIX" != "X"
+then
+    NAME="${NAME}$SUFFIX"
+fi
+
+echo "Database name will be ${NAME}"
+echo
+echo
+
+printf "Enter the offset for this DB host. Developers can enter 0:"
+read OFFSET
+
+MATCH=`expr "$OFFSET" : "[0-9][0-9]*"`
+
+if test $MATCH -eq 0
+then
+    echo "Offset must be an integer from 0..255"
+    exit 1
+fi
+
+if test $OFFSET -gt 255
+then
+    echo "Offset must be an integer from 0..255"
+    exit 1
+fi
+
+printf "Do you want to add the extra time indexes? (y/n)"
+read EXTRA
+
+if test "$EXTRA" = "y" -o "$EXTRA" = "Y"
+then
+    EXTRA=1
+    echo "Extra indexes will be added"
+else
+    EXTRA=0
+    echo "Extra indexes will NOT be added"
+fi
+
+# MPCS-6520 - Moved final yes/no after all questions
+# MPCS-7106 - Moved final yes/no after all questions
+# except ECDR (which MUST go after because optional by mission)
+
+#SQLOperation( $operation )
+
+# MPCS-6699 -  Add ECDR for NONE
+
+ECDR="NONE"
+
+# MPCS-10853
+# ECDR not supported in R8.1, but don't want to remove this code
+# as we may add support back at a later point
+#**
+if test "$lma" = "true"
+then
+
+    printf "Which ECDR index do you need? (SCET/ERT/NONE) "
+    read ECDR
+
+    ECDR=`echo $ECDR | tr "[a-z]" "[A-Z]"`
+
+    if test "X$ECDR" != "XSCET" -a "X$ECDR" != "XERT" -a "X$ECDR" != "XNONE"
+    then
+        echo "Choices are SCET or ERT or NONE"
+        exit 1
+    fi
+
+    if test "X$ECDR" != "XNONE"
+    then
+        echo "ECDR index is for $ECDR"
+    else
+        echo "There will be no ECDR index"
+    fi
+fi
+*#
+
+COMMON=$CHILL_GDS/bin/internal/sql
+SQ="'"
+
+CMD=""
+
+CMD="$CMD drop database if exists ${NAME};"
+CMD="$CMD create database ${NAME};"
+CMD="$CMD use ${NAME};"
+CMD="$CMD set @offset=$OFFSET;"
+CMD="$CMD set @extra=$EXTRA;"
+
+# MPCS-6520 - Add ECDR support
+# MPCS-7106 - Add ECDR support
+CMD="$CMD set @ecdr='$ECDR';"
+
+CMD="$CMD set @mission=${SQ}${CHILL_MISSION}${SQ};"
+CMD="$CMD source $COMMON/stored_v5_0_3.sql;"
+CMD="$CMD source $COMMON/master_create_v5_0_3.sql;"
+
+# MPCS-10660 - This file may not exist when renaming the mission
+if [ -f "$COMMON/${CHILL_MISSION}_create_v5_0_3.sql" ]; then
+    echo "Will execute ${CHILL_MISSION}_create_v5_0_3.sql when creating database"
+    CMD="$CMD source $COMMON/${CHILL_MISSION}_create_v5_0_3.sql;"
+fi
+
+# MPCS-9105 - Handle extended SCET tables by default
+CMD="$CMD source $COMMON/create_extended_scet.sql;"
+
+
+# MPCS-10660 - This file may not exist when renaming the mission
+# MPCS-11031 - only use one view or the other
+if [ -f "$COMMON/${CHILL_MISSION}_views_v5_0_3.sql" ]; then
+    echo "Will execute ${CHILL_MISSION}_views_v5_0_3.sql when creating database"
+    CMD="$CMD source $COMMON/${CHILL_MISSION}_views_v5_0_3.sql;"
+else
+    CMD="$CMD source $COMMON/views_v5_0_3.sql;"
+fi
+
+echo "Executing $CMD"
+
+mysql $CHILL_MYSQL_OPTIONS $@ -e "$CMD"

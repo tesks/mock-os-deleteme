@@ -1,0 +1,14 @@
+<html>
+<head>
+	<title>Plot-Oh-Matic - Report Generator</title>
+</head>
+<body>
+	<h1>Available Reports</h1>
+	<h2>Click to download the report in CSV format</h2>
+	<ul>
+		<li><a href="chill_get_products?#if($venue)venue=$venue#end&#if($host)host=$host#end#if($sessionKeys)&sessionKeys=$sessionKeys#end#if($timeType)&timeType=$timeType#end#if($starttime)&starttime=$starttime#end#if($endtime)&endtime=$endtime#end">Product Report</a></li>
+		<li><a href="chill_get_commands?#if($venue)venue=$venue#end&#if($host)host=$host#end#if($sessionKeys)&sessionKeys=$sessionKeys#end#if($timeType)&timeType=$timeType#end#if($starttime)&starttime=$starttime#end#if($endtime)&endtime=$endtime#end">Command Report</a></li>
+		<li><a href="chill_get_evrs?#if($venue)venue=$venue#end&#if($host)host=$host#end#if($sessionKeys)&sessionKeys=$sessionKeys#end#if($timeType)&timeType=$timeType#end#if($starttime)&starttime=$starttime#end#if($endtime)&endtime=$endtime#end">EVR Report</a></li>
+	</ul>
+</body>
+</html>

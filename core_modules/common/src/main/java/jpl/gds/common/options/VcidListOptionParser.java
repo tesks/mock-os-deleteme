@@ -1,0 +1,105 @@
+/*
+ * Copyright 2006-2018. California Institute of Technology.
+ * ALL RIGHTS RESERVED.
+ * U.S. Government sponsorship acknowledged.
+ *
+ * This software is subject to U. S. export control laws and
+ * regulations (22 C.F.R. 120-130 and 15 C.F.R. 730-774). To the
+ * extent that the software is subject to U.S. export control laws
+ * and regulations, the recipient has the responsibility to obtain
+ * export licenses or other export authority as may be required
+ * before exporting such information to foreign countries or
+ * providing access to foreign nationals.
+ */
+package jpl.gds.common.options;
+
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+
+import org.apache.commons.cli.ParseException;
+
+import jpl.gds.common.filtering.VcidFilter;
+import jpl.gds.shared.cli.cmdline.ICommandLine;
+import jpl.gds.shared.cli.options.AbstractOptionParser;
+import jpl.gds.shared.cli.options.ICommandLineOption;
+import jpl.gds.shared.types.UnsignedInteger;
+
+/**
+ * An option parser for a list of VCIDs to filter for. Splits a string by a comma. 
+ * Allows a NONE value for matching things with no VCID, if so configured. Also
+ * allows checking against a list of valid VCIDs. Returns a VcidFilter object,
+ * or null if the option was not provided on the command line. 
+ * 
+ *
+ */
+public class VcidListOptionParser extends AbstractOptionParser<VcidFilter> {
+    
+    /** Value that represents undefined VCID */
+    public static final String NONE_VALUE = "NONE";
+
+	private final boolean allowNone;
+    private final List<UnsignedInteger> validValues;
+	
+	/**
+	 * Constructor
+	 * @param allowNone if the NONE vcid is allowed
+	 * @param valid list of valid values; may be null
+	 */
+	public VcidListOptionParser(final boolean allowNone, final List<UnsignedInteger> valid) {
+		super();
+		this.allowNone = allowNone;
+		this.validValues = valid;
+	}
+
+	@Override
+	public VcidFilter parse(final ICommandLine commandLine, final ICommandLineOption<VcidFilter> opt)
+			throws ParseException {
+        final String str = getValue(commandLine,opt);
+
+        if (str == null) {
+           return null;
+           
+        } else {
+
+            boolean inputNone = false;
+            
+            final Collection<UnsignedInteger> csv = new ArrayList<>();
+        	 
+            for (final String s : str.trim().split(",")) {
+                if (!s.isEmpty()) {
+                    try {
+                        final UnsignedInteger temp = UnsignedInteger.valueOf(s);
+                        if (validValues != null && !validValues.contains(temp)) {
+                            throw new ParseException(THE_VALUE + opt.getLongOpt() + " includes " + s + 
+                                    " which is not a valid value in the current configuration");
+                        }
+                        csv.add(temp);
+                    } catch (final NumberFormatException e) {
+                        if (s.equalsIgnoreCase(NONE_VALUE)) {
+                            if (!this.allowNone) {
+                                throw new ParseException(THE_VALUE + opt.getLongOpt() + " does now allow " + NONE_VALUE + " in this context");
+                            }
+                            inputNone = true;
+                        } else {
+                            throw new ParseException(THE_VALUE + opt.getLongOpt() + " must include only unsigned integers");
+                        }
+                    }
+                }
+            }
+            
+            return new VcidFilter(csv, inputNone);
+	   
+        }
+	}
+	
+	/**
+	 * Retrieves the list of valid values.
+	 * 
+	 * @return list of valid VCID values for this option; may be null
+	 * 
+	 */
+	public List<UnsignedInteger> getValidValues() {
+	    return this.validValues;
+	}
+}

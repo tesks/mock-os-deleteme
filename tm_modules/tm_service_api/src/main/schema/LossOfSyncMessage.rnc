@@ -1,0 +1,35 @@
+# 
+# AMPCS LossOfSyncMessage RelaxNG Compact format XML specification.
+#
+# This message is published when the downlink processor drops out
+# of frame lock.
+#
+# Version: 5.0
+#
+# ChangeLog: V4.0 3/14/2013 Updated to import new common session schema.
+# ChangeLog: V4.1 3/30/16 Updated frame encoding types (MPCS-7993) and corrected spelling of REED_SOLOMON per
+#            MGSS ECR-117883
+# ChangeLog: V5.0 11/28/2017 Major updates for R8
+#
+default namespace = "http://dsms.jpl.nasa.gov/mpcs"
+namespace rng = "http://relaxng.org/ns/structure/1.0"
+
+include "ContextCommon.rnc"
+include "StationCommon.rnc"
+include "TelemFrameCommon.rnc"
+
+start = MPCSLossOfSyncMessage-def
+MPCSLossOfSyncMessage-def =
+    element MPCSLossOfSyncMessage {
+        context-def?, 
+        LossOfSyncMessage-def
+    }
+LossOfSyncMessage-def =
+    element LossOfSyncMessage {
+        attribute eventTime { time-def },
+        context-def?,
+        element lastFrameErt { ert-time-def },
+        element reason { xsd:string },
+        stationInfo-def,
+        transferFrameInfo-def
+    }

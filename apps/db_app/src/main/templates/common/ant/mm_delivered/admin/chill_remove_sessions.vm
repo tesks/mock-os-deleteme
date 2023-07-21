@@ -1,0 +1,40 @@
+#set ( $shellName = "sh" )
+#shell( $shellName )
+
+#init()
+
+#Java()
+
+#set( $tpsLibraries   =   ["piccolo","commons_cli","commons_lang", "commons_lang3","commons_collections","commons_logging","woodstox","mysql","velocity_engine_core","shared" ] )
+#constructClasspath( $tpsLibraries )
+#addSpringClasspath()
+#constructLog4j2Classpath()
+
+#set ( $appName = "chill_remove_sessions" )
+#set ( $appClass = "jpl.gds.db.app.SessionRemovalApp" )
+#set ( $appArgs = "" )
+#set ( $headless = "false" )
+#set ( $doExec = "false" )
+#set ( $doLog = "false" )
+#set ( $minMem = "128m" )
+#set ( $maxMem = "512m" )
+#set ( $responderHelper = "" )
+#set ( $sysProperties = "" )
+#set ( $includePassThruArgs = "true" )
+#execJava ( $appName $appClass $appArgs $headless $doExec $doLog $minMem $maxMem $responderHelper $sysProperties $includePassThruArgs )
+
+#*
+status=$?
+if [ $status == 0 ] ; then
+
+#databaseArgs()
+
+echo "Optimizing database ${dbName} to reclaim space..."
+CMD="$CMD use ${dbName};"
+CMD="$CMD source $CHILL_GDS/bin/internal/sql/${mission}_optimize_tables.sql;"
+
+echo mysql $CHILL_MYSQL_OPTIONS $dbHost $dbPort $dbUser $dbPwd -e "$CMD"
+mysql $CHILL_MYSQL_OPTIONS $dbHost $dbPort $dbUser $dbPwd -e "$CMD"
+
+fi
+*#

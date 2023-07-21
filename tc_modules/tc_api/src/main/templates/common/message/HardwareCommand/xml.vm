@@ -1,0 +1,11 @@
+<HardwareCommandMessage eventTime="$eventTime">
+	<HardwareCommand>
+                <ICmdRequestId>$iCmdRequestId</ICmdRequestId>
+                <ICmdRequestStatus>$iCmdRequestStatus</ICmdRequestStatus>
+#if($iCmdRequestFailureReason)
+                <ICmdRequestFailureReason>$iCmdRequestFailureReason</ICmdRequestFailureReason>
+#end
+		<CommandString>$commandString</CommandString>
+		<ScmfFile>$scmfFile</ScmfFile>
+	</HardwareCommand>
+</HardwareCommandMessage>

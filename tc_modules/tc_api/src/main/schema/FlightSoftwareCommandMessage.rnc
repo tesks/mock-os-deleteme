@@ -1,0 +1,44 @@
+# 
+# AMPCS FlightSoftwareCommandMessage RelaxNG Compact format XML specification,
+#
+# This message is published whenever an uplink application transmits
+# and immediate flight software command to the command sink.
+#
+# Version: 4.0
+#
+# ChangeLog: V3.0 3/13/2013 Updated to include new common session schema.
+# ChangeLog: V3.1 8/06/2013 Changed bad element name ICmdFailureReason to
+#                               ICmdRequestFailureReason
+# ChangeLog: V4.0 11/28/2017 Major updates for R8
+#
+namespace rng = "http://relaxng.org/ns/structure/1.0"
+datatypes xsd = "http://www.w3.org/2001/XMLSchema-datatypes"
+default namespace = "http://dsms.jpl.nasa.gov/mpcs"
+
+include "ContextCommon.rnc"
+include "Times.rnc"
+
+start = MPCSFlightSoftwareCommandMessage-def
+
+MPCSFlightSoftwareCommandMessage-def = element MPCSFlightSoftwareCommandMessage
+{
+     context-def?,
+     commandMessage-def+
+}
+
+commandMessage-def = element FlightSoftwareCommandMessage
+ {
+    attribute eventTime { time-def },
+    context-def?,
+    element FlightSoftwareCommand
+    {
+    	element ICmdRequestId { string },
+    	element ICmdRequestStatus { string },
+    	# 8/6/13 Updated element name for MPCS-5105
+    	element ICmdRequestFailureReason { token }?,
+        element CommandString { token },
+        element ScmfFile { token },
+        element ScmfChecksum { xsd:long },
+        element TotalCltus { xsd:long }
+    }
+}

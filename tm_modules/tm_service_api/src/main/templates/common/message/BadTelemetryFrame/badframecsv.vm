@@ -1,0 +1,6 @@
+#if($header)
+dssId,vcid,vcfc,name,ert,type,bitrate,badReason
+#end
+#if($body)
+#if($dssId >= 0)"$dssId"#else""#end,#if($vcid)"$vcid"#else""#end,"$vcfc","$frameType","$ert","$type","$bitRate","$badReason"
+#end

@@ -1,0 +1,32 @@
+#set ( $shellName = "sh" )
+#shell( $shellName )
+
+#init()
+
+#Java()
+
+#set ( $headless = "true" )
+#SWT( $headless )
+
+#* MPCS-8179: Added libraries for PDPP automation product adder *#
+
+#set( $tpsLibraries = ["commons_io", "commons_beanutils", "commons_cli", "commons_codec", "commons_collections", "commons_configuration2", "commons_http", "commons_lang", "commons_lang3", "commons_logging", "disruptor", "geronimo_jta_1.0.1B_spec", "gson", "guava", "hibernate", "hibernate/classmate*.jar", "hibernate/hibernate_validator*.jar", "hibernate/javassist*.jar", "hibernate/jboss*.jar", "hk2_api", "hk2_config", "hk2_core", "hk2_locator", "hk2_runlevel", "hk2_utils", "hk2", "icmd", "javamail", "javassist", "javax.inject", "jaxb" , "jaxrs", "jcommon", "jdom", "jersey2", "jface", "jing", "mysql", "piccolo", "reflections", "restlet", "shared", "spring_boot_starter_tomcat", "stax_api", "tomcat_embed_core", "tomcat_embed_el", "tomcat_embed_logging_juli", "tomcat_embed_websocket", "tomcat_jasper", "velocity_engine_core", "woodstox", "xml_commons", "jackson", "spring_integration_core", "spring_integration_ip", "spring_messaging", "reactor_core", "reactive_streams"])
+#constructClasspath( $tpsLibraries )
+#addSwagger2Classpath()
+#addSpringClasspath()
+#addSpringBootClasspath()
+#addDsneClasspath()
+#constructLog4j2Classpath()
+
+#set ( $appName = "chill_mds_server" )
+#set ( $appClass = "jpl.gds.mds.server.MonitorDataServiceApp" )
+#set ( $appArgs = "" )
+#set ( $headless = "true" )
+#set ( $doExec = "true" )
+#set ( $doLog = "true" )
+#set ( $minMem = "512m" )
+#set ( $maxMem = "4g" )
+#set ( $responderHelper = "" )
+#set ( $sysProperties = "-DGdsApplicationIsSse=$applicationIsSse" )
+#set ( $includePassThruArgs = "true" )
+#execJavaSimple ( $appName $appClass $appArgs $headless $doExec $doLog $minMem $maxMem $responderHelper $sysProperties $includePassThruArgs )

@@ -1,0 +1,29 @@
+<LossOfSyncMessage eventTime = "$eventTime">
+#if ($dsnInfo) 
+  <DSNInfo>
+    <ert>$ert</ert>
+    <bitRate>$bitRate</bitRate>
+    <numBits>$numBits</numBits>
+    <relayScid>$relayScid</relayScid>
+    <dssId>$dssId</dssId>
+  </DSNInfo>  
+#end
+#if ($tfInfo)
+  <TransferFrameInfo scid="$scid" name="$frameType">
+    <virtualChannel>$vcid</virtualChannel>
+    <seqCount>$vcfc</seqCount>
+    <version>$version</version>
+    <size>$size</size>
+    <firstPacketPointer>$fpp</firstPacketPointer>
+    <isIdle>$idle</isIdle>
+    <isBad>$bad</isBad>
+    <encodingType>$encodingType</encodingType>
+  </TransferFrameInfo>    
+#end
+#if($lastFrameErt)
+  <lastFrameErt>$lastFrameErt</lastFrameErt>
+#end  
+#if ($reason)
+  <reason>$reason</reason>
+#end
+</LossOfSyncMessage>

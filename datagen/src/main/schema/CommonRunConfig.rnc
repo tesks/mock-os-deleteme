@@ -1,0 +1,470 @@
+# AMPCS Channel Data Generator Run Configuration Schema
+#
+# This schema defines the XML used to configure each run of the 
+# AMPCS Channel generator.
+#
+# Version 1.0 - M. DeMore
+# Version 1.1 - M. DeMore add optional DesiredFillPercent element
+# Version 1.2 - M. DeMore add optional filter by channel data type 
+#               (MPCS-6333)
+#
+# Root element. Start XML document here.
+start =
+  element ChannelGeneratorRunConfig {
+  
+    # Desired size of the packet output file. The generator will
+    # write at least this many bytes of packet data, and will stop
+    # on the next packet boundary after this limit is reached.
+    # IGNORED in CUSTOM generation mode.
+    element DesiredFileSize {xsd:positiveInteger},
+    
+    # Desired percentage of fill packets to generate. Defaults to 0.0
+    # (no fill). If specified, the system will attempt to generate
+    # fill packets as this percentage of total packets.
+    element DesiredFillPercent {xsd:float { minInclusive="0.0" maxInclusive="100.0" }}?,
+    
+    # Desired progress report interval. Regardless, the generator will
+    # report progress at intervals of 10% completion. If supplied with
+    # this configuration value, it will report progress at this interval
+    # (specified in minutes) no matter what its current % complete.
+    # Defaults to 5 minutes.
+    element DesiredReportInterval {xsd:positiveInteger}?,
+    
+    # Seed data for integer DN value generation. If this element
+    # is omitted, default tables will be used to seed the integer
+    # generator that populates integer channel DNs.
+    # IGNORED in CUSTOM generation mode.
+    element IntegerSeedData {
+
+         # File from which to take 8 bit integer DN values.
+         # If omitted, defaults to "default", which will load the
+         # default seed table for 1 byte signed integer values.
+         element Integer8SeedTable { "default" | text }?,
+         
+         # File from which to take 16 bit integer DN values.
+         # If omitted, defaults to "default", which will load the
+         # default seed table for 2 byte signed integer values.
+         element Integer16SeedTable { "default" | text }?,
+         
+         # File from which to take 32 bit integer DN values.
+         # If omitted, defaults to "default", which will load the
+         # default seed table for 4 byte signed integer values.
+         element Integer32SeedTable { "default" | text }?,
+         
+         # File from which to take 64 bit integer DN values.
+         # If omitted, defaults to "default", which will load the
+         # default seed table for 8 byte signed integer values.        
+         element Integer64SeedTable { "default" | text }?,
+         
+         # Indicates whether to traverse integer seed values randomly
+         # or sequentially when generating integer values. The
+         # default is RANDOM.
+         element IntegerTraversalType { traversal-type-def }?
+    }?, 
+    
+    # Seed data for unsigned DN generation. If this element
+    # is omitted, default tables will be used to seed the unsigned
+    # generator that populates unsigned channel DNs.
+    # IGNORED in CUSTOM generation mode.
+    element UnsignedSeedData {
+
+         # File from which to take 8 bit unsigned DN values.
+         # If omitted, defaults to "default", which will load the
+         # default seed table for 1 byte unsigned values.
+         element Unsigned8SeedTable { "default" | text }?,
+         
+         # File from which to take 16 bit unsigned DN values.
+         # If omitted, defaults to "default", which will load the
+         # default seed table for 2 byte unsigned values.
+         element Unsigned16SeedTable { "default" | text }?,
+         
+         # File from which to take 32 bit unsigned DN values.
+         # If omitted, defaults to "default", which will load the
+         # default seed table for 4 byte unsigned values.
+         element Unsigned32SeedTable { "default" | text }?,
+         
+         # File from which to take 64 bit unsigned DN values.
+         # If omitted, defaults to "default", which will load the
+         # default seed table for 8 byte unsigned values.        
+         element Unsigned64SeedTable { "default" | text }?,
+         
+         # Indicates whether to traverse unsigned seed values randomly
+         # or sequentially when generating unsigned values. The
+         # default is RANDOM.
+         element UnsignedTraversalType { traversal-type-def }?
+    }?, 
+    
+    # Seed data for float DN generation. If this element
+    # is omitted, default tables will be used to seed the float
+    # generator that populates unsigned Channel DNs.
+    # IGNORED in CUSTOM generation mode.
+    element FloatSeedData {
+         
+         # File from which to take 32 bit floating-point DN values.
+         # If omitted, defaults to "default", which will load the
+         # default seed table for 4 byte float values.
+         element Float32SeedTable { "default" | text }?,
+         
+         # File from which to take 64 bit floating-point DN values.
+         # If omitted, defaults to "default", which will load the
+         # default seed table for 8 byte float values.        
+         element Float64SeedTable { "default" | text }?,
+         
+         # Indicates whether to traverse floating point seed values randomly
+         # or sequentially when generating float values. The
+         # default is RANDOM.
+         element FloatTraversalType { traversal-type-def }?,
+         
+         # Indicates whether to augment the float seed table with NaN and
+         # Infinite values. Default is false.
+         element IncludeNaNInfiniteFloats { xsd:boolean }?
+    }?, 
+    
+    # Seed data for packet SCLK generation. Required. 
+    element SclkSeedData {  
+         
+         # Can use SCLKs from a file, or SCLKs based upon
+         # initial and delta values
+         file-based-sclk-def | delta-based-sclk-def       
+    },
+  
+    # Seed data for string channel DN generation. If this element is
+    # omitted, all values will default.
+    # IGNORED in CUSTOM generation mode.
+    element StringSeedData {
+        
+        # Character set from which to generate strings. If omitted or
+        # set to "default", the default character set will be used 
+        # (ranging from 0x20 thru 0x7E). It is advisable to enclose the
+        # value of this element in a CDATA block if it is not set to
+        # "default". 
+        element StringCharacterSet { xsd:string { minLength="1"}}?,
+        
+        # Flag indicating whether to include empty string DNs. Defaults 
+        # to false.
+        element IncludeEmptyStrings { xsd:boolean }?,
+        
+        # Flag indicating whether to include the null (0x0) character in
+        # the character set. Defaults to false.
+        element IncludeNullCharacter { xsd:boolean }?,
+        
+         # Indicates whether to traverse string seed values randomly
+         # or sequentially when generating string values. The
+         # default is RANDOM.
+         element StringTraversalType { traversal-type-def }?
+    }?,
+    
+    # Seed data for enumerated channel DN generation. If this element
+    # is omitted, all values will default.
+    # IGNORED in CUSTOM generation mode.
+    element EnumSeedData {
+    
+        # Flag indicating whether to generate invalid enumerated DN
+        # values, i.e., numeric values that have no mapping to a symbol
+        # in the enumeration table. Defaults to false;
+        element IncludeInvalidEnums {xsd:boolean},
+        
+        # Approximate percentage of invalid enumeration values to generate.
+        # Default is 0.0. If IncludeInvalidEnums is true, at least one 
+        # invalid enumeration value is guaranteed, even if this number is 
+        # 0.0.
+        element InvalidEnumPercent {xsd:float { minInclusive = "0.0"
+            maxInclusive="100.0" }}?,
+                    
+        # Indicates whether to traverse enumeration seed values randomly
+        # or sequentially when generating enumerated values. The
+        # default is RANDOM.
+        element EnumTraversalType { traversal-type-def }?
+    }?,
+    
+    # Seed data for boolean channel DN generation. If omitted, all values will
+    # default. 
+    # IGNORED in CUSTOM generation mode.
+    element BooleanSeedData {
+    
+        # Flag indicating whether to include any non 0 or 1 value
+        # in the boolean DN values generated.  Defaults to false. If
+        # set to true, one random, unsigned 16 bit integer value other
+        # than 0 or 1 will be selected by the generator, and it will 
+        # be included in the boolean DN values generated with a 33%
+        # probability.
+        element IncludeNonZeroOrOne { xsd:boolean }?,
+        
+        # Indicates whether to traverse boolean seed values randomly
+        # or sequentially when generating boolean values. The
+        # default is RANDOM.
+        element BooleanTraversalType { traversal-type-def }?
+    }?,
+    
+    # Seed data channel packet body generation. If omitted, all values will default.
+    # Note that there are three separate modes for channel generation: RANDOM,
+    # BY APID, and CUSTOM. Therefore, this element is divided into 3 sub-elements,
+    # only one of which may be defined.
+    element ChannelSeedData {
+    
+       # Use this seed element to place channels into pre-channelized packets 
+       # randomly.  In this case, patterns can be used to select channels 
+       # in the dictionary.  The maximum and minumum number of channel samples
+       # per packet can be defined, as can the maximum packet size. The system
+       # will select the number of channels per packet randomly between the
+       # maximum and minimum and will ensure the maximum packet size is not 
+       # exceeded. It is possible to include invalid channel indices and
+       # corrupted packets in the generated data.
+       element Random {
+       
+           # Optional element to define which packet APIDs to generate and how many
+           # packets to generate for each APID before rotating to the next APID in 
+           # the sequence. If omitted, the system will use all channel APIDs defined
+           # in the mission configuration file, and will use a rotation value of
+           # 1.
+           packets-per-apid-def?,
+       
+           # Channel ID selector. Value should be a posix regular expression and
+           # should be enclosed in a CDATA block if it includes characters that
+           # interfere with XML parsing.  Channels witn IDs matching this pattern
+           # will be selected from the dictionary for inclusion in the result file.
+           # Defaults to ".*" (all levels).
+           element IdPattern { text }?,
+           
+           # Channel name selector. Value should be a posix regular expression and
+           # should be enclosed in a CDATA block if it includes characters that
+           # interfere with XML parsing.  Channels with names matching this pattern
+           # will be selected from the dictionary for inclusion in the result file.
+           # Defaults to "*" (all names).
+           element NamePattern { text }?,
+           
+           # Channel ops category selector. Value should be a posix regular expression and
+           # should be enclosed in a CDATA block if it includes characters that
+           # interfere with XML parsing.  Channels with operational categories matching 
+           # this pattern will be selected from the dictionary for inclusion in the 
+           # result file. Defaults to ".*" (all categories).
+           element OpsCatPattern { text }?,
+           
+           # Channel module selector. Value should be a posix regular expression and
+           # should be enclosed in a CDATA block if it includes characters that
+           # interfere with XML parsing.  Channels with modules matching 
+           # this pattern will be selected from the dictionary for inclusion in the 
+           # result file. Defaults to ".*" (all modules).
+           element ModulePattern { text }?,
+           
+           # Channel subsystem selector. Value should be a posix regular expression and
+           # should be enclosed in a CDATA block if it includes characters that
+           # interfere with XML parsing.  Channels with subsystems matching 
+           # this pattern will be selected from the dictionary for inclusion in the 
+           # result file. Defaults to ".*" (all subsystems).
+           element SubsystemPattern { text }?,
+           
+           # MPCS-6333 - 7/1/14. Add DataTypes element.
+           #
+           # Channel data type selector. This is a comma-separated list of data
+           # type names. If specified, ONLY channels with these data types will
+           # be included, regardless of their match to other filters. Valid data
+           # types are SIGNED_INT, UNSIGNED_INT, FLOAT, DIGITAL, STATUS, and ASCII.
+           # Defaults to all data types.
+           element DataTypes { text }?,
+           
+           # Indicates whether to traverse channel definitions in the dictionary
+           # sequentially or randomly. Default is SEQUENTIAL.
+           element ChannelTraversalType { traversal-type-def }?,
+           
+           # Maximum size for pre-channelized packets. Should be less than or
+           # equal to the maximum packet size for the mission. Defaults to the
+           # maximum packet size in the mission configuration.
+           element MaxChannelPacketSize { xsd:positiveInteger }?,
+           
+           # Minimum number of channel samples per packet. Defaults to 1. 
+           element MinPacketSamples { xsd:positiveInteger }?,
+           
+           # Maximum number of channel samples per packet. Defaults to 2000. 
+           element MaxPacketSamples { xsd:positiveInteger }?,
+           
+           # Indicates whether to include invalid indices. Defaults to false.
+           include-invalid-indices-def?,
+           
+           # Percentage of packets with invalid indices. Defaults to 0.0.
+           invalid-index-percent-def?,
+                        
+           # List of invalid channel indices
+           invalid-index-def*,
+           
+           # Indicates whether to include corrupted packets. Defaults to false.
+           # Currently UNSUPPORTED.
+           include-invalid-packets-def?
+       }
+       |
+       # Use this seed element when you want to specify which channels go into
+       # which pre-channelized packets by APID. Each channel listed for each
+       # APID will be included in the packet exactly once, in the order
+       # indicated. It is possible to include invalid channel indices and
+       # corrupted packets in the generated data.
+       element ByApid {
+       
+           # Optional element to define which packet APIDs to generate and how many
+           # packets to generate for each APID before rotating to the next APID in 
+           # the sequence. If omitted, the system will use all channel APIDs defined
+           # in the mission configuration file, and will use a rotation value of
+           # 1.
+           packets-per-apid-def?,
+           
+           # Defines the channels in one packet APID. Must match a pre-channelized 
+           # packet APID defined in the mission configuration file.
+           element ChannelsPerApid {
+           
+              # APID number
+              attribute apid { apid-def },
+              
+              # List of channel IDs to include in this APID. Duplicates will
+              # be removed.
+              element ChannelId { channel-id-def }+
+           }+,
+           
+           # Indicates whether to include packets with invalid channel indices. 
+           # Defaults to false.
+           include-invalid-indices-def?,
+           
+           # Percentage of packets with invalid indices. Defaults to 0.0.
+           invalid-index-percent-def?,
+           
+           # List of invalid channel indices
+           invalid-index-def*,
+           
+           # Indicates whether to include corrupted packets. Defaults to false.
+           # Currently UNSUPPORTED.
+           include-invalid-packets-def?
+       }
+       |
+       # Use this seed element to specify the exact series of desired pre-channelized
+       # packets, including the exact channel IDs and DN values for each packet.
+       # It is not posisble to generate any invalid packets. The DesiredFileSize
+       # and all other configuration for error injection and random behaviors will
+       # be ignored.
+       element Custom {
+          
+          # Defines desired packets, in order. There must be at least one of these.
+          element Packet {
+          
+              # APID for this packet. Must match a pre-channelized packet APID
+              # defines in the mission configuration file.
+              attribute apid { apid-def },
+              
+              # Defines desired channel samples in this packet, in order.
+              element Value {
+              
+                  # Channel ID for this sample
+                  attribute channelId { channel-id-def },
+                  
+                  # DN value for this sample. Will be parsed assuming the DN
+                  # data type of the channel in the dictionary. A type mismatch
+                  # will result in an error.
+                  attribute dnValue {xsd:string}
+              }+
+           }+
+       }
+    }
+}
+  
+# Valid range for a packet APID number
+apid-def = xsd:positiveInteger { maxInclusive = "4096"}
+
+# Pattern for channel IDs
+# Defines the allowed pattern for forming telemetry channel IDs
+channel-id-def = xsd:token {  pattern="[A-Za-z]{1}[A-Za-z0-9]{0,3}-[0-9]{4}" } 
+
+# Hex or decimal integer pattern for 16 bits
+hex-int-16 = xsd:token { pattern = "[0-9]{1,5}|0x[0-9a-fA-F]{1,4}|0X[0-9a-fA-f]{1,4}" }
+
+# Hex or decimal integer pattern for 32 bits
+hex-int-32 = xsd:token { pattern = "[0-9]{1,10}|0x[0-9a-fA-F]{1,8}|0X[0-9a-fA-f]{1,8}" }
+
+# Valid values for traversal type elements 
+traversal-type-def = ( "SEQUENTIAL" | "RANDOM" )
+
+# Invalid channel index element
+invalid-index-def = element InvalidIndex {
+
+    # Channel index. May be hex or decimal.
+    attribute index { hex-int-16 }
+}
+
+# Indicates whether to include ramdomly include invalid channel indices in 
+# packets. 
+include-invalid-indices-def = element IncludeInvalidIndices { xsd:boolean }
+              
+# Approximate percentage of packets with invalid indices to generate.
+# If IncludeInvalidIndices is true, at least one invalid packet is 
+# guaranteed, even if this number is 0.0.
+invalid-index-percent-def = element InvalidIndexPercent { xsd:float 
+      { minInclusive="0.0" maxInclusive="100.0" }}
+
+# Indicates whether to include random channel packets with corrupted 
+# binary bodies. Currently UNSUPPORTED.
+include-invalid-packets-def = element IncludeInvalidChannelPackets {xsd:boolean}
+
+# Defines which packet APIDs to generate and how many
+# packets to generate for each APID before rotating to the next APID in 
+# the sequence.
+packets-per-apid-def = element PacketsPerApid {
+
+   # Defines one packet APID to include in generated data and its 
+   # rotation count. 
+   element ApidCount {
+   
+       # APID for this packet. Must match a pre-channelized packet APID
+       # defined in the mission configuration file.
+       attribute apid { apid-def },
+       
+       # Number of packets to generate for this APID before rotating to
+       # the next one.
+       attribute count { xsd:positiveInteger }
+   }+
+}
+
+# Use this element to use SCLKs read from a file
+file-based-sclk-def =  element FileBasedSclk {
+         
+   # Path to the file containing SCLK seed values.
+   # There is no default.
+   element SclkSeedTable { xsd:string },
+             
+   # Indicates whether the generator should stop
+   # generating packets when all the SCLK values
+   # in the seed file have been used once, regardless
+   # of whether the desired file size has been reached. 
+   # Defaults to true.
+   element StopWhenExhausted { xsd:boolean }?
+}
+
+# Use this element to use monotonically increasing or
+# decreasing SCLK values.
+delta-based-sclk-def = element DeltaSclk {
+         
+   # Initial coarse SCLK value. This will be the coarse SCLK
+   # assigned to the first packet generated. Value must fit
+   # within the mission coarse SCLK size as defined in the
+   # mission configuration file.
+   element InitialSclkCoarse { xsd:nonNegativeInteger },
+           
+   # Initial fine SCLK value. This will be the fine SCLK
+   # assigned to the first packet generated. Value must fit
+   # within the mission fine SCLK size as defined in the
+   # mission configuration file.
+   element InitialSclkFine { xsd:integer },
+           
+   # Delta coarse SCLK value. The coarse packet SCLK will 
+   # increment by this tick value for each packet generated, plus whatever
+   # fraction is indicated by the fine SCLK delta. Absolute 
+   # value must fit within the mission coarse SCLK size as defined 
+   # in the mission configuration file. A negative value will result 
+   # in packets being generated in reverse SCLK order, but no
+   # protections are in place to prevent negative roll.
+   element SclkCoarseDelta { xsd:integer },
+           
+   # Delta fine SCLK value. The fine packet SCLK will 
+   # increment by this subtick value for each packet generated. Absolute 
+   # value must fit within the mission fine SCLK size as defined 
+   # in the mission configuration file. A negative value will result 
+   # in packets being generated in reverse SCLK order, but no
+   # protections are in place to prevent negative roll if the
+   # initial SCLK is not large enough.
+   element SclkFineDelta { xsd:nonNegativeInteger }
+}

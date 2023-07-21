@@ -1,0 +1,145 @@
+#!/bin/sh
+
+# Common shell script portions for the ADG/datagen module.
+# This file invoked by other ADG and MM scripts to check 
+# configuration and setup environment.
+#
+# Added under MPCS-9375 on 1/3/18 by M. Verdugo
+
+#Initialize all the important environment variables
+
+CLASSPATH=.
+JAVA_CMD=
+
+OS_UNAME=`uname`
+
+# Look for 64-bit, but ONLY for Linux at this time, not Apple
+
+
+if test "X$USE_64" = "Xyes" -a "X$OS_UNAME" = "XLinux" -a `uname -m` = "x86_64"
+then
+    MODEL="-d64"
+else
+    MODEL="-d32"
+fi
+
+if [ "$ADG_HOME" = "" ] ; then
+    echo "Your ADG_HOME environment variable is not set."
+    exit 1
+fi
+
+# MPCS-7840 - RAP - 1/13/2016: Add user override of system defaults.
+# ADG_ENV_OVERRIDE can be set to "true" to use only what is in the user's environment,
+# or be set to a valid file path to source.
+# If ADG_ENV_OVERRIDE is set to "false" or is not set, the system environment default
+# is used.
+if [ "X$ADG_ENV_OVERRIDE" = "X" ] || [ "X$ADG_ENV_OVERRIDE" = "Xfalse" ]
+then
+    source "${ADG_HOME}/config/adg_env.sh"
+elif [ "X$ADG_ENV_OVERRIDE" != "Xtrue" ]
+then
+    if [ -f "$ADG_ENV_OVERRIDE" ]
+    then
+        source "$ADG_ENV_OVERRIDE"
+    else
+        echo "ADG_ENV_OVERRIDE not set to a valid file path; please fix it or unset it."
+    fi
+fi
+
+#Setup the version of Java to use
+if [ "X$JRE_DIR" != "X" ] && [ -e $JRE_DIR ]
+then
+    export JAVA_HOME=$JRE_DIR
+elif [ "X$JDK_DIR" != "X" ] && [ -e $JDK_DIR ]
+then
+    export JAVA_HOME=$JDK_DIR
+elif [ "X$JAVA_HOME" = "X" ] || [ ! -e $JAVA_HOME ]
+then
+    echo "Either JAVA_HOME, JRE_DIR, or JDK_DIR needs to be set to a valid Java installation."
+    exit 1
+fi
+
+JAVA_CMD=$JAVA_HOME/bin/java
+export JAVA_CMD
+
+#Construct the Java classpath
+for i in $ADG_HOME/lib/*.jar \
+$ADG_HOME/tps/lib/piccolo/*.jar \
+$ADG_HOME/tps/lib/commons_cli/*.jar \
+$ADG_HOME/tps/lib/shared/*.jar \
+$ADG_HOME/tps/lib/jing/*.jar \
+$ADG_HOME/tps/lib/woodstox/*.jar \
+$ADG_HOME/tps/lib/jaxb/*.jar \
+$ADG_HOME/tps/lib/xeger/*.jar \
+$ADG_HOME/tps/lib/commons_logging/*.jar \
+$ADG_HOME/tps/lib/guava/*.jar
+do
+    CLASSPATH=${CLASSPATH}:${i}
+done
+export CLASSPATH
+
+springLibraries=( "disruptor", "spring_aop", "spring_beans", "spring_boot", "spring_boot_autoconfigure", "spring_boot_starter", "spring_boot_starter_validation", "spring_boot_starter_web", "spring_bridge", "spring_context", "spring_core", "spring_expression", "spring_webmvc", "spring_web", "spring_websocket" )
+
+for i in "${springLibraries[@]}"
+do
+    CLASSPATH=${CLASSPATH}:$ADG_HOME/tps/lib/${i%,}/${i%,}.jar
+done
+export CLASSPATH
+
+log4jLibraries=( "slf4j_api", "jcl_over_slf4j", "jul_to_slf4j", "log4j_slf4j_impl", "log4j_core", "log4j_api" )
+for i in "${log4jLibraries[@]}"
+do
+	CLASSPATH=${CLASSPATH}:$ADG_HOME/tps/lib/${i%,}/${i%,}.jar
+done
+export CLASSPATH
+
+LOG4J_CONFIG_FILE="log4j2.xml"
+LOG4J_COMPONENT_FILE="log4j2.component.properties"
+LOG4J_CONFIG_PROPERTY=""
+LOG4J_COMPONENT_PATH=""
+LOG_DIRECTORIES=""
+
+# Check system directory for Log4J component file                                                                                               
+if [ "X$ADG_HOME/config/$LOG4J_COMPONENT_FILE" != "X" ] && [ -f "$ADG_HOME/config/$LOG4J_COMPONENT_FILE" ]
+then
+    if [ "X$LOG4J_CONFIG_PROPERTY" = "X" ]
+    then
+                LOG4J_CONFIG_PROPERTY=$ADG_HOME/config/$LOG4J_COMPONENT_FILE
+                LOG_DIRECTORIES=$ADG_HOME/config
+    fi
+fi
+
+## Don't add log4j component file to CSV property, only to classpath
+LOG4J_CONFIG_PROPERTY=""
+
+# Check system directory for Log4J config file                                                                                                  
+if [ "X$ADG_HOME/config/$LOG4J_CONFIG_FILE" != "X" ] && [ -f "$ADG_HOME/config/$LOG4J_CONFIG_FILE" ]
+then
+    if [ "X$LOG4J_CONFIG_PROPERTY" = "X" ]
+    then
+                LOG4J_CONFIG_PROPERTY=$ADG_HOME/config/$LOG4J_CONFIG_FILE
+                LOG_DIRECTORIES=$ADG_HOME/config
+    else
+                LOG4J_CONFIG_PROPERTY=$ADG_HOME/config/$LOG4J_CONFIG_FILE,$LOG4J_CONFIG_PROPERTY
+    fi
+fi
+
+LOG4J_COMPONENT_PATH=$LOG_DIRECTORIES
+
+# Exit if there was no Log4J config file                                                                                                        
+if [ "X$LOG4J_CONFIG_PROPERTY" = "X" ]
+then
+    exit "Unable to load Log4j2 configuration file at $ADG_HOME/config" 1
+fi
+
+if [ "X$LOG4J_COMPONENT_PATH" != "X" ]
+then
+        CLASSPATH=$CLASSPATH:$LOG4J_COMPONENT_PATH
+fi
+
+export CLASSPATH
+
+export LOG4J_JAVA_OPTS="-Dlog4j.configurationFile=$LOG4J_CONFIG_PROPERTY -Dorg.jboss.logging.provider=slf4j \
+-Dcom.mchange.v2.log.MLog=com.mchange.v2.log.slf4j.Slf4jMLog -Dlog4j.shutdownHookEnabled=false -DGdsPid=$$"
+
+

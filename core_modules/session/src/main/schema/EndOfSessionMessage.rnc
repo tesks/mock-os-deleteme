@@ -1,0 +1,44 @@
+#
+# AMPCS EndOfSessionMessage RelaxNG Compact format XML specification.
+#
+# EndOfSessionMessage is issued upon completion of an AMPCS session.
+# It uniquely identifies the session that has completed. It
+# is the counterpart to the StartOfSessionMessage.
+#
+# Version: 4.0
+#
+# ChangeLog: V3.0 Updated to import the new common session schema.
+# ChangeLog: V4.0 5/18/17 Major updates for AMPCS R8
+#
+namespace rng = "http://relaxng.org/ns/structure/1.0"
+datatypes xsd = "http://www.w3.org/2001/XMLSchema-datatypes"
+default namespace = "http://dsms.jpl.nasa.gov/mpcs"
+
+include "SessionCommon.rnc"
+include "ContextCommon.rnc"
+include "Times.rnc"
+
+start = MPCSEndOfSessionMessage-def
+
+MPCSEndOfSessionMessage-def = 
+## Root element. 
+element MPCSEndOfSessionMessage {
+     context-def?,
+     endOfSessionMessage-def
+}
+
+endOfSessionMessage-def = 
+## The MPCS specific body element.
+element EndOfSessionMessage {
+    ## The time this message was created, in the format YYYY-MM-DDTHH:MM:SS.ttt, GMT.
+    attribute eventTime { time-def },
+    
+    context-def?,
+           
+    ## Indicates if the message is from a standalone SSE application
+    element fromSSE {xsd:boolean},
+    
+    ## The session ID
+    session-id-def
+}
+

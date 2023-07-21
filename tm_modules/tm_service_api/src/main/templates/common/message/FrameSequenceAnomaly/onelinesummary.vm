@@ -1,0 +1,1 @@
+FRAME SEQ ANOMALY at $eventTime, Anomaly Type=$anomalyType, Expected VCFC=$expectedVcfc, DSSID=$dssId, Frame Type=$frameType, VCID=$vcid, ERT=$ert, VCFC=$vcfc, bitrate=$bitRate

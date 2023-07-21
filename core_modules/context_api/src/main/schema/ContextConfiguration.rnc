@@ -1,0 +1,371 @@
+# 
+# AMPCS Context Configuration schema.
+# 
+# This schema defines the Context Configuration an application is running with
+#
+# ChangeLog
+# Version: 1.0
+# V1.1 Added for AMPCS R8.1
+# 
+#
+
+namespace rng = "http://relaxng.org/ns/structure/1.0"
+
+include "ContextCommon.rnc"
+
+## Root context element
+## Defines a general context configuration
+context-config-def =
+    element Context {
+        
+        ## Context version 
+        attribute version { xsd:int },
+        
+        ## Context type
+        attribute type { type-def },
+        
+        ## Rest Port
+        attribute restPort { restPort-def },
+        
+        ## AMPCS Version number
+        element AmpcsVersion { mpcs-version-def },
+
+        ## Time comparison strategy
+        element TimeComparisonStrategy { xsd:string }?,
+        
+        ## Context Identification 
+        context-identification-def,
+        
+        ## General Information
+        general-information-def,
+        
+        ## Venue Information
+        venue-information-def,
+        
+        ## Filter Information
+        filter-information-def,
+        
+        ## Dictionary Information
+        dictionary-information-def,
+        
+        ## Connection Information
+        connection-information-def
+    }
+
+## Defines context identification
+context-identification-def =
+    element ContextId {
+        
+        ## Basic Context Information
+        element BasicContextInfo { basic-info-def },
+        venue-connection-def,
+        
+        ## The start time of the context, in the format YYYY-MM-DDTHH:MM:SS.ttt, GMT. 
+        ## This is reset by AMPCS each time a new context is started. It cannot be
+        ## used by a user to indicate when a context should start.
+        element StartTime { context-time-def },
+        
+        ## The end time of the context, in the format YYYY-MM-DDTHH:MM:SS.ttt, GMT. 
+        ## This may or may not be present, since the context may not have ended. It
+        ## is assigned by AMPCS.
+        element EndTime { context-time-def }?
+    }
+
+## Defines "General" Information
+general-information-def =
+    element GeneralInformation {
+        
+        ## Context output directory path. 
+        ## 
+        ## If the OutputDirOverridden flag is set, this is required and 
+        ## will be used as is by a new context. If this directory does not 
+        ## exist, it will be created by AMPCS.
+        element OutputDirectory { directory-def }?,
+        
+        ## Flag indicating whether the context output directory is overridden 
+        ## by the user. Assumed to be false if not supplied. 
+        element OutputDirOverridden { xsd:boolean }?,
+        
+        ## JMS sub-topic for publication of real-time messages, to be 
+        ## prepended to the automatic JMS topic name if supplied. Used only 
+        ## for OPS, CRUISE, and SURFACE venues, and always optional. Will be
+        ## ignored in non-OPS configurations.        
+        element Subtopic { sub-topic-def }?,
+        
+        ## JMS Topic for publication of real-time messages. Populated by 
+        ## AMPCS and cannot be overridden by the user.             
+        element Topic { topic-def }?, 
+        
+        ## Whether or not SSE is enabled
+        element isSse { xsd:boolean }
+    }
+
+## Defines basic context key and description information
+basic-info-def =
+    
+    ## The unique ID number of the context. This number is
+    ## assigned by AMPCS when the context in created in the database.
+    ## If no database was used or the context is yet undefined, 
+    ## the context number must be 0.
+    element Number { xsd:nonNegativeInteger },
+    
+    ## Numeric spacecraft identifier. Will be populated by AMPCS if 
+    ## not supplied, based upon current mission configuration.
+    element SpacecraftId { xsd:nonNegativeInteger }?,
+    
+    ## The name of the context. This is user-specified and is required.
+    element Name { name-def },
+    
+    ## The type of the context. This is user-specified and is optional.
+    element Type { type-def }?,
+    
+    ## The description of the context. This is user-specified and is 
+    ## optional.
+    element Description { context-description-def }?
+
+## Defines venue connection information sufficient to locate the context and its LAD.
+venue-connection-def =
+    element Venue {
+        
+        ## The user running the context. This is required, but does not have
+        ## to match the current user's login name.
+        element User { user-def },
+        
+        ## The host on which the context was run. This is required.
+        element Host { host-def },
+        
+        ## The database ID of the host on which the context was run. This
+        ## is required and is automatically assigned by AMPCS. Must be -1
+        ## or omitted if not known.
+        element HostId { xsd:integer }?
+    }
+
+## The AMPCS venue type. This indicates the type of environment in which 
+## the context is run. This is required.
+venue-type-def =
+    element VenueType { "TESTSET" | "TESTBED" | "ATLO" | "OPS" | "CRUISE" | "SURFACE" | "ORBIT" }
+
+## The input data format for the downlink processor. This is required.
+## UNKNOWN value is used in uplink-only context configurations. 
+input-format-def = element InputFormat { all-input-formats-def }
+
+## Defines a list of all input formats
+all-input-formats-def =
+    "UNKNOWN" | "RAW_TF" | "RAW_PKT" | "SFDU_TF" | "SFDU_PKT" | "CMD_ECHO" | "LEOT_TF"
+
+## Downlink stream ID, indicating which flight stream is being processed. 
+## Required only for ATLO and TESTBED venues. Will be ignored in all other cases.
+downlink-stream-def =
+    element DownlinkStreamId {
+        "TZ" | "LV" | "SA" | "Command Echo" | "Selected DL" | "Not applicable"
+    }
+
+## The downlink connection type. Indicates the type of connection 
+## to the data source. This is required. Should be UNKNOWN for 
+## uplink-only contexts.
+downlink-connection-type-def =
+    element DownlinkConnectionType {
+        "UNKNOWN"
+        | "FILE"
+        | "DATABASE"
+        | "CLIENT_SOCKET"
+        | "SERVER_SOCKET"
+        | "NEN_SN_SERVER"
+        | "NEN_SN_CLIENT"
+        | "TDS"
+    }
+testbed-name-def = element TestbedName { testbed-def }
+
+## Defines the full set of venue information.
+venue-information-def =
+    element VenueInformation { venue-type-def, testbed-name-def, downlink-stream-def }
+
+## Defines filter information
+filter-information-def =
+    element FilterInformation {
+        
+        ## The context data source station filter. Optional. If set, only downlink data 
+        ## from the indicated station will be processed and telemetry without
+        ## a station ID will be tagged with this value. If not present, data 
+        ## from all stations will be processed, and telemetry without a station
+        ## will be tagged with a station ID of 0.
+        element DssId { xsd:nonNegativeInteger }?,
+        
+        ## The context virtual channel identifier filter. If set, only downlink 
+        ## data from the indicated virtual channel will be processed. If not 
+        ## present, data from all virtual channels will be processed.
+        element Vcid { xsd:nonNegativeInteger }?
+    }
+
+## Defines Dictionary information
+dictionary-information-def =
+    element DictionaryInformation {
+        
+        ## Top-level path to the flight dictionary directory. This is required
+        ## in all but SSE-only configurations.
+        ## The mission name will be automatically appended, then the FswVersion,
+        ## to locate the dictionary files.
+        element FswDictionaryDirectory { directory-def }?,
+        
+        ## The flight software dictionary version used by the context. This 
+        ## is required in all but SSE-only configurations.
+        element FswVersion { dict-version-def }?,
+        
+        ## Top-level path to the SSE dictionary directory. This is optional if 
+        ## there is no SSE in the current configuration. If there is an SSE, this
+        ## value must be supplied. The mission name will be automatically appended, 
+        ## then the SseVersion, to locate the dictionary files.
+        element SseDictionaryDirectory { directory-def }?,
+        
+        ## The SSE/GSE software dictionary version used by the context. 
+        ## This is optional if there is no SSE in the current configuration. 
+        ## If there is an SSE, this value must be supplied. 
+        element SseVersion { dict-version-def }?
+    }
+
+## Common connection definition for connections 
+## That have a host, port, and role
+common-connection-def =
+    attribute host { host-def }?,
+    attribute port { port-def }?,
+    attribute role { connection-role-def }?
+
+## Defines socket connection
+socket-connection-def = element SocketConnection { common-connection-def? }
+
+## Defines mission space connection
+missionspace-connection-def = element MissionSpaceConnection { common-connection-def? }
+
+## Defines NEN/SN connection
+nen-sn-connection-def = element NenSnConnection { common-connection-def? }
+
+## Defines DSN (CPD) connection
+dsn-connection-def = element DsnCpdConnection { common-connection-def }
+
+## Defines file connection
+file-connection-def =
+    element FileConnection {
+        attribute InputFormat { all-input-formats-def },
+        
+        ## element FileConnection { xsd:string },
+        attribute FilePath { file-def }?
+    }
+
+## Defines database connection
+database-connection-def =
+    element DbConnection {
+        attribute SourceKey { xsd:nonNegativeInteger }?,
+        attribute SourceHost { host-def }?
+    }
+
+## Defines TDS connection
+tds-connection-def =
+    element DsnTdsConnection {
+        attribute InputFormat { all-input-formats-def },
+        common-connection-def
+    }
+
+## Defines all connection types
+connection-type-def =
+    socket-connection-def
+    | file-connection-def
+    | missionspace-connection-def
+    | nen-sn-connection-def
+    | database-connection-def
+    | tds-connection-def
+    | dsn-connection-def
+    
+
+## Defines the sse_downlink_connection 
+sse-down-def =
+    element sse_downlink_connection {
+        attribute InputFormat { all-input-formats-def }?,
+        connection-type-def?
+    }
+    
+## Defines the fsw_downlink_connection 
+fsw-down-def =
+    element fsw_downlink_connection {
+        attribute InputFormat { all-input-formats-def }?,
+        connection-type-def?
+    }?
+    
+## Defines the sse_uplink_connection 
+sse-up-def = element sse_uplink_connection { connection-type-def? }
+
+## Defines the fsw_uplink_connection 
+fsw-up-def = element fsw_uplink_connection { connection-type-def? }
+
+## Defines Connections information 
+connection-information-def =
+
+    ## Order of connection elements does not matter
+    element Connections {
+            sse-down-def?
+            & fsw-up-def? 
+            & sse-up-def?
+            & fsw-down-def?
+    }
+
+## Valid pattern for a context name
+name-def = xsd:token { pattern = "[A-Za-z0-9_\-]{1,64}" }
+
+## Context type definition
+type-def = xsd:token { pattern = "[^%&<>]{1,64}" }
+
+## Valid pattern for a context description
+context-description-def = xsd:token { pattern = "[^%&<>]{1,255}" }
+
+## Valid pattern for an MPCS version
+mpcs-version-def = xsd:token { pattern = "[A-Za-z0-9\./]{1,16}" }
+
+## Valid pattern for a flight or SSE dictionary version
+dict-version-def = xsd:token { pattern = ".{1,64}" }
+
+## Valid pattern for a user name
+user-def = xsd:token { pattern = "[A-Za-z0-9_\-]{1,32}" }
+
+## Valid pattern for a host name or IP
+host-def = xsd:token { pattern = "[A-Za-z0-9_\-\.]{1,64}" }
+
+## Valid pattern for a file path
+file-def = xsd:token { pattern = ".{1,1024}" }
+
+## Context restport definition 
+## Can be -1 when REST interface is not enabled 
+restPort-def = xsd:int { minInclusive = "-1" maxInclusive = "65535" }
+
+## Valid range for a port number
+port-def = xsd:nonNegativeInteger { minInclusive = "1" maxInclusive = "65535" }
+
+## Valid pattern for a sub-topic name
+sub-topic-def = xsd:token { pattern = "[A-Za-z0-9_\-\.]{1,32}" }
+
+## Valid pattern for a topic name
+topic-def = xsd:token { pattern = "[A-Za-z0-9_\-\.]{1,128}" }
+
+## Valid pattern for a directory path
+directory-def = xsd:token { pattern = ".{1,1024}" }
+
+## Connection role
+connection-role-def = "CLIENT" | "SERVER"
+
+## Valid pattern for a testbed name
+testbed-def = xsd:token { pattern = "[A-Za-z0-9_\-]{1,32}" }
+
+## Definition of an ISO time field
+context-iso-time-def =
+    xsd:string {
+        pattern =
+            "[0123456789]{4}-[0123456789]{2}-[0123456789]{2}T[0123456789]{2}:[0123456789]{2}:[0123456789]{2}.[0123456789]{3}"
+    }
+
+## Definition of a day-of-year time field
+context-doy-time-def =
+    xsd:string {
+        pattern =
+            "[0123456789]{4}-[0123456789]{3}T[0123456789]{2}:[0123456789]{2}:[0123456789]{2}.[0123456789]{3}"
+    }
+
+## Definition of a context time, which may be ISO or DOY
+context-time-def = context-iso-time-def | context-doy-time-def

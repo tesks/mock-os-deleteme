@@ -1,0 +1,30 @@
+#set ( $shellName = "sh" )
+#shell( $shellName )
+
+#init()
+
+#Java()
+
+#set ( $headless = "true" )
+#SWT( $headless )
+
+#set( $tpsLibraries = ["gson","xml_commons","piccolo","commons_cli", "commons_io", "commons_lang", "commons_lang3","commons_collections","commons_logging","woodstox","mysql","velocity_engine_core","hibernate","shared","jdom2","disruptor","guava", "geronimo_jta_1.0.1B_spec", "guava"] )
+#constructClasspath( $tpsLibraries )
+#addJmsClasspath()
+#addSpringClasspath()
+
+#set ( $LOG4J_PDPP_CONFIG_FILE = "log4j2-pdpp.xml" )
+#constructLog4j2Classpath($LOG4J_PDPP_CONFIG_FILE)
+
+#set ( $appName = "chill_log_products" )
+#set ( $appClass = "jpl.gds.product.processors.ReferenceCommandLinePostProcessor" )
+#set ( $appArgs = "" )
+#set ( $headless = "true" )
+#set ( $doExec = "false" )
+#set ( $doLog = "false" )
+#set ( $minMem = "128m" )
+#set ( $maxMem = "512m" )
+#set ( $responderHelper = "" )
+#set ( $sysProperties = "-DMnemonic=logger" )
+#set ( $includePassThruArgs = "true" )
+#execJava ( $appName $appClass $appArgs $headless $doExec $doLog $minMem $maxMem $responderHelper $sysProperties $includePassThruArgs)

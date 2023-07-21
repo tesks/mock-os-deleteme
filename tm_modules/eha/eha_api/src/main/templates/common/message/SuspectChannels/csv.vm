@@ -1,0 +1,1 @@
+"SUSPECT CHANNELS",#if($sessionId)"$sessionId.toString()"#else""#end,#if ($dnList)"#foreach($chan in $dnList)$chan;#end",#else"",#end#if ($euList)"#foreach($chan in $euList)$chan;#end",#else"",#end#if ($alarmList)"#foreach($chan in $alarmList)$chan;#end"#else""#end

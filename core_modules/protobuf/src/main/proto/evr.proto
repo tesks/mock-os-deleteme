@@ -1,0 +1,93 @@
+ /**
+ * Copyright 2006-2018. California Institute of Technology.
+ * ALL RIGHTS RESERVED.
+ * U.S. Government sponsorship acknowledged.
+ *
+ * This software is subject to U. S. export control laws and
+ * regulations (22 C.F.R. 120-130 and 15 C.F.R. 730-774). To the
+ * extent that the software is subject to U.S. export control laws
+ * and regulations, the recipient has the responsibility to obtain
+ * export licenses or other export authority as may be required
+ * before exporting such information to foreign countries or
+ * providing access to foreign nationals.
+ */
+ /**
+ * AMPCS common protobuf schema for an EVR message.
+ *
+ * Version: 1.0
+ * ChangeLog:
+ * V1.0 - New for R8
+ */
+syntax = "proto3";
+
+package evr;
+
+import "primitives/time_primitives.proto";
+import "abstract_message.proto";
+
+option optimize_for = SPEED;
+option java_multiple_files = true;
+option java_package = "jpl.gds.serialization.evr";
+option java_outer_classname = "ProtoBufEvrMessageSerialization";
+
+message Proto3EvrMessage{
+    messages.Proto3AbstractMessage super = 1;
+    Proto3EvrDefinition evrDefinition = 2;
+    string evrMessage = 3;
+    Proto3EvrMetadata evrMetadata= 4;
+    bool realtime = 5;
+    bool usesSol = 6;
+    oneof hasErt { Proto3Adt ert = 7; }
+    oneof hasSclk { Proto3Sclk sclk = 8; }
+    oneof hasScet { Proto3Adt scet = 9; }
+    oneof hasSol { Proto3Lst sol = 10; }
+    oneof hasRct { Proto3Adt rct = 11; }
+    oneof hasDssId { int32 dssId = 12; }
+    oneof hasVcid { int32 vcid = 13; }
+    bool isBad = 14;
+    
+}
+
+message Proto3EvrDefinition {
+    string level = 1;
+    oneof hasModule { string module = 2; }
+    oneof hasOpsCat { string opsCat = 3; }
+    oneof hasName { string name = 4; }
+    int64 eventId = 5;
+}
+
+
+message Proto3EvrMetadata{
+    repeated Proto3EvrMetadataElement metadataEntry = 1;
+}
+
+message Proto3EvrMetadataElement {
+    Proto3EvrMetadataKey key = 1;
+    string value = 2;
+}
+
+enum Proto3EvrMetadataKey{
+    /** UNKNOWN */
+    UNKNOWN = 0;
+    
+    /** TaskName */
+    TASKNAME = 1;
+    
+    /** SequenceId */
+    SEQUENCEID = 2;
+    
+    /** CategorySequenceId */
+    CATEGORYSEQUENCEID = 3;
+    
+    /** AddressStack */
+    ADDRESSSTACK = 4;
+    
+    /** Source */
+    SOURCE = 5;
+    
+    /** TaskId */
+    TASKID = 6;
+    
+    /** errno */
+    ERRNO = 7;
+}

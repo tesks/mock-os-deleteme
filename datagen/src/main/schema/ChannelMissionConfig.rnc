@@ -1,0 +1,62 @@
+# AMPCS Channel Data Generator Mission Configuration Schema
+#
+# This schema defines the XML used to configure a mission for the
+# AMPCS channel generator.
+#
+# Version 1.0 - M. DeMore
+# Version 1.1 - M. DeMore add optional FillPacketApid element
+# Version 1.2 - M. DeMore added some comments regarding --sourceSchema 
+#                  and made SCLK settings optional (MPCS-6698)
+# Version 1.3 - M. DeMore change name of imported common schema
+#               (MPCS-6854 - 11/21/14)
+# Version 1.4 - M. DeMore change comments about defaults for SCLK
+#               elements. Added packet header class element. 
+#               (MPCS-7663 - 9/10/15)
+
+include "CommonConfig.rnc"
+
+# Root element. Start XML document here.
+start =
+  element ChannelGeneratorMissionConfig {
+  
+    # AMPCS Java class name for the channel dictionary parser. This is the
+    # AMPCS class used to parse the dictionary. If omitted, this defaults
+    # based upon the --schemaSource command line option to the generator.
+    element ChannelDictionaryClass { text }?,
+    
+    # MPCS-7663 - 9/10/15. Added packet header class element.
+    
+    # See the common schema for definition.
+    packet-header-class-def?,
+    
+    # See the common schema for definition
+    max-packet-len-def?,
+    
+    # MPCS-7663 - 9/10/15. Removed statement about defaults for SCLK
+    # elements below.
+    
+    # See the common schema for definitions of these. 
+    sclk-coarse-len-def?,
+    sclk-fine-len-def?,
+    use-fraction-sclk-def?,
+    sclk-sep-char-def?,
+    
+    # See the common schema for definition
+    fill-apid-def?,
+      
+    # Defines the channel packet APIDs for the mission.
+    element ChannelApids {
+    
+      # Defines one channel packet APID. Must be repeated for every channel APID
+      # the mission supports.
+      element PacketType {
+        
+        # The packet APID.
+        attribute apid { xsd:positiveInteger  { maxInclusive = "4096"}  },
+        
+        # True if this APID is pre-channelized, false if it uses a decom map.
+        # Defaults to true, and currently false is UNSUPPORTED.
+        attribute prechannelized { xsd:boolean }?
+      }+
+    }
+  }

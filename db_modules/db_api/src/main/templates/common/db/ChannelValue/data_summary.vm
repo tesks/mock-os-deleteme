@@ -1,0 +1,11 @@
+##
+##  MPCS-12120: (R8.6.1 Psyche) chill_data_summary --beginTime --endTime EHA counts
+##  not accurate under certain conditions
+##
+##  This template has been added for the use of data transfer between chill_get_chanvals and chill_data_summary.
+##  When chill_data_summary is executed with the --beginTime and/or --endTime options, chill_data_summary
+##  launches chill_get_chanvals with the option '--outputFormat data_summary'.
+##
+#if ($body)
+$sessionId,$channelId,$name
+#end

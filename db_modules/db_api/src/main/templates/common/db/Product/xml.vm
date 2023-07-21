@@ -1,0 +1,39 @@
+#if ($body)
+<Product>
+   <SessionId>$sessionId</SessionId>
+   <SessionHost>$sessionHost</SessionHost>
+   
+   <ReferenceProductMetadata>
+        <GroundCreationTime>$creationTime</GroundCreationTime>
+#if($vcid)
+        <VCID>$vcid</VCID>
+#end
+        <Apid>$apid</Apid>
+#if($productType)        
+        <ProductType>$productType</ProductType>
+#else
+        <ProductType>Unknown</ProductType>
+#end        
+        <GroundStatus>$groundStatus</GroundStatus>
+        <DataFileName>$fullPath</DataFileName>
+        <SequenceId>$seqId</SequenceId>
+        <SequenceVersion>$seqVersion</SequenceVersion>
+        <CommandNumber>$commandNumber</CommandNumber>
+        <DvtCoarse>$dvtCoarse</DvtCoarse>
+        <DvtFine>$dvtFine</DvtFine>
+        <Sclk>$sclk</Sclk>
+        <Scet>$scet</Scet>
+#if($lst)
+        <Lst>$lst</Lst>
+#end
+#if($rct)
+        <RCT>$rct</RCT>
+#end
+        <LastPartErt>$ert</LastPartErt>
+        <TotalParts>$totalParts</TotalParts>
+        <ProductChecksum>$checksum</ProductChecksum>
+        <ProductFileSize>$fileSize</ProductFileSize>
+        <CfdpTransactionId>$transactionId</CfdpTransactionId>   
+   </ReferenceProductMetadata>
+</Product>
+#end

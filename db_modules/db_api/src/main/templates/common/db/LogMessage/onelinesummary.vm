@@ -1,0 +1,4 @@
+#if ($body)
+Log SessionId=$sessionId SessionHost=$sessionHost SessionFragment=$sessionFragment ContextId=$contextId #if($eventTime)EventTime=$eventTime #end#if($rct)RCT=$rct #end#if($severity)Classification=$severity #end#if($type)Type=$type #end#if($message)Message=$message#end
+
+#end

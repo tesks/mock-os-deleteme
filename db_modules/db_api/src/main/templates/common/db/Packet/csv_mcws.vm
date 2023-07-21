@@ -1,0 +1,11 @@
+#macro( escape $field)
+#if($field.toString())#set($field=$field.toString().replace('\', '\\').replace('"', '\"'))
+#else#set($field="")
+#{end}
+$field#end
+#if ($header)
+record_type,session_id,session_host,rct,scet,lst,ert,sclk,vcid,dss_id,apid,apid_name,from_sse,spsc,length,source_vcfc
+#{end}
+#if ($body)
+"packet","#escape($sessionId)","#escape($sessionHost)","#escape($rct)","#escape($scet)","#escape($lst)","#escape($ert)","#escape($sclk)","#escape($vcid)","#if($dssId >= 0)$dssId#end","#escape($apid)","#escape($apidName)","#escape($fromSse)","#escape($spsc)","#escape($length)","#escape($sourceVcfcs)"
+#{end}

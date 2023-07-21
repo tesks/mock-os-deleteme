@@ -1,0 +1,15 @@
+#set ( $shellName = "sh" )
+#shell( $shellName )
+
+#init()
+
+#Python()
+
+#set( $tpsLibraries = ["matplotlib","numpy","cheetah", "pmw"] )
+#constructPythonpath ( $tpsLibraries )
+
+export MPLCONFIGDIR=$CHILL_GDS/config
+
+#set ( $scriptName = "lib/python/mtak/chill_mtak_gui.py" )
+#set ( $excludeSite = "false" )
+#execPython ( $scriptName $excludeSite )

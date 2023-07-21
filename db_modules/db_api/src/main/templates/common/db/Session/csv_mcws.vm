@@ -1,0 +1,11 @@
+#macro( escape $field)
+#if($field.toString())#set($field=$field.toString().replace('\', '\\').replace('"', '\"'))
+#else#set($field="")
+#{end}
+$field#end
+#if($header)
+record_type,number,name,type,description,user,host,downlink_connection_type,uplink_connection_type,start_time,end_time,output_directory,output_dir_overridden,fsw_version,sse_version,fsw_dictionary_directory,sse_dictionary_directory,input_format,venue_type,testbed_name,downlink_stream_id,spacecraft_id,ampcs_version,full_name,fsw_downlink_host,fsw_uplink_host,fsw_downlink_port,fsw_uplink_port,sse_host,sse_downlink_port,sse_uplink_port,input_file,topic,jms_subtopic,session_dss_id,session_vcid,run_fsw_downlink,run_sse_downlink,run_uplink,database_session_key,database_session_host
+#{end}
+#if ($body)
+"session","#escape($testNumber)","#escape($testName)","#escape($testType)","#escape($testDescription)","#escape($user)","#escape($host)","#escape($downlinkConnectionType)","#escape($uplinkConnectionType)","#escape($startTime)","#escape($endTime)","#escape($outputDir)","#escape($outputDirOverride)","#escape($fswVersion)","#escape($sseVersion)","#escape($fswDictionaryDir)","#escape($sseDictionaryDir)","#escape($inputFormat)","#escape($venueType)","#if($testbedName && ($venueType == "TESTBED" || $venueType == "ATLO"))#escape($testbedName)#end","#if($downlinkStreamId && ($venueType == "TESTBED" || $venueType == "ATLO"))#escape($downlinkStreamId)#end","#escape($spacecraftId)","#escape($mpcsVersion)","#escape($fullName)","#escape($fswDownlinkHost)","#escape($fswUplinkHost)","#escape($fswDownlinkPort)","#escape($fswUplinkPort)","#escape($sseHost)","#escape($sseDownlinkPort)","#escape($sseUplinkPort)","#escape($inputFile)","#escape($topic)","#escape($subtopic)","#if($dssId != 0)$dssId#end","#escape($vcid)","#escape($fswDownlinkFlag)","#escape($sseDownlinkFlag)","#escape($uplinkFlag)","#escape($databaseSessionId)","#escape($databaseHost)"
+#{end}

@@ -1,0 +1,48 @@
+# 
+# AMPCS ServiceConfiguration RelaxNG Compact format XML specification
+# 
+# ChangeLog
+# Version: 1.0
+# V1.0 Added schema for R8.1
+# 
+#
+
+namespace rng = "http://relaxng.org/ns/structure/1.0"
+datatypes xsd = "http://www.w3.org/2001/XMLSchema-datatypes"
+
+## Root element.
+## 12/5/13 - MPCS-5533. Added service configuration
+## The service configuration associated with the session.
+## triviski 3/30/2016 MPCS-7815 - Adding boolean to indicate if the lad is enabled.
+ServiceConfiguration-def = element ServiceConfiguration {
+        
+        ## The host on which the global LAD server resides
+        element ladHost { xsd:token }?,
+        
+        ## The port on which the global LAD server resides
+        element ladPort { xsd:nonNegativeInteger }?,
+        
+        ## Flag indicating if the global LAD is enabled.
+        element ladEnabled { xsd:boolean }?,
+        
+        ## The host on which the Life-of-Mission database resides
+        element lomsDbHost { xsd:token },
+        
+        ## The port on which the Life-of-Mission database resides
+        element lomsDbPort { xsd:nonNegativeInteger },
+        
+        ## Flag indicating if the Life-of-Mission database is enabled.
+        element lomsDbEnabled { xsd:boolean },
+        
+        ## The name of the Life-of-Mission database
+        element lomsDbConnectData { xsd:token },
+        
+        ## The host on which the JMS service resides
+        element jmsHost { xsd:token },
+        
+        ## The port at which the JMS service resides
+        element jmsPort { xsd:nonNegativeInteger },
+        
+        ## Flag indicating if the JMS service is enabled.
+        element jmsEnabled { xsd:boolean }
+}

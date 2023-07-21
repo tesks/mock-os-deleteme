@@ -1,0 +1,207 @@
+# Multi-mission monitor/header channel common XML schema.
+#     
+# Defines XML structures shared by the multi-mission monitor and
+# header dictionaries.
+#
+# Copyright (c) 2013 California Institute of Technology, All Rights Reserved
+# JPL Proprietary Information
+#
+# Change Log:
+#   V1.0  05/30/13   Original version
+#   V1.1  09/18/13   Minor updates in response to DMS SIS Review
+#
+# Include common dictionary XML definitions
+include "CommonDictionary.rnc"
+
+# Definition of a Java derivation    
+derivation-java-def =
+
+    element derivation_java {
+    
+        # The java class (full package name) the computes the deriveed channels
+        attribute java_class { java-class-name },
+        
+        # A unique identifier for this derivation
+        attribute derivation_id { name-def },
+        
+        # The Java derivation can have several parent channels
+        element parents {
+            
+            # Defines the channel ID of one parent. There must 
+            # be at least one.
+            element parent {
+                attribute channel_id { m-h-channel-id }
+            }+
+        },
+        
+        # Defines parameters to be passed to the derivation algorithm.
+        arguments-def?
+    }
+    
+# Definition of a bit-unpack operation   
+derivation-bitunpack-def =
+
+    element derivation_bit {
+    
+        # This has a single parent channel.
+        attribute parent { m-h-channel-id },
+        
+        # This is used to specify the bit for the extraction. You can specify
+        # multiple bits for non-contiguous extraction. All extracted bits are
+        # concatenated together to form the new channel value. The bits are 
+        # specified with the least significant bit (LSB) being the 0 bit. For
+        # example:
+        # 
+        #   num_bits = 9
+        #   start_bit = 0
+        #   parent value = 0x01020304
+        # 
+        # This definition will extract the first byte from the parent value. The
+        # resulting channel value will be 0x00000104 assuming a 32-bit derived
+        # channel type.
+        element bits {
+        
+            attribute start_bit {
+                xsd:int { minInclusive = "0" maxInclusive = "63" }
+            },
+            
+            attribute num_bits {
+                xsd:int { minInclusive = "1" maxInclusive = "64" }
+            }
+        }+
+    }
+    
+    
+# General DN-to-EU conversion definition
+dn-eu-conversion-def =
+
+    element dn_to_eu {
+    
+        # An optional display format for the channel EU
+        attribute eu_io_format { xsd:string }?,
+        
+        # Optional units associated with the channel EU
+        attribute eu_units { xsd:token }?,
+        
+        # The definition of the actual EU conversion.
+        # Supports 3 types: a polynomial conversion, a
+        # table interpolation, and a custom java 
+        # class
+        (dn-eu-poly-def | dn-eu-table-def | dn-eu-java-def)    
+    }
+
+# Defines a polynomal DN-to-EU conversion
+dn-eu-poly-def =
+
+    element dn_eu_poly {
+    
+        # Polynomial coefficient values. Coefficients must
+        # be specified up to the order of the polynomial.
+        # In other words, one cannot specify coefficient 0
+        # and coefficient 4 and leave out coefficients 1, 2, and 
+        # 3. There must be at least one coefficient. There can be
+        # no more than 8. Starting index is 0.
+        element coeff {
+            
+            # The index of this coefficient. 
+            attribute index { poly-index-range-def },
+            
+            #
+            # The value of the coefficient.
+            attribute val { xsd:double }        
+        }+
+    }
+    
+# Defines a table interpolation DN-to-EU conversion   
+dn-eu-table-def =
+
+    element dn_eu_table {
+    
+        # Specifies mappings in the table.There must be at least one
+        # mapping in the DN-to-EU table
+        element val {
+        
+            #
+            # Channel DN
+            attribute dn { xsd:double },
+            
+            #
+            # EU the DN above maps to
+            attribute eu { xsd:double }          
+        }+
+    }
+    
+# Defines a java DN-to-EU conversion    
+dn-eu-java-def =
+
+    element dn_eu_java {
+        
+        # The full package name of the java class to invoke
+        attribute java_class { java-class-name },
+        
+        # Parameters passed to the derivation algorithm.
+        arguments-def?
+    }
+    
+# Pattern for a channel identifier, specifically for MON or header channels
+m-h-channel-id = xsd:token { pattern = "[MH]-[0-9]{4}" }
+
+# Definition of a channel identifier element, specifically for MON or header channels
+m-h-channel-id-def = attribute channel_id { m-h-channel-id }
+
+# Valid pattern for a Java class name
+java-class-name = xsd:token { pattern = "[A-Za-z_][A-Za-z_0-9.]*" }
+
+# Valid channel data types
+channel-type-list-def = ("UNSIGNED_INT" | "STATUS" | "FLOAT" | "SIGNED_INT" | "ASCII" | "DIGITAL")
+
+# Valid integer channel data types
+int-channel-type-list-def = ("UNSIGNED_INT" | "STATUS" | "SIGNED_INT")
+    
+# Channel name displayed by GDS tools. Note this is more lax with regard
+# to character content than flight channel names because legacy header
+# channel names can be really wacky.
+channel-name-def = attribute channel_name { xsd:token { maxLength="64" } }
+        
+# The channel data type
+channel-type-def = attribute type { channel-type-list-def }
+        
+# Units associated with the channel DN. Use "UNDEFINED" if the DN has no units
+channel-units-def = attribute units { "UNDEFINED" | xsd:token }
+        
+# Display format for the channel DN, in the form of
+# a C "printf" formatter string
+io-format-def = attribute io_format { xsd:normalizedString }?
+        
+# A description of the channel. May be multi-line. White space will be preserved.
+comment-def = element comment { xsd:string }
+ 
+# If a status channel, this element defines the valid state values.
+states-def =     
+    element states {
+        # Defines one mapping between a channel DN and a state value
+        element enum {
+           # Channel DN
+           attribute dn { xsd:integer },
+           # Text to map to
+           symbol-def
+        }+
+    }
+                   
+# Defines parameters to be passed to a java algorithm.
+arguments-def = 
+     element arguments {
+        
+        # Defines a single parameter
+        element argument {
+            
+           # The name of the parameter
+           attribute name { name-def },
+                
+           # The value of the parameter. Virtually no restriction on content.
+           text
+        }+
+     }  
+     
+# Valid range for header/monitor measurement IDs
+measurement-id-range-def =  xsd:nonNegativeInteger { maxInclusive = "9999" }

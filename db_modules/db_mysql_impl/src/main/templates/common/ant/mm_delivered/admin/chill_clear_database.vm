@@ -1,0 +1,38 @@
+#set ( $shellName = "sh" )
+#shell( $shellName )
+
+#init()
+
+#set ( $operation = "clear" )
+
+DBNAME=${CHILL_MISSION}${dbName}
+NDBNAME=${noneDbName}
+
+printf "Enter database name suffix, if any:"
+read SUFFIX
+
+if test "X$SUFFIX" != "X"
+then
+    DBNAME="${DBNAME}$SUFFIX"
+    NDBNAME="${NDBNAME}$SUFFIX"
+fi
+
+echo
+echo "Database to be cleared is ${DBNAME}"
+echo
+
+#SQLOperation( $operation )
+
+CMD=""
+
+#if ( $isUnitTest )
+    CMD="$CMD use ${NDBNAME};"
+    CMD="$CMD source $CHILL_GDS/bin/internal/sql/delete_v5_0_3.sql;"
+#end
+
+CMD="$CMD use ${DBNAME};"
+CMD="$CMD source $CHILL_GDS/bin/internal/sql/delete_v5_0_3.sql;"
+
+echo "Executing $CMD"
+
+mysql $CHILL_MYSQL_OPTIONS $@ -e "$CMD"

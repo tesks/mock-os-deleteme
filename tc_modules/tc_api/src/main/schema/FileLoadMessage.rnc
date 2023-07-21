@@ -1,0 +1,48 @@
+# 
+# AMPCS FileLoadMessage RelaxNG Compact format XML specification.
+#
+# This message is sent by an uplink application when it transmits
+# a non-SCMF file to the command sink.
+#
+# Version: 4.0
+#
+# ChangeLog: V3.0 3/15/2013 Updated to import new common session schema.
+# ChangeLog: V3.1 8/06/2013 Changed bad element name ICmdFailureReason to
+#                               ICmdRequestFailureReason
+# ChangeLog: V4.0 11/28/2017 Major updates for R8
+#
+namespace rng = "http://relaxng.org/ns/structure/1.0"
+datatypes xsd = "http://www.w3.org/2001/XMLSchema-datatypes"
+default namespace = "http://dsms.jpl.nasa.gov/mpcs"
+
+include "ContextCommon.rnc"
+include "Times.rnc"
+
+start = MPCSFileLoadMessage-def
+
+MPCSFileLoadMessage-def = element MPCSFileLoadMessage
+{
+     context-def?,
+     fileLoadMessage-def
+}
+
+fileLoadMessage-def = element FileLoadMessage
+{
+    attribute eventTime { time-def },
+    context-def?,
+    element FileLoad
+    {
+    	element ICmdRequestId { string },
+    	element ICmdRequestStatus { string },
+        # 8/6/13 Updated element name for MPCS-5105
+    	element ICmdRequestFailureReason { token }?,
+    	element ScmfFile { token },
+    	element ScmfChecksum { xsd:long },
+    	element TotalCltus { xsd:long },
+        element Source { token },
+        element Destination { token },
+        element FileType { xsd:short },
+        element IsPartialFile { xsd:boolean },
+        element PartNumber { xsd:nonNegativeInteger }
+    }
+}

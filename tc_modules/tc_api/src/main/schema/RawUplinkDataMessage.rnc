@@ -1,0 +1,41 @@
+# 
+# AMPCS RawUplinkDataMessage RelaxNG Compact format XML specification.
+#
+# This message is published whenever an uplink application transmits a
+# raw CLTU file to the command sink.
+#
+# Version: 3.0
+#
+# ChangeLog: V2.0 3/14/2013 Updated to import new common session schema.
+# ChangeLog: V2.1 8/06/2013 Changed bad element name ICmdFailureReason to
+#                               ICmdRequestFailureReason
+# ChangeLog: V3.0 11/28/2017 Major updates for R8
+#
+namespace rng = "http://relaxng.org/ns/structure/1.0"
+datatypes xsd = "http://www.w3.org/2001/XMLSchema-datatypes"
+default namespace = "http://dsms.jpl.nasa.gov/mpcs"
+
+include "ContextCommon.rnc"
+include "Times.rnc"
+
+start = MPCSRawUplinkDataMessage-def
+
+MPCSRawUplinkDataMessage-def = element MPCSRawUplinkDataMessage
+{
+    context-def?,
+    commandMessage-def+
+}
+
+commandMessage-def = element RawUplinkDataMessage
+ {
+    attribute eventTime { time-def },
+    context-def?,
+    element ICmdRequestId { string },
+    element ICmdRequestStatus { string },
+    # 8/6/13 Updated element name for MPCS-5105
+    element ICmdRequestFailureReason { token }?,
+    element DataFilename { token },
+    element ScmfFile { token },
+	element ScmfChecksum { xsd:long },
+	element TotalCltus { xsd:long }
+}

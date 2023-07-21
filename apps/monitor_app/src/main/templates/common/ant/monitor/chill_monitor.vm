@@ -1,0 +1,36 @@
+ #set ( $shellName = "sh" )
+#shell( $shellName )
+
+#init()
+
+#Java()
+
+#set ( $headless = "true" )
+#SWT( $headless )
+
+#set( $tpsLibraries   =   ["piccolo", "commons_cli", "commons_codec", "commons_lang", "commons_lang3", "commons_collections", "commons_http", "commons_logging", "woodstox", "jcommon", "jfreechart", "velocity_engine_core", "mysql", "jface", "jing", "widgets.nattable.core", "widgets.nattable.extension.glazedlists", "glazedlists_java15", "disruptor", "jersey2", "jackson", "jaxrs", "guava", "persistence", "shared", "commons_io" ] )       
+#constructClasspath( $tpsLibraries )
+#addJmsClasspath()
+#addSpringClasspath()
+#verifyMessagingService()
+#constructLog4j2Classpath()
+
+#*
+ * Using execJavaSimpleMemory. Allows memory allocation to be adjusted. Increased max memory to 4GB.
+ *                        execJavaSimple did not use G1 Garbage Collection; set useG1GC to false to continue current garbage collection.
+*#
+
+#set ( $appName = "chill_monitor" )
+#set ( $appClass = "jpl.gds.monitor.guiapp.app.MonitorApp" )
+#set ( $appArgs = "" )
+#set ( $headless = "false" )
+#set ( $doExec = "true" )
+#set ( $doLog = "true" )
+#set ( $useG1GC = "false" )
+#set ( $minMem = "512m" )
+#set ( $maxMem = "4g" )
+#set ( $responderHelper = "" )
+#set ( $sysProperties = "" )
+#set ( $includePassThruArgs = "true" )
+#execJavaSimpleMemory ( $appName $appClass $appArgs $headless $doExec $doLog $useG1GC $minMem $maxMem $responderHelper $sysProperties $includePassThruArgs )
+	

@@ -1,0 +1,3 @@
+#if($body)
+EVR ($name,$event): $message Module=$module FromSSE=$fromSse SCLK=$sclk SCET=$scet LST=#if($lst)$lst#else""#end ERT=$ert#end
+

@@ -1,0 +1,49 @@
+#set ( $headMark='$$MARK$$' )#set ( $headReport='$$REPORT' )#set ( $headFormat='$$FORMAT' )#set ( $headChansets='$$CHANELS' )#set ( $headCSV='$$CSV' )#set ( $tailEOF='$$EOF' )#if ($header)
+CCSD3ZF0000100000001NJPL3KS0L015$headMark
+MISSION_NAME = $missionName;
+SPACECRAFT_NAME = $spacecraftName;
+DSN_SPACECRAFT_NUM = $spacecraftID;
+DATA_SET_ID = ECSV;
+FILE_NAME = /dev/stdout;
+APPLICABLE_START_TIME = $startTime;
+APPLICABLE_STOP_TIME = $stopTime;
+PRODUCTION_CREATION_TIME = $productCreationTime;
+PRODUCER_ID = MPCS;
+CCSD3RE00000$$MARK$$NJPL3IF0006500000001
+$headReport
+TITLEROWS,1
+LABEL,1,1,FILE: $F
+LABEL,1,120,PAGE: $P
+HEADROWS,2
+COLUMN,1,9,LEFT,CHAN NAME
+COLUMN,2,9,LEFT,TITLE
+COLUMN,3,20,RIGHT,DN VALUE
+COLUMN,4,20,RIGHT,EU VALUE
+## COLUMN,4,4,LEFT,CHAN TYPE
+COLUMN,5,24,RIGHT,ERT TIME
+COLUMN,6,21,RIGHT,SCET
+COLUMN,7,21,RIGHT,SCLK VALUE
+## $headChansets
+## CHANNEL_SET_NAME,cs-FIRST
+## $channelValues 
+$headFormat
+VERSION,1.0
+MISSION,$missionName
+COLUMNS,7
+FIELD,1,CHANNEL NAME,CHANNEL
+FIELD,2,CHANNEL TITLE,STRING
+FIELD,3,DN VALUE,STRING
+FIELD,4,EU VALUE,STRING
+## FIELD,4,CHANNEL TYPE,STRING
+FIELD,5,ERT TIME,TIME
+FIELD,6,SCET,TIME
+FIELD,7,SCLK,SCLK
+$headCSV
+## recordType,sessionId,sessionHost,channelId,module,ert,scet,sclk,dn,eu,dnAlarmState,euAlarmState
+#elseif ($trailer)
+$tailEOF
+#else
+#if($channelId)$channelId,#else,#end#if($name)$name,#else,#end#if($dataNumber)$dataNumber,#else,#end#if($eu)$eu,#else,#end#if($ert)$ert,#else,#end#if($scet)$scet,#else,#end#if($sclk)$sclk#end
+## "$sessionId", "$sessionHost", #if($channelId)"$channelId",#end #if($module)"$module",#else"",#end #if($ert)"$ert",#end #if($scet)"$scet",#end #if($sclk)"$sclk",#end "$dataNumber", #if($eu)"$eu",#else"",#end #if($dnAlarmState)"$dnAlarmState,"#else"",#end #if($euAlarmState)"$euAlarmState",#else"",#end
+
+#end

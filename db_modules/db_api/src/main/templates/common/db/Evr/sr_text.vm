@@ -1,0 +1,35 @@
+##DEFAULT_WIDTH = 30;SMALL_WIDTH = 10;LARGE_WIDTH = 50;V_LARGE_WIDTH = 70;VV_LARGE_WIDTH = 90;
+##DEFAULT_WIDTH,DEFAULT_WIDTH,DEFAULT_WIDTH,SMALL_WIDTH,DEFAULT_WIDTH,V_LARGE_WIDTH,SMALL_WIDTH,VV_LARGE_WIDTH,SMALL_WIDTH
+#if ($header)
+#set($ert="ERT                           ")
+#set($scet="SCET                          ")
+#set($sclk="SCLK                          ")
+#set($evr="EVR       ")
+#set($level="LEVEL                         ")
+#set($name="NAME                                                                  ")
+#set($module="MODULE    ")
+#set($message="MESSAGE                                                                                                                           ")
+#set($seqId="SEQUENCE_ID")
+${ert}	${scet}	${sclk}	${evr}	${level}	${name}	${module}	${message}	${seqId}	SOURCE	SESSION	
+#elseif ($trailer)
+#else
+#if($ert)#{set}($ert= $formatter.anCsprintf("%-30s", $ert))#{end}
+#{if}($scet)#{set}($scet= $formatter.anCsprintf("%-30s", $scet))#{end}
+#if($sclk)#{set}($sclk= $formatter.anCsprintf("%-30s", $sclk.toString()))#{end}
+#if($fromSse)#{set}($evr="SSE")#{elseif}($realTime)#{set}($evr="FSW RT")#{else}#{set}($evr="FSW REC")#{end}#{set}($evr=$formatter.anCsprintf("%-10s",$evr))
+#if($level)#{set}($level = $level)#{else}#{set}($level = "")#end#{set}($level = $formatter.anCsprintf("%-30s", $level))
+#if($name)#{set}($name = $name)#{else}#{set}($name = "")#{end}#{set}($name = $formatter.anCsprintf("%-70s", $name))
+#if($module)#{set}($module = $module)#{else}#{set}($module = "")#{end}#{set}($module = $formatter.anCsprintf("%-10s", $module))
+#{set}($cm = $message.replaceAll("[\r\n]+", " "))#{set}($cm = $formatter.anCsprintf("%-130s", $cm))
+#{set}($seqId = "SEQ_ID=")
+#{set}($index=0)#{set}($val=false)
+#{foreach}($key in $metadataKeys)
+#{if}($key.convert()=="SequenceId")#{set}($val=$metadataVals.get($index))#{end}
+#{set}($index=$index+1)
+#{end}
+#if($val)#{set}($seqId = $seqId+$val)
+#{else}#{set}($seqId = "SEQ_ID=NOT_FOUND")#end
+#{set}($seqId = $formatter.anCsprintf("%-10s", $seqId))
+#{set}($realtime = $realTime)
+${ert}	${scet}	${sclk}	${evr}	${level}	${name}	${module}	${cm}	${seqId}	${realtime}	$sessionId
+#end

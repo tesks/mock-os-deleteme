@@ -1,0 +1,1 @@
+"SSE COMMAND",#if($sessionId)"$sessionId.toString()"#else""#end,"$eventTime","$commandString"

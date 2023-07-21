@@ -1,0 +1,26 @@
+#set ( $shellName = "sh" )
+#shell( $shellName )
+
+#init()
+
+#Java()
+
+#set( $tpsLibraries   =   ["piccolo","commons_cli","commons_lang", "commons_lang3","commons_collections","commons_logging","commons_http","commons_codec","woodstox","mysql","velocity_engine_core","restlet","javamail","shared","hibernate", "jta", "commons_io", "guava" ] )
+
+#constructClasspath( $tpsLibraries )
+#addSpringClasspath()
+#addJmsClasspath()
+#constructLog4j2Classpath()
+
+#set ( $appName = "chill_automation_gui" )
+#set ( $appClass = "jpl.gds.product.automation.hibernate.gui.ProductAutomationAdministrationControlApp" )
+#set ( $appArgs = "" )
+#set ( $headless = "false" )
+#set ( $doExec = "false" )
+#set ( $doLog = "true" )
+#set ( $minMem = "128m" )
+#set ( $maxMem = "512m" )
+#set ( $responderHelper = "" )
+#set ( $sysProperties = "-Dnet.sf.ehcache.skipUpdateCheck=true" )
+#set ( $includePassThruArgs = "true" )
+#execJavaSimple ( $appName $appClass $appArgs $headless $doExec $doLog $minMem $maxMem $responderHelper $sysProperties $includePassThruArgs)

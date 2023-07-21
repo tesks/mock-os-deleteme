@@ -1,0 +1,62 @@
+#set ( $shellName = "sh" )
+#shell( $shellName )
+
+#checkForHelpOption()
+#checkChillMission()
+
+if test "$showHelp" = "true"
+then
+    printf "${CHILL_MISSION} chill_clear_unit_test_database --user <username> [Other-MySQL-options]"
+    
+    printf "The chill_clear_unit_test_database script is used to clear out the unit test database data from the current version of MPCS without destroying the database installation. This script is generally only used by developers. This script will have no affect on the 'mpcs' user account in MySQL. If you need to completely remove the MPCS unit test database installation, see chill_destroy_unit_test_database.
+
+    The MySQL executable must be in your executable path to use this script. A password may be required.
+
+    The other requirement for running this script is that an environment variable named 'CHILL_GDS' must point to the root of the MPCS installation (one level above the MPCS 'bin' directory). If this environment variable is not present, it will default to '/msop/mpcs/<mission>/current'.
+
+    To execute this script, it should simply be run from the command line. The script will ask you for a database suffix, if any. The usual response is to enter an empty string. The script will then prompt you to confirm that the databases should be cleared. If 'y' is entered, then database clearing will occur. If 'n' is entered, then the script will exit with no changes having been made.
+
+    The Host table is not cleared.
+
+    There are no options specific to this script: all options are passed through to MySQL."
+
+    exit 1
+fi
+
+#init()
+
+#set ( $operation = "clear" )
+
+DBNAME=${CHILL_MISSION}${dbName}
+NDBNAME=${noneDbName}
+
+printf "Enter database name suffix, if any:"
+read SUFFIX
+
+if test "X$SUFFIX" != "X"
+then
+    DBNAME="${DBNAME}$SUFFIX"
+    NDBNAME="${NDBNAME}$SUFFIX"
+fi
+
+echo
+echo "Database to be cleared is ${DBNAME}"
+echo
+
+#SQLOperation( $operation )
+
+CMD=""
+
+#if ( $isUnitTest )
+    CMD="$CMD use ${NDBNAME};"
+    CMD="$CMD source $CHILL_GDS/bin/internal/sql/delete_v5_0_3.sql;"
+
+#end
+
+# MPCS-9105 - Handle extended SCET tables by default
+CMD="$CMD use ${DBNAME};"
+CMD="$CMD source $CHILL_GDS/bin/internal/sql/delete_v5_0_3.sql;"
+
+echo "Executing $CMD"
+
+mysql $CHILL_MYSQL_OPTIONS $@ -e "$CMD"

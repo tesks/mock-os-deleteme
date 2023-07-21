@@ -1,0 +1,24 @@
+#set ( $shellName = "sh" )
+#shell( $shellName )
+
+#init()
+
+#Java()
+
+#set( $tpsLibraries   =   ["piccolo", "disruptor", "commons_cli","commons_lang", "commons_lang3","commons_io", "commons_collections","commons_logging","woodstox","mysql","velocity_engine_core", "jing","guava", "shared", "commons_io"] )
+#constructClasspath( $tpsLibraries )
+#addSpringClasspath()
+#addJmsClasspath()
+#verifyMessagingService()
+#constructLog4j2Classpath()
+
+#set ( $appName = "chill_message_watcher" )
+#set ( $appClass = "jpl.gds.watcher.app.MessageWatcherApp" )
+#set ( $headless = "false" )
+#set ( $doExec = "true" )
+#set ( $doLog = "false" )
+#set ( $minMem = "128m" )
+#set ( $maxMem = "512m" )
+#set ( $sysProperties = "" )
+#set ( $includePassThruArgs = "true" )
+#execJava ( $appName $appClass $appArgs $headless $doExec $doLog $minMem $maxMem $responderHelper $sysProperties $includePassThruArgs )

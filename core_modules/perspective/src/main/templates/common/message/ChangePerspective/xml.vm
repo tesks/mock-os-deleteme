@@ -1,0 +1,6 @@
+<ChangePerspectiveSessionMessage eventTime="$eventTime">
+  $sessionConfiguration
+#if ($applicationId) 
+  <guiApplicationId>$applicationId</guiApplicationId>
+#end     
+</ChangePerspectiveSessionMessage>

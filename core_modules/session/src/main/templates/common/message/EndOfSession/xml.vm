@@ -1,0 +1,5 @@
+<EndOfSessionMessage eventTime="$eventTime">  
+  <startTime>$startTime</startTime>
+  $sessionConfiguration
+  <endTime>$endTime</endTime>
+</EndOfSessionMessage>

@@ -1,0 +1,6 @@
+#if ($header)
+ERT,SCET,SCLK,SOURCE,TYPE,ID,DATA,SESSION
+#elseif ($trailer)
+#else
+$ert,$scet,$sclk,FSW,DP #set($gs=$groundStatus)#if($gs)$gs#end,#if($productType)$productType#end ($apid),"DVT=${dvtCoarse}-${dvtFine} TOTAL=$totalParts SIZE=$fileSize $groundStatus",$sessionId
+#end

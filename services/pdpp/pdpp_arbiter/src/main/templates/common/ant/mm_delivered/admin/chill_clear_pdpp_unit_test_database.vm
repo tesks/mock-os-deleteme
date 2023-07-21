@@ -1,0 +1,64 @@
+#set ( $shellName = "sh" )
+#shell( $shellName )
+
+#checkForHelpOption()
+#checkChillMission()
+
+if test "$showHelp" = "true"
+then
+printf "$CHILL_MISSION chill_clear_pdpp_unit_test_database --user <username> [Other-MySQL-options]"
+
+    printf "The chill_clear_pdpp_unit_test_database script is used to clear out all data from the current MPCS PDPP database without destroying the database structure. This script will also have no affect on the "mpcs" user account in MySQL. If you need to completely remove the MPCS database installation, see chill_destroy_pdpp_database.
+
+    The MySQL executable must be in your executable path to use this script. A MySQL user name and password must be supplied. In the default MPCS configuration, the username "mpcs" may be used. A password may be required.
+
+    The environment variable named "CHILL_GDS" must point to the root of the MPCS installation (one level above the MPCS "bin" directory). If this environment variable is not present, the script will fail.
+
+    To execute this script, it should simply be run from the command line. The script will ask you for a database suffix, if any. The usual response is to enter an empty string. The script will then prompt you to confirm that the databases should be cleared. If 'y' is entered, then database clearing will occur. If 'n' is entered, then the script will exit with no changes having been made.
+
+    The Host table is not cleared.
+
+    There are no options specific to this script: all options are passed through to MySQL."
+
+    exit 1
+fi
+
+#init()
+
+# MPCS-10216  10/19/18: Update PDPP DV to V1.2.0
+# MPCS-11563  2/18/2020: Update PDPP DV to V1.3.0
+
+#set ( $operation = "clear" )
+
+NAME="${CHILL_MISSION}_pdpp_automation_v1_3_0"
+
+#if ( $isUnitTest )
+    NAME="${CHILL_MISSION}_pdpp_automation_unit_test_v1_3_0"
+#end
+
+printf "Enter database name suffix, if any:"
+read SUFFIX
+
+if test "X$SUFFIX" != "X"
+then
+    NAME="${NAME}$SUFFIX"
+fi
+
+echo
+echo "Database to be cleared is ${NAME}"
+echo
+
+#SQLOperation( $operation )
+
+CMD="$CMD use ${NAME};"
+CMD="$CMD source $CHILL_GDS/bin/internal/sql/pdpp_delete_v1_3_0.sql;"
+
+# MPCS-11563 - 02/2020 - Add check for mission specific PDPP sql
+if [ -f "$CHILL_GDS/bin/internal/sql/${CHILL_MISSION}_pdpp_test_create_v1_3_0.sql" ]; then
+    echo "Will execute $CHILL_GDS/bin/internal/sql/${CHILL_MISSION}_pdpp_test_create_v1_3_0.sql when clearing database"
+    CMD="$CMD source $CHILL_GDS/bin/internal/sql/${CHILL_MISSION}_pdpp_test_create_v1_3_0.sql;"
+fi
+
+echo "Executing $CMD"
+
+mysql $CHILL_MYSQL_OPTIONS $@ -e "$CMD"

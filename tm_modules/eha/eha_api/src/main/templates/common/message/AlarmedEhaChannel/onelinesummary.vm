@@ -1,0 +1,2 @@
+#if ($body)
+EHA Channel ID=$channelId #if($title != "")Title=$title #end#if($name != "")FswName=$name #end#if($module != "")Module=$module #end#if($subsystem != "")Subsystem=$subsystem #end#if($opsCategory != "")OperationalCategory=$opsCategory #end DN=$dataNumber #if($eu)EU=$eu #end SCLK=$sclk SCET=$scet #if($lst)LST=$lst#end ERT=$ert InAlarm=$inAlarm Realtime=$realTime#end

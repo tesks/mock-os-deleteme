@@ -1,0 +1,23 @@
+MissionName=$missionName
+MissionId=$missionId
+SpacecraftName=$spacecraftName
+SpacecraftId=$spacecraftId
+SessionId=$sessionId
+SessionHost=$sessionHost
+ChannelId=$channelId
+ChannelName=$title
+Module=$module
+ERT=$ert
+SCLK=$sclk
+SCET=$scet
+DN=$dataNumber
+#if($status)
+STATUS=$status
+#end
+#if($eu)
+EU=$eu
+#end
+InAlarm=$inAlarm
+#foreach($alarm in $alarms)
+ALARM type="$alarm.getType().toString()" state="$alarm.getState()" level="$alarm.getLevel()" isRealtime="$realTime" onEu="$alarm.isOnEu()"
+#end

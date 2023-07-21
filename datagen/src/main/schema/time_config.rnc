@@ -1,0 +1,210 @@
+#
+# This schema defines the time configuration file used by AMPCS. The time
+# configuration file should declare all formats of time tags that occur in
+# frames, packet headers, or payloads processed by AMPCS's generic
+# decommutation capability. The time configuration file also contains
+# configuration concerning the display of various time fields throughout
+# the AMPCS system.
+#
+# Author: Josh Choi
+# Version: 1.0
+# Author: Rob Puncel
+# Version: 2.0
+#
+namespace rng = "http://relaxng.org/ns/structure/1.0"
+datatypes xsd = "http://www.w3.org/2001/XMLSchema-datatypes"
+
+include "Times.rnc"
+
+start = time-config-def
+
+# Root element.
+time-config-def = element time_config {
+    attribute schema_version { "2.0" }
+    & time-tags-def?
+    & date-def?
+}
+
+# Time tags block.  All definitions of raw telemetry
+# time tags go here.
+time-tags-def = element time_tags {
+    # Canonical sclk is a special case because it gets
+    # rendered in displays.
+    element canonical_sclk {
+        coarse-fine-time-def?,
+        coarse-fine-display-format-def?,
+        # Default assumes scet0_offset.
+        element scet_conversion_method { 
+            # scet0_offset uses the scet0 configured in the date block below
+            # and interprets the Sclk as a seconds / subseconds offset from
+            # that time. Appropriate for clocks that are correlated to ground.
+            "correlation_file"
+            # correlation_file uses sclkscet file (reference spec number)
+            | "scet0_offset" 
+        }?
+    }?
+    # Data validity time is the coarse-fine-time associated
+    # with a data product.
+    & element data_validity_time {
+        coarse-fine-time-def,
+        coarse-fine-display-format-def
+    }?
+    & coarse-fine-time-def*
+    & custom-time-def*
+    & fine-time-def*
+    & floating-point-time-def*
+    & gps-time-def*
+
+}
+
+coarse-fine-display-format-def = element display_format {
+    # AMPCS can display the fine portion of the canonical SCLK either
+    # as the integer number of fine "ticks", or as a decimal fraction
+    # of a coarse tick (e.g., the number of fine ticks divided by the
+    # number of fine ticks in one coarse tick.
+    element use_fractional_format {
+        xsd:boolean
+    }
+    # If the fine portion of the canonical SCLK is configured
+    # to display as a fraction of one coarse tick, the character
+    # configured here will separate the coarse ticks and the fraction.
+    # Cannot be the same as the ticks_separator.
+    & element fractional_separator {
+        ("-" | ".")
+    }
+    # If the fine portion of the canonical Sclk is configured to
+    # display as an integer number of fine ticks, the character
+    # configured here will separate the coarse and the fine ticks.
+    # Cannot be the same as the fractional_separator.
+    & element ticks_separator {
+        ("-" | ".")
+    }
+}
+
+# Coarse-fine times consist of a coarse field and a fine field that can be
+# defined as separate binary segments.  It is also capable of representing
+# a CCSDS Unsegmented Timecode.
+coarse-fine-time-def = element coarse_fine_time {
+    # The unique identifier for this time definition.  This identifier
+    # is used to reference this time definition in other AMPCS dictionaries
+    # and configuration files.
+    attribute id { xsd:ID },
+    # The number of bits needed to express the coarse portion of the time.
+    element coarse_bits { 
+        xsd:integer { minInclusive = "1" maxInclusive="32" } 
+    },
+    # The number of bits needed to express the fine portion of the time.
+    element fine_bits {
+        xsd:integer { minInclusive = "0" maxInclusive = "32" }
+    },
+    # The fine modulus configuration defines a custom number of fine ticks per
+    # coarse tick. E.g., if it is set to 50,000, AMPCS will increment the
+    # coarse ticks by 1 and reset the number of fine ticks to 0
+    # when the number of fine ticks reaches 50,000, and a fractional
+    # representation of the fine clock will be calculated
+    # as the number of fine ticks divided by the fine_modulus.
+    # If this field is left blank, AMPCS will assume a modulus of 2 raised to the power of
+    # the number of fine bits
+    element fine_modulus { xsd:integer { minInclusive = "2" } } ?
+}
+
+# A custom time defines a block of bits in telemetry that AMPCS will not
+# interpret itself.  Instead, it will provide the data
+# to a user-defined algorithm that produces a canonical SCLK from those bits.
+custom-time-def = element custom_time {
+    # The unique identifier for this time definition.  This identifier
+    # is used to reference this time definition in other AMPCS dictionaries and
+    # configuration files.
+    attribute id { xsd:ID },
+    # This is a reference to the identifier of an sclk_extractor algorithm
+    # definition.
+    element extractor { xsd:token }
+}
+
+# Fine times are a single field that are of a granularity less than one coarse
+# tick.  For example, a mission that uses coarse ticks on the order of one
+# second might define a fine time field that represents a number of
+# milliseconds.
+fine-time-def = element fine_time {
+    # The unique identifier for this time definition.  This identifier
+    # is used to reference this time definition in other AMPCS dictionaries
+    # and configuration files.
+    attribute id { xsd:ID },
+    element bits { xsd:nonNegativeInteger },
+    # The following element tells AMPCS how to convert from the number of fine
+    # ticks to a number of coarse and fine ticks.
+    element fine_modulus { xsd:integer { minInclusive = "2" }}
+}
+
+# This is the canonical Sclk represented as a floating point number.  This will
+# be converted to a coarse / fine time by AMPCS with no other conversion.
+# In other words, the whole number portion of the floating point number is
+# interpreted as the number of coarse ticks, and the fractional part of the
+# floating point number is converted to an approximate number of fine ticks.
+# The floating point number must be an IEEE 754 encoding.
+floating-point-time-def = element floating_point_time {
+    # The unique identifier for this time definition.  This identifier
+    # is used to reference this time definition in other AMPCS dictionaries and
+    # configuration files.
+    attribute id { xsd:ID },
+    element bytes { "4" | "8" }
+}
+
+# GPS times consist of weeks, seconds, and (possibly) subseconds.
+# AMPCS multiplies the weeks value by the number of seconds per week
+# to put GPS times in terms of the coarse/fine canonical Sclk.
+gps-time-def = element gps_time {
+    attribute id { xsd:ID },
+    element week_bits { xsd:integer { minInclusive = "0" } },
+    element second_bits { xsd:integer { minInclusive = "0" } },
+    element subsecond_bits { xsd:integer { minInclusive = "0" } },
+    element subsecond_modulus { xsd:integer { minInclusive ="0" } }?
+}
+
+# Various AMPCS configurations handling the display and usage of datetime
+# information.
+date-def = element date {
+    element use_doy_output_format { xsd:boolean }?
+    & element use_doy_output_directory { xsd:boolean }?
+    # Indicates number of decimal places displayed in earth receive time (ERT)
+    # strings.
+    & element ert_precision {
+        xsd:integer { minInclusive = "0" maxInclusive = "7" }
+    }?
+    # Indicates number of decimal places displayed in spacecraft event time
+    # (SCET) strings. MPCS-8384 JM 11/09/16 Extend from 3 to 9.
+    & element scet_precision {
+        xsd:integer { minInclusive = "0" maxInclusive = "9" }
+    }?
+    # The epoch for computing SCETs if the scet_conversion_method is
+    # "scet0_offset".  This is the time that a 0 spacecraft time should
+    # be correlated to.
+    & element scet0 { time-def }?
+    & lst-def?
+    # Indicates whether extended SCET precision may be used
+    # MPCS-8639 JM 02/13/17 Added,
+    & element use_extended_scet_precision { xsd:boolean }?
+}
+
+# Configuration block for local solart time (LST).
+# If not present, AMPCS will assume that local solar time is not used.
+lst-def = element local_solar_time {
+    # Set true if LST should be calculated for telemetry; false otherwise.
+    element enable { xsd:boolean }?
+    # Specify the number of decimal places to include in LSTs.
+    & element lst_precision {
+        xsd:integer { minInclusive = "0" maxInclusive = "3" }
+    }?
+    # The prefix to use on LST time output. Will be followed by a dash in the
+    # output, then the LST day number.
+    & element lst_prefix { xsd:token }?
+    # Indicates the epoch for the LST, given as a SCET value. This is the SCET
+    # value from when the local solar time becomes meaningful for a mission.
+    # For example, it might be the SCET when a lander reaches the surface of a planet.
+    & element epoch_scet { 
+        time-def 
+    }?
+    # Stores an earth second conversion factor. Represents the number of earth
+    # seconds in local solar second.
+    & element earth_second_conversion_factor { xsd:double }?
+}?

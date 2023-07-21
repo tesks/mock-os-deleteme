@@ -1,0 +1,206 @@
+#set ( $shellName = "sh" )
+#shell( $shellName )
+
+#init()
+
+if test "X$1" = "X-h" -o "X$1" = "X--help"
+then
+    echo "$0 [--username mpcs] [mysql arguments]" 1>&2
+    exit 1
+fi
+
+PERMS="ALL PRIVILEGES"
+
+# MPCS-6522 - Find subnets file
+
+if test -z "${CHILL_DB_SUBNETS}"
+then
+    # User didn't set it, try the standard configurations
+
+    TRY1="${CHILL_GDS}/config/${CHILL_MISSION}/subnets.conf"
+
+    if test -r ${TRY1} -a -f ${TRY1}
+    then
+        export CHILL_DB_SUBNETS="${TRY1}"
+    else
+        TRY2="${CHILL_GDS}/config/subnets.conf"
+
+        if test -r ${TRY2} -a -f ${TRY2}
+        then
+            export CHILL_DB_SUBNETS="${TRY2}"
+        else
+            echo "Cannot find or read database subnets file as ${TRY1} or ${TRY2}" 1>&2
+            exit 1
+        fi
+    fi
+
+elif test ! -r "${CHILL_DB_SUBNETS}" -o ! -f "${CHILL_DB_SUBNETS}"
+then
+    echo "Cannot find or read read database subnets file: CHILL_DB_SUBNETS='${CHILL_DB_SUBNETS}'" 1>&2
+    exit 1
+fi
+
+echo "Using database subnets file ${CHILL_DB_SUBNETS}"
+
+# We delete the anonymous user.
+
+# Make sure that shell wildcards are not expanded
+set -o noglob
+
+# Allow --username as the first argument only
+
+USERNAME=mpcs
+SHIFT=0
+
+for OPTION
+do
+    if test $SHIFT -eq 1
+    then
+        # Get user name and do not continue
+
+        USERNAME="$OPTION"
+        SHIFT=2
+        break
+
+    elif test "X$OPTION" = "X--username"
+    then
+        # Option specified, expect user name and continue
+
+        SHIFT=1
+
+    else
+        # Did not find option, do not continue looking
+        break
+    fi
+done
+
+if test $SHIFT -eq 1
+then
+    echo "--username option not followed by user name" 1>&2
+    echo "$0 [--username mpcs] [mysql arguments]" 1>&2
+    exit 1
+fi
+
+TUSERNAME=`echo "$USERNAME" | tr -d ' '`
+
+if test "$USERNAME" != "$TUSERNAME"
+then
+    echo "User name must not contain blanks" 1>&2
+    exit 1
+fi
+
+if test `expr "X$USERNAME" : "X-"` -gt 0
+then
+    echo "User name must not begin with a dash" 1>&2
+    exit 1
+fi
+
+if test "$USERNAME" = ""
+then
+    echo "User name cannot be empty" 1>&2
+    exit 1
+fi
+
+# Ignore arguments we processed
+shift $SHIFT
+
+# Check for it occurring again or not at the beginning
+for OPTION
+do
+    if test "X$OPTION" = "X--username"
+    then
+        echo "--username must be first option" 1>&2
+        exit 1
+    fi
+done
+
+DBARGS=${1+"$@"}
+
+#set ( $operation = "grant" )
+
+NAME=${CHILL_MISSION}${dbName}
+NNAME=${CHILL_MISSION}${noneDbName}
+
+printf "Enter database name suffix, if any:"
+read SUFFIX
+
+if test "X$SUFFIX" != "X"
+then
+    NAME="${NAME}$SUFFIX"
+    NNAME="${NNAME}$SUFFIX"
+fi
+
+echo
+echo "Database name will be ${NAME}"
+echo "User name ${USERNAME}"
+echo "Additional arguments '${DBARGS}'"
+echo
+
+#SQLOperation( $operation )
+
+CMD=""
+
+CMD="${CMD} DELETE FROM mysql.user WHERE User='';"
+CMD="${CMD} DELETE FROM mysql.db   WHERE User='';"
+CMD="${CMD} DELETE FROM mysql.user WHERE Host='%localhost%' AND User='${USERNAME}';"
+CMD="${CMD} DELETE FROM mysql.db   WHERE Host='%localhost%' AND User='${USERNAME}';"
+
+# MPCS-6522 -  Redo loop to use subnets file
+# which can have blank lines or comments.
+# NB: the hash is a special character to both bash and Velocity,
+# so be careful and double-check any changes to that logic.
+
+while read i
+do
+    # Trim blanks fore and aft
+    i=`echo ${i}`
+
+    if test -z "${i}"
+    then
+        continue
+    fi
+
+    # Look for comments (need single quotes for Velocity to be able to parse)
+    # MPCS-7249 -  Remove expr and replace with sed
+
+    i=`echo "${i}" | sed -e 's/#.*$//'`
+
+    # Trim blanks aft again
+    i=`echo ${i}`
+
+    # May be empty now
+
+    if test -z "${i}"
+    then
+        continue
+    fi
+	# MPCS-9314 - for MariaDB we need to make sure the user is
+	# created before we grant them any permissions
+	CMD="${CMD} CREATE USER IF NOT EXISTS '${USERNAME}'@'${i}';"
+
+    #if ( $isUnitTest )
+        CMD="${CMD} GRANT ${PERMS} ON ${NNAME}.* TO '${USERNAME}'@'${i}';"
+    #end
+	
+    CMD="${CMD} GRANT ${PERMS} ON ${NAME}.* TO '${USERNAME}'@'${i}';"
+
+    CMD="${CMD} GRANT SUPER ON *.* TO '${USERNAME}'@'${i}';"
+
+done <${CHILL_DB_SUBNETS}
+
+CMD="${CMD} FLUSH PRIVILEGES;"
+
+TEXT=`echo "$CMD" | sed "s/;/;\n/g"`
+
+echo
+echo "Executing:"
+echo "${TEXT}"
+echo
+
+set +o noglob
+
+# Do the real work
+
+mysql $CHILL_MYSQL_OPTIONS ${DBARGS} -e "${CMD}"
+
+exit $?

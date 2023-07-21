@@ -1,0 +1,36 @@
+#if ($body)
+#if ($dataNumber)
+#if (($channelType.toString() == "FLOAT" || $channelType.toString() == "DOUBLE") && $preFormatted == false)
+#set ($dataNumber = $formatter.anCsprintf("%.12e",$dataNumber))
+#end
+#end
+#if ($eu && $preFormatted == false)
+#set ($eu = $formatter.anCsprintf("%.12e",$eu))
+#end
+#if($apid)
+#set ($apids=$apid.toString())
+#else
+#set ($apids="")
+#end
+#if($apidName)
+#set ($apidNames=$apidName.toString())
+#else
+#set ($apidName="")
+#end
+#if($spsc)
+#set ($spscs=$spsc.toString())
+#else
+#set ($spscs="")
+#end
+#if($packetRct)
+#else
+#set ($packetRct="")
+#end
+#if($vcfc)
+#set ($vcfcs=$vcfc.toString())
+#else
+#set ($vcfcs="")
+#end
+#if($sclk)$sclk#end,#if($scet)$scet#end,$ert,$channelId,$channelType,$dataNumber,#if($eu)$eu#elseif($status)$status#else#end 
+
+#end

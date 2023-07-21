@@ -1,0 +1,116 @@
+ /**
+ * Copyright 2006-2018. California Institute of Technology.
+ * ALL RIGHTS RESERVED.
+ * U.S. Government sponsorship acknowledged.
+ *
+ * This software is subject to U. S. export control laws and
+ * regulations (22 C.F.R. 120-130 and 15 C.F.R. 730-774). To the
+ * extent that the software is subject to U.S. export control laws
+ * and regulations, the recipient has the responsibility to obtain
+ * export licenses or other export authority as may be required
+ * before exporting such information to foreign countries or
+ * providing access to foreign nationals.
+ */
+  /**
+ * AMPCS common protobuf schema for an EHA aggregation.
+ *
+ * Version: 1.0
+ * ChangeLog:
+ * V1.0 - New for R8
+ */
+ syntax = "proto3";
+
+package eha;
+
+import "abstract_message.proto";
+import "primitives/time_primitives.proto";
+import "primitives/eha_primitives.proto";
+import "primitives/alarm_primitives.proto";
+import "alarm_value_set.proto";
+
+option optimize_for = SPEED;
+option java_multiple_files = true;
+option java_package = "jpl.gds.eha.api.channel.aggregation.serialization";
+option java_outer_classname = "ProtoBufEhaAggregatedSerialization";
+
+/**
+ * @see GroupChannelAggregationService.GroupMember
+ */
+message Proto3EhaGroupMember {
+	Proto3Adt eventTime = 1;
+	string channelId = 2;
+	Proto3Sclk sclk = 3;
+	Proto3Adt scet = 4;
+	Proto3Adt ert = 5;
+	Proto3Adt rct = 6;
+	Proto3Dn dn = 7;
+	oneof hasEu { double eu = 8; }
+	oneof hasStatus { string status = 9; }
+	oneof hasAlarmValueSet { Proto3AlarmValueSet alarmValueSet = 10; }
+	string name = 11;
+	string module = 12;
+	int32 channelIndex = 13;
+	string dnFormat = 14;
+	string euFormat = 15;
+	int64 packetId = 16;
+}
+
+message Proto3EhaBatchRecord {
+	string record = 1;
+}
+
+enum Proto3ChanCategory {
+    /** FSW channel value */
+    FSW = 0;
+
+    /** SSE channel value */
+    SSE = 1;
+
+    /** Monitor channel value */
+    MONITOR = 2;
+
+    /** Frame header channel value */
+    FRAME_HEADER = 3;
+
+    /** Packet header channel value */
+    PACKET_HEADER = 4;
+
+    /** SSE packet header channel value */
+    SSEPACKET_HEADER = 5;
+
+    /** Lost header channel value (old data only) */
+    LOST_HEADER = 6;
+}
+
+/**
+ *
+ */
+message Proto3EhaGroupDiscriminator {
+	int32 vcid = 1;
+	int32 apid = 2;
+	int32 dssId = 3;
+	bool isRealtime = 4;
+	bool isFromSSE = 5;
+	Proto3ChanDefType chanType = 6;
+	Proto3ChanCategory chanCategory = 7;
+	Proto3SclkEncoding sclkEncoding = 8;
+}
+
+/**
+ * @see GroupedChannelAggregationService.GroupMetadata
+ */
+message Proto3EhaAggregatedGroup {
+	Proto3EhaGroupDiscriminator discriminatorKey = 1;
+	int32 samples = 2;
+	repeated string channelIds = 3;
+	Proto3ErtRange ertRange = 4;
+	Proto3RctRange rctRange = 5;
+	Proto3SclkRange sclkRange = 6;
+	Proto3ScetRange scetRange = 7;
+	repeated Proto3EhaGroupMember values = 8;
+}
+
+message Proto3EhaAggregatedChannelValueMessage {
+    messages.Proto3AbstractMessage super = 1;
+    Proto3EhaAggregatedGroup aggregatedGroup = 2;
+}

@@ -1,0 +1,347 @@
+body{
+	background-color:#F8F8F8;
+	overflow: auto;
+}
+
+h1{
+    text-align: center;
+}
+
+h2{
+    text-align: center;
+}
+
+select {
+    width:138px;
+}
+
+table{
+	border-collapse: collapse;
+	padding: 2px;
+	margin: 0 auto 0 auto;
+	text-align: left;
+	white-space: nowrap;
+	background-color:#FFFFFF
+}
+
+table tr.alt{
+	background: AliceBlue;
+}
+
+ul.fancytree-container {
+  width: 100%;
+  height: 100%;
+  overflow-x: hidden;
+  overflow-y: auto;
+  position: relative;
+}
+
+ul.ui-fancytree.fancytree-container.fancytree-plain{
+  background-color: #F8F8F8;
+  border: 1px solid;
+}
+
+.basicTable{
+	border: 3px solid black;
+	border-collapse: collapse;
+}
+
+.basicTable th, .basicTable td{
+	border: 2px solid black;
+	padding: 2px;
+}
+
+.body{
+	position:absolute;
+	top:150px;
+	left:0;
+	width:100%;
+	overflow:hidden;
+}
+
+.bodyInfo{
+	position:absolute;
+	top:151px;
+	bottom:0px;
+	left:0;
+	width:100%;
+	overflow:auto;
+}
+
+.dataDiv{
+	position:relative;
+	float:left;
+	height:100%;
+	border-left:ridge;
+	border-width:5px;
+	border-color:gray;
+	text-align:center;
+}
+
+.dataButton{
+	background-color:White;
+	width:85px;
+	border-radius:7px;
+	margin: 2px;
+}
+
+.dataButton:hover{
+	background-color:#E6E6E6;
+}
+
+.dataButton:active{
+	background-color:#B2B2B2;
+}
+
+.dataButtonSelected{
+	background-color: GreenYellow;
+	width:85px;
+	border-radius:7px;
+}
+
+.dataButtonSelected:hover{
+	background-color:#C6FF6D;
+}
+
+.dataButtonSelected:active{
+	background-color:#68991C;
+}
+
+.dataButtonDiv{
+	border-top: 1px solid;
+}
+
+.dataFixedOptionsDiv{
+	overflow:auto;
+	border-top:1px solid;
+	background-color: #F8F8F8;
+	text-align: center;
+}
+
+.dataOptionsDiv{
+	overflow: hidden;
+	width: 100%
+}
+
+.dataTable, .dataTable th, .dataTable td{
+	text-align: right;
+	padding: 2px 5px;
+}
+
+.dataTable th.left, .dataTable td.left{
+	text-align: left;
+}
+
+
+.fileDownload {
+    position: relative;
+    overflow: hidden;
+    border: 1px solid LightGray;
+    border-radius: 4px;
+    padding: 2px 5px;
+    margin: 0px;
+    background: White;
+    display: inline-block;
+    font-family: Arial, sans-serif;
+    font-size: 0.71em;
+    color:black;
+    text-decoration: none;
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
+
+.fileDownload:active{
+	background: DodgerBlue;
+}
+
+.fileUpload {
+    position: relative;
+    overflow: hidden;
+    border: 1px solid Gold;
+    border-radius: 4px;
+    padding: 2px 5px;
+    margin: 10px;
+    background: White;
+    display: inline-block;
+    font-family: Arial, sans-serif;
+    font-size: 0.75em;
+}
+
+.fileUpload:active{
+	background: DodgerBlue;
+}
+
+.fileUpload input.upload {
+    position: absolute;
+    top: 0;
+    right: 0;
+    margin: 0;
+    padding: 0;
+    font-size: 20px;
+    opacity: 0;
+    filter: alpha(opacity=0);
+}
+
+.Header{
+	position:absolute;
+	top:0%;
+	left:0%;
+	bottom:90%;
+	width:100%;
+}
+
+.info{
+	position:relative;
+	width:100%;
+	overflow-y:auto;
+	overflow-x:hidden;
+}
+
+.infoTable{
+	width:100%;
+}
+
+.infoTable th, .infoTable td{
+	border:1px solid black;
+}
+
+.leftPane{
+	position:relative;
+	float:left;
+	height:100%;
+	width:25%;
+}
+
+.optionsDiv{
+	height:27px;
+	overflow:hidden;
+	border-bottom:solid;
+	border-width:1px;
+}
+
+.optionsSubDiv{
+	float:left;
+	padding-left:10px;
+	padding-right:15px;
+	padding-bottom:25px;
+}
+
+.optionsTable{
+	background-color: #F8F8F8;
+	margin-left:0 auto;
+	margin-right:0 auto;
+}
+
+.queryOptionsTable{
+	background-color: #F8F8F8;
+}
+
+.responseArea{
+	height:95%;
+	overflow:auto;
+	text-align:center;
+}
+
+.statsTable td{
+	text-align : right;
+}
+
+.statsTableBasic{
+	background-color: #F8F8F8;
+	margin:0 0 auto;
+}
+
+.tree{
+	position:relative;
+	height:70%;
+	width:100%;
+	border-bottom:ridge;
+	border-width:5px;
+	border-color:gray;
+	overflow:hidden;
+}
+
+.updateStatus{
+	text-align:center;
+}
+
+
+#LADDownloadButton{
+	border:1px solid DarkGreen;
+}
+
+
+
+
+.Table
+{
+    display: table;
+    margin: auto;
+    text-align: center;
+    border-collapse: collapse;
+}
+
+.Title
+{
+    display: table-caption;
+    text-align: center;
+    font-weight: bold;
+    font-size: larger;
+}
+
+.Heading
+{
+    display: table-cell;
+    border: solid;
+    border-width: thin;
+    padding-left: 5px;
+    padding-right: 5px;
+    text-align: center;
+    background-color:orange;
+}
+
+.Row
+{
+    display: table-row;
+}
+
+.Cell
+{
+    display: table-cell;
+    border: solid;
+    border-width: thin;
+    padding-left: 5px;
+    padding-right: 5px;
+    text-align: center;
+    background-color:White;
+}
+
+.borderlessCell
+{
+    display: table-cell;
+    padding-left: 5px;
+    padding-right: 5px;
+    text-align: center;
+}
+
+.helpButtonDiv{
+	height:100%;
+	text-align:center;
+}
+
+.links{
+	border: outset;
+	background-color: #f7e8ff;
+	text-align: center;
+}
+
+img {
+	display: block;
+	margin: auto;
+	width: 90%;
+	height: auto;
+}

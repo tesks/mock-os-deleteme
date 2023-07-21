@@ -1,0 +1,32 @@
+#if ($body)
+<AlarmChangeMessage eventTime="$eventTime">
+  <alarmChange>$alarmChange</alarmChange>
+  <rct>$rct</rct>
+  <realtime>$realTime</realtime>
+#if ($dssId)
+  <dssId>$dssId</dssId>
+#end
+  <EhaChannel id="$channelId"#if($title != '') title="$title"#end#if($name != '') fswName="$name"#end>
+    <channelDef type="$channelType"#if($module != '') module="$module"#end#if($dnUnits != '') dnUnits="$dnUnits"#end#if($euUnits != '') euUnits="$euUnits"#end#if($subsystem != '') subsystem="$subsystem"#end#if($opsCategory != '') opsCategory="$opsCategory"#end/>
+     <sclk>$sclk</sclk>
+    <ert>$ert</ert>
+    <scet>$scet</scet>
+#if ($lst)
+    <lst>$lst</lst>  
+#end    
+    <dn><![CDATA[$dataNumber]]></dn>
+#if ($eu)
+    <eu>$eu</eu>
+#end
+#if ($status)
+    <statusValue>$status</statusValue>
+#end  
+    <inAlarm>$inAlarm</inAlarm>
+#if($alarms)
+#foreach($alarm in $alarms)
+    <alarmValue type="$alarm.getType().toString()" state="$alarm.getState()" level="$alarm.getLevel()" onEu="$alarm.isOnEu()"/>
+#end
+#end
+  </EhaChannel>
+</AlarmChangeMessage>
+#end

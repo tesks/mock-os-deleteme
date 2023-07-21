@@ -1,0 +1,3 @@
+#if ($body)
+"Eha","$sessionId","$sessionHost","$channelId","#if($dssId >= 0)$dssId#end","#if($vcid)$vcid#end","$name","#if($module)$module#end","$ert","#if($scet)$scet#end","#if($lst)$lst#end","$sclk","$dataNumber","#if($eu)$eu#end","#if($status)$status#end","#if($nullTool.isNotNull($isRealTime))$isRealTime#{else}null#end","$channelType"
+#{end}

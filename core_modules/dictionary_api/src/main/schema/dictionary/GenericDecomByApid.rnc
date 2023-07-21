@@ -1,0 +1,84 @@
+#
+# Multimission Generic Decom APID-to-Decom-Map Schema
+#
+# This schema defines an XML lookup table for associating generic decom
+# maps to their respective packet APIDs. Each APID-to-map association must
+# have the APID number as the unique key, and the value is the name
+# of the decom map XML file for that APID. Only the file name and not
+# the path should be specified. AMPCS will look for the file in the
+# same manner as it seeks for other dictionary and configuration files.
+#
+# Also a "general" map can be specified, for decommutating packets
+# having APIDs not listed in the table. Another usage would be to use
+# one map for all packets, in which case the "general" map should be
+# the only decom map specified.
+#
+# Copyright (c) 2005 California Institute of Technology, All Rights Reserved
+# JPL Proprietary Information
+#
+# Change Log:
+#   V1.0  03/16/10   Original Version
+#   V1.1  05/20/12   Imported common dictionary schema, some
+#                    comments
+#   V1.2  05/20/13   Moved into AMPCS, normalized header
+#                    format, minor reorganization.
+#   V1.3  09/18/13   Minor updates in response to DMS SIS Review
+#
+namespace rng = "http://relaxng.org/ns/structure/1.0"
+datatypes xsd = "http://www.w3.org/2001/XMLSchema-datatypes"
+
+# Include common dictionary XML definitions
+include "CommonDictionary.rnc"
+
+# Start XML document here
+start = apid-map-table-def
+
+# This is the table that specifies all decom maps.
+apid-map-table-def =
+
+    # Optional. Specifies the table of decom maps for specific packet 
+    # APIDs, as a series of ApidMap elements.
+    element ApidMapTable {
+    
+        # Standard dictionary version header and general change log 
+        header-def,
+    
+        element ApidMaps {
+            apid-map-def+
+        }?,
+        
+        # Optional. Specifies the default decom map for other APIDs,
+        # as a GeneralMap element.
+        general-map-def?
+    }
+
+# ApidMap is the element that defines an APID-specific decom map file.
+apid-map-def =
+    element ApidMap {
+        # APID number this map is associated with
+        attribute apid { xsd:nonNegativeInteger },
+        
+        # File name of decom map to use for the given APID. 
+        # Omit directory path. AMPCS will use a search algorithm
+        # to find the file.
+        map-xml
+    }
+    
+
+# GeneralMap is the element that defines a general decom map file, which
+# can be applied to packets with any APID. If an APID is defined to
+# have format "DECOM_FROM_MAP" in the APID Dictionary, but no ApidMap
+# entry is present in the XML defined above, then this decom map
+# will be applied to the packet content.
+general-map-def =
+    element GeneralMap {
+    
+        # File name of the decom map to be used on any DECOM_FROM_MAP 
+        # format packets WITHOUT an ApidMap entry above. 
+        # Omit directory path. AMPCS will use a search algorithm
+        # to find the file.
+        map-xml
+    }
+    
+# Pattern that decom map file names must match. (Must end with ".xml").
+map-xml = xsd:token { pattern = ".+\.xml" }

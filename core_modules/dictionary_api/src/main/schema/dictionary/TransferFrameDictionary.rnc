@@ -1,0 +1,419 @@
+#
+# Transfer Frame dictionary schema.
+#     
+# Defines the format and types of telemetry transfer frames. The content
+# of the transfer frame dictionary is normally defined once per
+# mission from the Flight-Ground ICD or SIS. It contains the transfer frame
+# field sizes and encoding descriptions. The transfer frame capabilities 
+# defined here are based upon the CCSDS standards, but some customization for
+# other formats is possible. Frame definitions are exclusive of station or other 
+# headers/trailers attached by software along the receipt path of the frame.
+#
+# Copyright (c) 2013-2016 California Institute of Technology, 
+# All Rights Reserved
+# JPL Proprietary Information
+#
+# Change Log:
+#   V4.0  Date Unknown   Various authors 
+#   V5.0  06/01/13       Imported common schema. Major
+#                        commenting and re-organization. Removal of
+#                        unsupported elements
+#   V6.0  08/05/15       added namespace declarations.
+#                        Correct spelling of reed-solomon.
+#                        This is the final change for AMPCS 7.3
+#                        (MGSS ECR-117883)
+#   V7.0 02/11/16        Major overhaul
+#
+namespace rng = "http://relaxng.org/ns/structure/1.0"
+datatypes xsd = "http://www.w3.org/2001/XMLSchema-datatypes"
+
+# Include common dictionary XML definitions
+include "CommonDictionary.rnc"
+
+# Start XML document here
+start = transfer_frame-def
+
+# The transfer frame dictionary root element.
+transfer_frame-def = element frame_dictionary {
+
+    # Standard dictionary version header and general change log 
+    header-def, 
+    
+    # The list of transfer frame definitions
+    frames-def
+}
+
+# Defines the list of transfer frame definitions for the current mission
+frames-def = element frame_definitions {
+     
+    # A single telemetry transfer frame definition  
+    element telemetry_frame_definition {
+        (
+        # A name for this frame type. Must be unique within a single
+        # mission.  This name is generally derived from the FGICD.
+        # Examples; RS_LONG, LONG_TURBO_3.
+        attribute name { frame-name-def },
+        
+        # Frame Channel Access Data Unit (CADU) size in bits, which includes 
+        # the sync mark (ASM), frame header, frame data, FECF, OCF, and 
+        # encoding field size. If not divisible by 8, will be rounded up 
+        # to the nearest multiple of 8. CADUs must be padded to an even byte 
+        # boundary before receipt by the GDS. This is the expected CADU 
+        # size when the frame arrives at the GDS.
+        attribute cadu_size { cadu-size-def },
+        
+        # Total frame size when encoded (not the encoding size), in bits.
+        # The encoded_size is the same as the CADU size above for most types of
+        # frames, and if this attribute is omitted, that is assumed to
+        # be true. Currently, the only exception is that the encoded size of
+        # turbo frames is larger than the CADU size. If not divisible by 8, 
+        # will be rounded up to the nearest multiple of 8. The GDS uses the 
+        # encoded_size only for receive time and rate calculations. 
+        attribute encoded_cadu_size { xsd:positiveInteger }?
+        ),
+        
+        (       
+        # Frame synchronization marker (ASM) definition. The ASM is 
+        # also sometimes called the Psuedo-Noise (PN) code and is placed
+        # between frames so they can be located in the data stream. The
+        # ASM must start on a byte boundary by the time the GDS
+        # receives the frame.
+        asm-def,
+        
+        # Format of the transfer frame, header, data area, and trailer.
+        frame-format-def,
+               
+        # Frame encoding and correction strategy.
+        #
+        # Unencoded frames have no additional check or encoding bits
+        # and need no entry here.
+        #
+        # RS-encoded frames have some number of trailing RS check bits,
+        #
+        # Turbo-encoded frames have a turbo rate amd some number of 
+        # trailing turbo trellis bits.
+        #
+        # Encoding bits are assumed to follow the frame trailer.  The
+        # total number of bits does not have to be divisible by 8, but
+        # the enclosing CADU must be padded to a byte boundary.
+        encoding-def?,
+        
+        # The long description of the frame definition.
+        element description { xsd:string }?,
+        
+        # Additional project or mission information as keyword/value pairs.
+        # Currently ignored by the GDS.
+        attributes-def?
+        )
+      
+    }*
+}
+
+ # Frame synchronization marker (ASM) definition. The ASM is 
+ # also sometimes called the Psuedo-Noise (PN) code and is placed
+ # between frames so they can be located in the data stream. The
+ # ASM must start on a byte boundary by the time the GDS
+ # receives the frame.
+ asm-def = element asm_definition {
+        
+      # Indicates whether frames arrive with an attached ASM. 
+      # If they arrive without an ASM, the GDS can only match 
+      # frame type to this dictionary using length and any encoding-type 
+      # information found in the station header. If the ASM is not attached 
+      # to a received frame, it will be reattached before the GDS
+      # archives the frame in the database.
+      #
+      # If the ASM arrives attached its length must included in the CADU 
+      # size.
+      # If the ASM does not arrive attached its length should not be
+      # included in the CADU size.
+      attribute arrives_as_attached { xsd:boolean }, 
+            
+      # The ASM as hex value. Mandatory.
+	  asm-pattern-def 
+}  
+        
+# Elements to define frame encoding/error correction
+encoding-def = rs-encoded-def | turbo-encoded-def
+
+# Encoding/error correction definition for Reed-Solomon frames
+rs-encoded-def = element reed_solomon_encoding {
+
+    # Length of RS check bits. The RS check
+    # field is assumed to immediately follow the FECF field.
+    attribute bit_size { encoding-size-def }
+}   
+
+# Encoding/error correction definition for turbo frames
+turbo-encoded-def = element turbo_encoding {
+    (
+    # Turbo rate. Used only for receive time and rate calculations. 
+    attribute turbo_rate { turbo-rate-def },
+    
+    # Length and optional offset of turbo trellis bits. The trellis
+    # field is assumed to immediately follow the FECF field. 
+    #
+    # IMPORTANT - The trellis bits are often stripped before the
+    # frame is received by the GDS. In this case, the bit_size 
+    # should be set to 0.
+    attribute bit_size { encoding-size-def }
+    )
+}
+
+# Frame format, which covers headers, data area, and trailers.
+# Options are pre-defined CCSDS formats or a custom format
+# based upon CCSDS fields, but possibly with different field
+# lengths.
+frame-format-def = element frame_format {
+     (ccsds-tm-def | ccsds-aos-def | custom-format-def )
+}
+
+# Custom frame format. Can be used to define frames that closely
+# resemble CCSDS frames in terms of structure, but which may
+# have non-standard field lengths or require custom header parsing,
+# or custom CRC validation. Basic structure of the frame is still
+# assumed to be:
+#     Primary header
+#     FHECF
+#     Secondary header or insert zone
+#     Data area
+#     OCF
+#     FECF
+custom-format-def = element custom_frame_format {
+    (
+    # Fixed frame format type
+    attribute frame_format_type { "CUSTOM_CLASS" },
+    
+    # Length of the frame primary header. Mandatory.
+    attribute primary_header_length { short-field-size-def },
+    
+    # Length of the Frame Header Error Control field (FHECF). 
+    # If omitted or set to 0, the frame has no FHECF.
+    attribute fhecf_length { ecf-size-def }?,
+    
+    # Length of the frame secondary header or insert zone. If omitted or 
+    # set to 0, the frame has no secondary header.
+    attribute secondary_header_length { short-field-size-def }?,
+    
+    # Length of frame data PDU header. Optional. If omitted or set
+    # to 0, the frame is assumed to have no PDU header.
+    attribute pdu_header_length { short-field-size-def }?,
+    
+    # Length of the frame data area. Mandatory.
+    attribute data_area_length { frame-data-size-def },
+      
+    # Length of Operational Control Field in the frame trailer.
+    # If omitted or set to 0, the frame has no OCF.   
+    attribute ocf_length { short-field-size-def }?,
+     
+    # Length of the Frame Error Control Field (FECF) in the frame trailer. 
+    # If omitted or set to 0, the frame has no FECF.
+    attribute fecf_length { ecf-size-def }?,
+    
+    # Not part of the CCSDS standard. Used to define an optional hardware/
+    # spacecraft time code to be extracted from the secondary header. 
+    time-field-def?,
+    
+    # Built in header class identifier or Java class name of the class 
+    # that parses the frame header. Contact the AMPCS team for the required 
+    # Java interface.
+    attribute frame_header_class { frame-header-format-def | 
+         java-class-name-def },
+    
+    # Built-in algorithm name or Java class name for computing the FECF. 
+    # Defaults to CCSDS_CCIT_16. Contact the AMPCS team for the required Java 
+    # interface.
+    attribute frame_error_control_class { fecf-algorithm-def | 
+        java-class-name-def }?
+    )
+}
+    
+# Element that specifies a Java class
+java-time-class-def = element java_time_class { 
+     attribute class_name { java-class-name-def }
+}
+
+# Defines the TM frame format defined in CCSDS 132.0-B-1. (CCSDS V1)
+# This frame header is assumed to have a 6-byte primary header consisting of:
+#     Bits 0-1:   Frame version number
+#     Bits 2-11:  Spacecraft ID
+#     Bits 12-14: Virtual Channel Identifier
+#     Bit 15:     Operational Control Field Flag
+#     Bits 16-23: Master Channel Frame Count
+#     Bits 24-31: Virtual Channel Frame Count
+#     Bits 23-47: Frame Data Field Status (with last 11 bits 
+#                 being First Header Pointer)
+#     This is followed by an optional secondary header, the
+#     data area, an optional 32-bit operational control field, and 
+#     an optional 16-bit FECF, computed according to CCSDS 132.0-B-1.
+ccsds-tm-def = element ccsds_tm_1_frame {
+    # Fixed frame format type
+    attribute frame_format_type { "CCSDS_TM_1" },
+    
+    # Length of the frame secondary header or insert zone. If omitted 
+    # or set to 0, the frame has no secondary header.
+    attribute secondary_header_length { short-field-size-def }?,
+    
+    # Length of the frame data area
+    attribute data_area_length { frame-data-size-def },
+    
+    # Flag indicating if the 16-bit Operational Control Field
+    # is present in the frame trailer.    
+    attribute has_ocf { xsd:boolean },
+     
+    # Flag indicating if the 16-bit Frame Error Control Field (FECF)
+    # is present in the frame trailer.  
+    attribute has_fecf { xsd:boolean },
+    
+    # Not part of the CCSDS standard. Used to define an optional hardware/
+    # spacecraft time code to be extracted from the secondary header. 
+    time-field-def?
+}
+
+# Both CCSDS_1_AOS_M and CCSDS_1_AOS_B correspond to the frame header 
+# format defined in CCSDS 732.0-B-1 (CCSDS V2). This frame header is 
+# assumed to have a 6 or 8 byte primary header consisting of:
+#     Bits 0-1:   Frame version number
+#     Bits 2-9:   Spacecraft ID
+#     Bits 10-15: Virtual Channel Identifier
+#     Bits 16-39: Virtual Channel Frame Count
+#     Bits 40-47: Signaling Field
+#     Bits 48-63: Optional Frame Header Error Control
+#     This is followed by an optional frame insert zone, the data area,
+#     an optional 32-bit operational control field, and an optional 
+#     16-bit FECF. 
+# 
+# CCSDS_1_AOS_MPDU is assumed to contain a CCSDS M_PDU header as the first 
+# item in the frame data area. This header is assumed to consist of:
+#     Bits 0-4:   Spare
+#     Bits 5-15:  First Header Pointer
+#
+# CCSDS_1_AOS_BPDU is assumed to contain a CCSDS B_PDU header as the first
+# item in the frame data area. This header is assumed to consist of:
+#     Bits 0-1:   Spare
+#     Bits 2-15:  Bit Stream Data Pointer
+#
+ccsds-aos-def = element ccsds_aos_2_frame {
+     # Frame format. AOS frames containing M_PDU or B_PDU are supported.
+     attribute frame_format_type { "CCSDS_AOS_2_MPDU" |  "CCSDS_AOS_2_BPDU" },
+     
+     # Flag indicating if the 16-bit a Frame Header Error Control (FHECF)
+     # field is present in the frame primary header.
+     #
+     # At this time, the GDS does not use or check the FHECF.
+     attribute has_fhecf { xsd:boolean },
+     
+     # Length of the frame insert zone. If ommitted or set to 0,
+     # the frame has no insert zone.
+     attribute insert_zone_length { short-field-size-def }?,
+     
+     # Length of the frame data area.
+     attribute data_area_length { frame-data-size-def },
+     
+     # Flag indicating if the 16-bit Operational Control Field
+     # is present in the frame trailer.    
+     attribute has_ocf { xsd:boolean },
+     
+     # Flag indicating if the 16-bit Frame Error Control Field (FECF)
+     # is present in the frame trailer.     
+     attribute has_fecf { xsd:boolean },
+     
+     # Not part of the CCSDS standard. Used to define an optional hardware/
+     # spacecraft time code to be extracted from the secondary header.
+     time-field-def?
+}
+
+# Hardware time field definition. 
+time-field-def = element time_field {
+
+    # Offset of the field to be extracted, relative to the first bit
+    # of the primary header
+    attribute bit_offset { cadu-size-def },
+       
+    # Bit size of the time field. Must be divisible by 8.
+    attribute bit_size { cadu-size-def },
+    
+    # Format of the time code. 
+    time-format-def?
+}
+
+
+# Possible format definitions for hardware time code. Options are the
+# standard project spacecraft clock (must be configured in the GDS), 
+# a custom two-segment big-endian time code, or a custom Java class.
+# The end result of any time extraction must fit into the project 
+# SCLK.
+time-format-def = ( project-sclk-def | custom-sclk-time-def | 
+    java-time-class-def )
+
+# Project spacecraft clock time format. Configured in the GDS.
+project-sclk-def = element project_sclk_time { empty }
+
+# Custom two-segment spacecraft clock time format. 
+custom-sclk-time-def = element custom_sclk_time {
+
+    # Coarse bit length
+    attribute coarse_bit_len { xsd:integer },
+    
+    # Fine time bit length
+    attribute fine_bit_len { xsd:integer },
+    
+    # Modulus (maximum) value for fine field. This is when the
+    # coarse value will be incremented and the fine value rolls 
+    # to 0.
+    attribute fine_upper_limit { xsd:integer }
+}
+     
+# Names of built-in FECF calculations.
+#
+# CCSDS_CRC_16 is the algorithm defined in the CCSDS 132.0-B-1 Blue 
+# Book. The extracted checksum is always 16 bits long.
+fecf-algorithm-def = ( "CCSDS_CRC_16" )
+
+frame-header-format-def = ("CCSDS_TM_1" | "CCSDS_AOS_2_MPDU" | 
+       "CCSDS_AOS_2_BPDU")
+
+# Valid values for length of Frame or Header Error Control fields.
+ecf-size-def = ( "16" | "24" | "32" | "64" )
+
+# String pattern for defining a java class name, which should include the
+# full package name.
+java-class-name-def =  xsd:token { pattern = "[a-zA-Z][\.0-9a-fA-F]*[a-zA-Z0-9]" }
+
+# Valid values for turbo encoding rate. The GDS uses the turbo rate only
+# for receive time and rate calculations. If the supplied value is not
+# in this list, the GDS will record the rate as unknown.
+turbo-rate-def = ( "TURBO_1_2" | "TURBO_1_4" | "TURBO_1_3" | "TURBO_1_6" )
+
+# Range for length of trailing bits related to frame encoding and error 
+# checking. (For example, Reed-Solomon check or turbo trellis bits.) 
+encoding-size-def =  xsd:nonNegativeInteger { minInclusive = "0" 
+     maxInclusive = "65535" }
+
+# CADU bit length range. If not divisible by 8. the value will be rounded up to
+# the next number divisible by 8 and the CADU must be padded with extra bits to
+# that length. The largest CADU the GDS can currently store is 7000 bytes.
+cadu-size-def = xsd:positiveInteger { minInclusive = "8" 
+    maxInclusive = "448000" }
+
+# Frame data area size limit. Must be divisible by 8. 
+frame-data-size-def = xsd:positiveInteger { minInclusive = "8" 
+   maxInclusive = "448000" }
+
+# ASM bit length range. Must be divisible by 8.
+asm-size-def = xsd:nonNegativeInteger { minInclusive = "8" 
+    maxInclusive = "256" }
+
+# Allowed patterns for ASM
+asm-pattern-def = xsd:token { pattern = "[0-9a-fA-F]{8,64}" }
+
+# Generic short frame field bit size range.
+short-field-size-def = xsd:positiveInteger { minInclusive = "1" 
+    maxInclusive = "1024" }
+
+# Field offset range.
+field-offset-def = xsd:nonNegativeInteger { minInclusive = "0" 
+    maxInclusive = "448000" }
+
+# Unique frame type name pattern
+frame-name-def = xsd:ID {  maxLength="64"} 

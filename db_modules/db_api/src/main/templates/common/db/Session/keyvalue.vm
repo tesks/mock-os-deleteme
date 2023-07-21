@@ -1,0 +1,110 @@
+#if ($body)
+-------
+Session
+-------
+#if($sessionId)
+Number=$sessionId
+#else
+Number=<UNASSIGNED>
+#end
+SpacecraftId=$spacecraftId
+#if ($sessionName)
+Name=$sessionName
+#end
+#if ($sessionType)
+Type=$sessionType
+#end
+#if ($sessionDescription)
+Description=$sessionDescription
+#end
+User=$user
+Host=$sessionHost
+Fragment=$sessionFragment
+StartTime=$startTime
+#if ($endTime)
+EndTime=$endTime
+#end
+AmpcsVersion=$mpcsVersion
+#if ($fullName)
+FullName=$fullName
+#end
+#if ($fswVersion)
+FswVersion=$fswVersion
+#end
+#if ($sseVersion)
+SseVersion=$sseVersion
+#end
+RunFswDownlink=$fswDownlinkFlag
+RunSseDownlink=$sseDownlinkFlag
+RunUplink=$uplinkFlag
+#if ($fswDictionaryDir)
+FswDictionaryDirectory=$fswDictionaryDir
+#end
+#if ($sseDictionaryDir)
+SseDictionaryDirectory=$sseDictionaryDir
+#end
+#if($outputDir)
+OutputDirectory=$outputDir
+#end
+OutputDirOverridden=$outputDirOverride
+#if ($venueType)
+VenueType=$venueType
+#end
+#if ($inputFormat)
+InputFormat=$inputFormat
+#end
+#if ($downlinkConnectionType)
+DownlinkConnectionType=$downlinkConnectionType
+#end
+#if ($uplinkConnectionType)
+UplinkConnectionType=$uplinkConnectionType
+#end
+#if($testbedName && ($venueType == "TESTBED" || $venueType == "ATLO"))
+TestbedName=$testbedName
+#end
+#if($downlinkStreamId && ($venueType == "TESTBED" || $venueType == "ATLO"))
+DownlinkStreamId=$downlinkStreamId
+#end
+#if ($dssId != 0)
+SessionDssId=$dssId
+#end
+#if ($vcid)
+SessionVcid=$vcid
+#end
+#if ($inputFile)
+InputFile=$inputFile
+#end
+#if ($databaseSessionId)
+DatabaseSessionKey=$databaseSessionId
+#end
+#if ($databaseHost)
+DatabaseSessionHost=$databaseHost
+#end
+#if ($subtopic)
+JmsSubtopic=$subtopic
+#end
+#if ($topic)
+Topic=$topic
+#end
+#if ($fswDownlinkHost)
+FswDownlinkHost=$fswDownlinkHost
+#end
+#if ($fswUplinkHost)
+FswUplinkHost=$fswUplinkHost
+#end
+#if ($sseHost)
+SseHost=$sseHost
+#end
+#if ($fswUplinkPort)
+FswUplinkPort=$fswUplinkPort
+#end
+#if ($sseUplinkPort)
+SseUplinkPort=$sseUplinkPort
+#end
+#if ($fswDownlinkPort)
+FswDownlinkPort=$fswDownlinkPort
+#end
+#if ($sseDownlinkPort)
+SseDownlinkPort=$sseDownlinkPort
+#end
+#end

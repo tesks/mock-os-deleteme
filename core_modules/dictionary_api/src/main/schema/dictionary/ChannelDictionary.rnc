@@ -1,0 +1,365 @@
+#
+# AMPCS Multi-mission telemetry channel dictionary schema
+#     
+# This schema defines a common, multi-mission format for expression of the 
+# channelized telemetry portion of the flight-ground telemetry dictionary. 
+# This dictionary essentially defines the types of discrete telemetry values 
+# exchanged between flight and ground software, and the telemetry values 
+# derived by ground software from flight data.
+#
+# This xml is focused on the processing and display of the measurements. 
+# Some meta-data about the measurements have been found to be useful in the past 
+# and is included by name in the dictionary. Other meta-data that is mission specific
+# or of lesser use is stored using a generic keyword/value system.
+#
+# Numeric data to be extracted from channel packets must be placed into packets
+# in big-endian order, i.e., the most significant byte has the smallest offset.
+# For 4 byte floating-point values, the bits must represent of a floating-point  
+# value according to the IEEE 754 floating-point "single format" bit layout. For 
+# 8 byte floating-point values, the bits must represent of a floating-point 
+# value according to the IEEE 754 floating-point "double format" bit layout. 
+#
+# String data must be placed into packets such that the first character 
+# in the string has the smallest offset in the packet. All characters should 
+# be in the ASCII printable range (hexadecimal values 0x20 through 0x7E). 
+# The GDS will replace carriage returns (0x0D), line feeds (0x0A), and all 
+# other characters outside of the printable range by space characters (0x20).  
+# The byte length of string fields must correspond to the length of 
+# the string in the packet. The C NULL (0x00) character has no meaning to the 
+# GDS and will not be recognized as a string terminator.
+#
+# Copyright (c) 2013-2015 California Institute of Technology, All Rights Reserved
+# JPL Proprietary Information
+#
+# Change Log:
+#   V1.0  05/20/12   Original version
+#   V1.1  05/20/13   Moved into AMPCS, normalized header 
+#                    format, minor reorganization.
+#   V1.2  09/18/13   Minor updates in response to DMS SIS Review
+#   V2.0  05/23/14   Updates for dictionary conversion. The
+#                    "id" attribute was removed and "title" in telemetry elements made
+#                    optional. A "description" element was added to the 
+#                    telemetry element. The "endianness" element was removed
+#                    from the bit_extract element. Removed "derived" and "bit_extract"
+#                    as channel sources. Comment updates. (ECR-116156)
+#   V2.1 09/16/14    Added "monitor" channel source and support
+#                    for parameterized EU algorithms
+#   V2.2 02/24/15    Made channel "source" attribute required.#
+#   V2.3 06/16/15    Minor updates in response to customers comments
+#   V3.0 08/05/15    Added header channel source.
+#                    Added channel group attribute. Removed change log
+#                    support on the telemetry element.
+#                    This is the final change for AMPCS 7.3 (MGSS ECR-117883)
+#   V3.1 08/18/16    Moved raw to engineering unit conversions from
+#                    channel dictionary schema to common
+#   V3.2 09/06/17    Removed %SCET and LMST formatters.
+#   V3.3 01/09/19    Clarified limitation on unsigned channels of 8 byte length.
+#                    in comments
+#   V3.4 09/21/20    Use new offset-64-length-def definition
+#                    for bit extract length.
+#
+
+namespace rng = "http://relaxng.org/ns/structure/1.0"
+datatypes xsd = "http://www.w3.org/2001/XMLSchema-datatypes"
+
+# Include common dictionary XML definitions
+include "CommonDictionary.rnc"
+
+# Start XML document here
+start = telemetry-dictionary-def
+
+# Top-level element for the telemetry dictionary
+telemetry-dictionary-def = element telemetry_dictionary {
+    
+    # Standard dictionary version header and general change log 
+    header-def,
+    
+    # Define 0 or more enumeration tables for use by STATUS channels
+    element enum_definitions { 
+        enum-table-def* 
+    }?,
+      
+    # Define 0 or more derivations used to compute engineering unit and ground 
+    # derived telemetry values. 
+    element derivation_definitions { 
+        derivation-def* 
+    }?,
+     
+    # Define 0 or more telemetry channels 
+    element telemetry_definitions { 
+        telemetry-definition-def* 
+    }
+}
+
+# Defines a single telemetry channel
+telemetry-definition-def = element telemetry {
+
+    # Removed the "id" attribute.
+    
+    # Updated comment to indicate that this is
+    # the primary channel key. 
+    #
+    # The short string identifier for this telemetry channel. Consists of 1 letters, 
+    # 0-3 letters or digits, a dash, and 4 digits. All telemetry channel abbreviations 
+    # must be unique. This is the primary key for the channel in the ground system.
+    # In all dictionaries that reference or use "channel ID" elements, it is this 
+    # abbreviation that must be used.
+    attribute abbreviation { channel-id-def },
+    
+    #
+    # The dictionary name for this telemetry channel.  Allowed characters are limited 
+    # to letters, numbers, -, or _ for ease of processing. All telemetry channel names 
+    # should be unique for usability sake, but the name is not used as the primary key 
+    # for the channel in the ground system because it is too long to be efficient and 
+    # is too often truncated by display software.
+    attribute name { name-def } ,
+    
+    # The data type of the telemetry value. The size is given in byte_length. At this 
+    # time, measurements are only primitive data types. 
+    #
+    # 1. Time channels must contain spacecraft clock values.
+    # 2. Boolean channels may take any values, but will be interpreted on the ground 
+    #    as FALSE if the unsigned value is 0, and TRUE if the unsigned value is non-0.
+    # 3. Enum channels must have a corresponding enum-table-def, and are interpreted 
+    #    by the  ground as signed values, not unsigned, as with legacy STATUS 
+    #    channels.
+    # 4. Channels with source "bit_extract" can have type integer, unsigned, enum, or 
+    #    boolean.
+    attribute type { channel-type-def },
+    
+    # The source of the telemetry value: flight, simulation/support equipment, or 
+    # receiving station.  
+    #
+    # Made this attribute required
+    attribute source { channel-source-def },
+    
+    # Byte length of the telemetry value. Integer, unsigned, enum, and boolean values 
+    # may be 1, 2, 4, or 8 bytes in length. Float values may be 4 or 8 bytes. Data 
+    # length for time values must match the project SCLK length.  String values may 
+    # be 0 to 255 data bytes in length, but for strings in pre-channelized packets, 
+    # this value may be 0 and the length in the packet is always the length that is 
+    # used. 
+    attribute byte_length { unsigned-8-def },
+    
+    #
+    # An optional group name for this telemetry channel. Allows channels to
+    # be placed into collections that may imply their common downlink, grouping
+    # on displays, or some other common purpose. Currently AMPCS does
+    # nothing with channel groups, but they may be linked to future features.
+    attribute group_id { channel-group-def}?,
+            
+    # Measurement ID (channel index) of the telemetry value. Required only for 
+    # telemetry values with source "flight" or "simulation". This is a 16 bit value 
+    # used to identify telemetry items in pre-channelized packets, and must be unique.
+    element measurement_id { unsigned-16-def }?,
+    
+    # Derivation ID of the derivation that produces the telemetry value, if the source 
+    # of this channel is "derived" and the derivation is algorithmic. Each 
+    # derivation instance must have a unique derivation ID, which ties together 
+    # all the parents and children for a single derivation and links this child 
+    # channel to a specific algorithmic derivation defined above.
+    element source_derivation_id { name-def }?,
+    
+    # A descriptive title for this telemetry value, used for display purposes. May 
+    # be any length, but projects are strongly advised to set a reasonable limit 
+    # for displays and maintain that limit, or at least maintain uniqueness in the 
+    # first N characters that will appear on displays.
+    #
+    # Made this element optional.
+    element title { xsd:normalizedString }?, 
+    
+    # A long description for this channel. May contain line feeds. White space will
+    # be preserved.
+    #
+     # Added this element
+    element description {xsd:string}?, 
+    
+    # Format specifier for display of the telemetry value on the ground.
+    # Boolean telemetry values should use boolean-format-def. Status channels 
+    # should use enum-format-def. All other channels should use plain-format-def.
+    (plain-format-def | boolean-format-def | enum-format-def )?, 
+    
+    # Units to be displayed with the raw (data number) telemetry value on the ground.
+    # Note that units for engineering value are separate and contained within
+    # the raw_to_eng element below. Both this element and the eng_units element
+    # may be specified for the same channel.
+    element raw_units { xsd:token }?,
+    
+    # Definition of function used to map raw (data number) telemetry value to
+    # engineering value on the ground.
+    element raw_to_eng {
+    
+        #
+        # Defines how the engineering value is created from the raw value.
+        # Four types of functions are allowed: polynomial expansion, 
+        # table interpolation, and custom algorithm. Simple algorithms have
+        # been deprecated and should not be used in new dictionaries.
+        # A parameterized EU algorithm accepts channel value as a Java Object 
+        # and a hash map of named parameter values.
+        #
+        # If using parameterized algorithm, omit the optional "returnType" element
+        #
+        (poly-def | table-lookup-def | simple-algorithm-def |
+             parameterized-algorithm-def ),
+        
+        # Format specifier for display of the engineering unit telemetry value on 
+        # the ground. Format specifiers embedded in this string must adhere to the
+        # C printf standard for format strings, excluding the %p formatter and use of 
+        # the "#" or "*" width specifiers. The %SCLK formatter may be
+        # used for time values. Use two percents (%%) to represent a single percent 
+        # sign in the output. Do not use carriage returns or line feeds in format 
+        # text. 
+        plain-format-def?,
+       
+        # Units to be displayed with the engineering unit telemetry value on the 
+        # ground.
+        #
+        # It is highly recommended that all engineering values have valid units. 
+        # This has caused major misunderstandings in past missions.
+        element eng_units { xsd:token }?
+    }?,
+    
+    # Definition of bit extraction used to produce this telemetry value, if the source
+    # of the channel is "bit_extract".
+    element bit_extract {
+        
+        # Parent telemetry channel identifier. This is the telemetry value used as
+        # the source for this channel's value.
+        element parent_id { channel-id-def } ,
+        
+        # Definition of bit ranges to extract from the parent value. Multiple
+        # bit ranges will be appended together to produce the resulting child
+        # value.
+        element bits {
+         
+
+            # Bit offset of the bit range in the parent channel. Whether the bit 
+            # numbered 0 is on the left or the right is defined by the endianness 
+            # attribute.
+            attribute offset { offset-64-def },
+            
+            # Length of the bit range in the parent channel, inclusive of the 
+            # bit at the starting offset. In other words to select two bits, 
+            # the value is 2, not 1. 
+            attribute length { offset-64-length-def }
+        }+
+    }?,
+    
+     # This is used to categorize different measurements into groups. Possible 
+     # category names are "module", "ops category", "subsystem", ...
+     # It is possible that there are multiple ways of organizing groups of 
+     # measurements, so that there may be more than one category entry for a 
+     # measurement.
+    categories-def?,
+    
+    # Additional dictionary attributes, defined using key-value XML container. Use
+    # this to attach additional project-specific information to this telemetry 
+    # definition. 
+    attributes-def?
+    
+}
+
+# Format specifier for display of a raw non-enum/boolean telemetry value on the 
+# ground. Format specifiers embedded in this string must adhere to the
+# C printf standard for format strings, excluding the %p formatter and use of 
+# the "#" and "*" width specifiers. The %SCLK formatter may be used
+# for time values. Use two percents (%%) to represent a single percent sign in the
+# output. Do not use carriage returns or line feeds in format text. 
+#
+# Default for floating point channels is %16.9e. There are no other defaults.
+plain-format-def = element format { xsd:normalizedString }
+
+# Format specifier for display of a boolean telemetry value on the ground.
+# Default in the ground system is to display TRUE for non-zero channel values,
+# and FALSE for zero channel values.  This element allows different
+# values, such as ON and OFF, to be displayed instead. It also allows the
+# formatters for both the numeric and string values to be specified.
+boolean-format-def = element boolean_format { 
+ 
+   # Value to display as status for TRUE boolean values
+   attribute true_str { symbol-def }, 
+    
+   # Value to display as status for FALSE boolean values
+   attribute false_str { symbol-def },
+   
+   # This specifier is used to format the raw numeric value.
+   element numeric_format { xsd:normalizedString }?,
+    
+   # This specifier is used to format the symbolic status value.
+   element string_format { xsd:normalizedString }?
+}
+  
+# Format specifier for display of an enumeration, or status, telemetry value 
+# on the ground. This element specifies the enumeration table name, and
+# formatters for both the numeric and string values.
+enum-format-def = element enum_format {
+
+    # Name of the enum-table-def to use for mapping numeric raw value to symbolic 
+    # string value, for telemetry channels with type "enum".
+    attribute enum_name { name-def },
+    
+    # This specifier is used to format the raw numeric value.
+    element numeric_format { xsd:normalizedString }?,
+    
+    # This specifier is used to format the symbolic status value.
+    element string_format { xsd:normalizedString }?
+}
+    
+# Defines a custom channel derivation, including algorithm, trigger channels, 
+derivation-def = element derivation {
+
+     # Each derivation must have a unique ID, which ties together all the parents 
+     # and children for a single derivation.
+     attribute derivation_id { name-def },
+     
+     # The definition of the algorithm to use to compute the child channels.
+     # Return-type of the algorithm must be "channel_list". This algorithm may 
+     # take parameters
+     parameterized-algorithm-def,
+     
+     # Channel ids of channels that provide input values to this derivation.
+     # Must be at least one.
+     element parent_id { channel-id-def }+,
+     
+     # IDs of the parent channels which trigger execution of the algorithm.
+     # Algorithm will be triggered whenever any of the listed trigger values are 
+     # received, but not when non-listed parent values are received.
+     #
+     # If omitted, algorithm will be triggered when any parent value is received.
+     #
+     # Allow 0 or 1 trigger only, instead of multiple
+     element trigger_id { channel-id-def }?
+}*
+
+# The data type of the telemetry value. The size is given in byte_length. At this 
+# time, measurements are only primitive data types. 
+#
+# 1. Time channels must contain coarse spacecraft clock values (SCLK coarse) ONLY.
+#    The bit size of these channels should not exceed the bit size of the project
+#    coarse SCLK. The value of the channel will be interpreted as an unsigned integer.
+# 2. Boolean channels may take any values, but will be interpreted on the ground 
+#    as FALSE if the unsigned value is 0, and TRUE if the unsigned value is non-0.
+# 3. Enum channels must have a corresponding enum-table-def, and are interpreted by 
+#    the ground as signed values, not unsigned, as with legacy STATUS channels.
+# 4. Channels with source "bit_extract" can have type integer, unsigned, enum, or 
+#    boolean.
+# 5. Unsigned channels may be declared as being 8 bytes; however, the MSB must not be
+#    set to 1 - only value ranges from 0 to 2^63-1 are supported.
+channel-type-def =  "integer" | "unsigned" | "float" | "enum" | "string" | "time" 
+    | "boolean"
+
+
+#
+# The possible sources of a telemetry value:
+#
+# 1. "flight" implies the telemetry value is computed on board the spacecraft
+# 2. "simulation" implies the telemetry value is computed by the ground simulation 
+#     support equipment or by flight simulation software.
+# 3. "monitor" implies the telemetry value is from a station and contains station-
+#     generated data
+# 4. "header" implies the telemetry value is a metadata value extracted from 
+#     the telemetry packet or frame header
+# 
+channel-source-def = "flight" | "simulation" | "monitor" | "header"
+
+

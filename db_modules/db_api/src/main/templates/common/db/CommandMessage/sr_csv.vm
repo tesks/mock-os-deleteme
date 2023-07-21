@@ -1,0 +1,7 @@
+## MPCS-7941 changed replaceAll for " to prevent VM from randomly interpret the escape incorrectly
+#if ($header)
+ERT,SCET,SCLK,SOURCE,TYPE,ID,DATA,SESSION
+#elseif ($trailer)
+#else
+#if($eventTime)$eventTime#end,,,MPCS,#if($commandType)#if($commandType=="SseCommand")SSE CMD#{else}FSW CMD#{end}#{else}#end,#if($nullTool.isNotNull($commandString))#{set}($msg_clean=$commandString)#{set}($msg_clean=$msg_clean.replaceAll('"', ""))#{set}($dat=$msg_clean.split(",",2))$dat.get(0),#if($dat.size() > 1)"$dat.get(1)"#{else}""#{end}#{else},""#end,$sessionId
+#end

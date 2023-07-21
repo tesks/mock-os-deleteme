@@ -1,0 +1,3 @@
+#if($header)
+#else
+RequestStatus SubmitTime=$submitTime RequestID=$requestId#if($userId) UserID=$userId#else#end#if($roleId) RoleID=$roleId#else#end RequestStatus=$status StatusUpdateTime=$statusUpdateTime#if($nullTool.isNotNull($includedInExeList)) IncludedInExeList=$includedInExeList#else#end#if($filename) Filename=$filename#else#end#if($bitrates)#set($delim = '') Bitrates=#foreach($val in $bitrates)$delim$val#set($delim = ',')#end#end#end
